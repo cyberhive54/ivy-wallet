@@ -26,7 +26,7 @@ import com.ivy.design.utils.springBounce
 fun Switch(
     modifier: Modifier = Modifier,
     enabled: Boolean,
-    enabledColor: Color = UI.colors.green,
+    enabledColor: Color = UI.colors.primary,
     disabledColor: Color = UI.colors.gray,
     animationColor: AnimationSpec<Color> = springBounce(),
     animationMove: AnimationSpec<Float> = springBounce(),

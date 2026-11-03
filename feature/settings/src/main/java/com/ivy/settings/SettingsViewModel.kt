@@ -12,6 +12,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
+import com.ivy.base.legacy.Accent
 import com.ivy.base.legacy.Look
 import com.ivy.base.legacy.SharedPrefs
 import com.ivy.base.legacy.Theme
@@ -72,7 +73,8 @@ class SettingsViewModel @Inject constructor(
     private val startDateOfMonth = mutableIntStateOf(1)
     private val progressState = mutableStateOf(false)
     private val look = mutableStateOf(SettingsAppearance.LOOK_IVY)
-    private val accentColor = mutableStateOf(SettingsAppearance.ACCENT_IVY)
+    private val accentColor = mutableStateOf(SettingsAppearance.ACCENT_DEFAULT)
+    private val dockTranslucent = mutableStateOf(false)
 
     // Root Settings list scroll position, synced from the UI. Backed by the
     // (Activity-scoped) ViewModel so the position survives child-page push/pop
@@ -104,7 +106,8 @@ class SettingsViewModel @Inject constructor(
             hideIncome = getHideIncome(),
             languageOptionVisible = isLanguageOptionVisible(),
             look = getLook(),
-            accentColor = getAccentColor()
+            accentColor = getAccentColor(),
+            dockTranslucent = getDockTranslucent()
         )
     }
 
@@ -120,6 +123,7 @@ class SettingsViewModel @Inject constructor(
         initializeStartDateOfMonth()
         initializeLook()
         initializeAccentColor()
+        initializeDockTranslucent()
     }
 
     private suspend fun initializeCurrency() {
@@ -183,8 +187,15 @@ class SettingsViewModel @Inject constructor(
     private fun initializeAccentColor() {
         accentColor.value = sharedPrefs.getString(
             SharedPrefs.SETTINGS_ACCENT_COLOR,
-            SettingsAppearance.ACCENT_IVY
-        ) ?: SettingsAppearance.ACCENT_IVY
+            SettingsAppearance.ACCENT_DEFAULT
+        ) ?: SettingsAppearance.ACCENT_DEFAULT
+    }
+
+    private fun initializeDockTranslucent() {
+        dockTranslucent.value = sharedPrefs.getBoolean(
+            SharedPrefs.SETTINGS_DOCK_TRANSLUCENT,
+            false
+        )
     }
 
     @Composable
@@ -247,6 +258,11 @@ class SettingsViewModel @Inject constructor(
         return accentColor.value
     }
 
+    @Composable
+    private fun getDockTranslucent(): Boolean {
+        return dockTranslucent.value
+    }
+
     private fun isLanguageOptionVisible(): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     }
@@ -276,6 +292,7 @@ class SettingsViewModel @Inject constructor(
             is SettingsEvent.SetTheme -> setTheme(event.theme)
             is SettingsEvent.SetLook -> setLook(event.look)
             is SettingsEvent.SetAccentColor -> setAccentColor(event.accentColor)
+            is SettingsEvent.SetDockTranslucent -> setDockTranslucent(event.translucent)
 
             SettingsEvent.DeleteCloudUserData -> deleteCloudUserData()
             SettingsEvent.DeleteAllUserData -> deleteAllUserData()
@@ -385,10 +402,21 @@ class SettingsViewModel @Inject constructor(
     }
 
     private fun setAccentColor(newAccentColor: String) {
-        accentColor.value = newAccentColor
+        val parsed = Accent.parse(newAccentColor) ?: Accent.DEFAULT
+        accentColor.value = parsed.code
 
         viewModelScope.launch {
-            sharedPrefs.putString(SharedPrefs.SETTINGS_ACCENT_COLOR, newAccentColor)
+            sharedPrefs.putString(SharedPrefs.SETTINGS_ACCENT_COLOR, parsed.code)
+            ivyContext.switchAccent(parsed)
+        }
+    }
+
+    private fun setDockTranslucent(translucent: Boolean) {
+        dockTranslucent.value = translucent
+
+        viewModelScope.launch {
+            sharedPrefs.putBoolean(SharedPrefs.SETTINGS_DOCK_TRANSLUCENT, translucent)
+            ivyContext.switchDockTranslucent(translucent)
         }
     }
 

@@ -16,8 +16,6 @@ import androidx.compose.ui.unit.dp
 import com.ivy.design.l0_system.UI
 import com.ivy.legacy.IvyWalletComponentPreview
 import com.ivy.legacy.utils.springBounce
-import com.ivy.wallet.ui.theme.Gray
-import com.ivy.wallet.ui.theme.Green
 
 @Deprecated("Old design system. Use `:ivy-design` and Material3")
 @Composable
@@ -26,8 +24,14 @@ fun IvySwitch(
     enabled: Boolean,
     onEnabledChange: (checked: Boolean) -> Unit
 ) {
+    // Accent-driven on state: primary in light mode, the readable companion (primary1)
+    // in dark - both follow the user's Accent choice and the material's signature.
     val color by animateColorAsState(
-        targetValue = if (enabled) Green else Gray,
+        targetValue = if (enabled) {
+            if (UI.colors.isLight) UI.colors.primary else UI.colors.primary1
+        } else {
+            UI.colors.gray
+        },
         animationSpec = springBounce()
     )
 

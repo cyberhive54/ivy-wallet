@@ -52,6 +52,7 @@ fun IvyUI(
         IvyTheme(
             theme = ivyContext.theme,
             look = ivyContext.look,
+            accent = ivyContext.accent,
             design = design
         ) {
             WrapWithSurface(includeSurface = includeSurface) {

@@ -72,8 +72,6 @@ import com.ivy.ui.R
 import com.ivy.wallet.ui.theme.Gradient
 import com.ivy.wallet.ui.theme.GradientGreen
 import com.ivy.wallet.ui.theme.GradientIvy
-import com.ivy.wallet.ui.theme.Green
-import com.ivy.wallet.ui.theme.Ivy
 import com.ivy.wallet.ui.theme.White
 import com.ivy.wallet.ui.theme.components.IvyCircleButton
 import com.ivy.wallet.ui.theme.components.IvyIcon
@@ -136,9 +134,12 @@ fun BoxWithConstraintsScope.BottomBar(
 
     // Material-aware dock colors. isLight comes from the token (not a color equality
     // check) so the Forest / Graphite light palettes keep their light dock.
+    // The glass material is the Look.GLASS signature OR the user's Translucent-dock
+    // override - in both cases the surface recipe is glass while colors still follow
+    // the active material, mode and accent (pill/active tab read the primary tokens).
     val isLight = UI.colors.isLight
     val isAmoled = UI.colors.pure == TrueBlack
-    val isGlass = UI.colors.look == Look.GLASS
+    val isGlass = UI.colors.look == Look.GLASS || ivyContext.dockTranslucent
 
     val dockBg = when {
         isGlass && isLight -> Color(0xFFF6F8FC).copy(alpha = 0.72f)
@@ -160,7 +161,7 @@ fun BoxWithConstraintsScope.BottomBar(
         isGlass && isLight -> Color(0xFF0A1220)
         isGlass -> Color.Black
         isLight -> Color(0xFF0F172A)
-        isAmoled -> Ivy
+        isAmoled -> Color.Black
         else -> Color.Black
     }
 
@@ -172,21 +173,15 @@ fun BoxWithConstraintsScope.BottomBar(
         else -> 0.50f
     }
 
-    val pillBg = when {
-        isGlass && isLight -> Color(0xFF0A6BD8).copy(alpha = 0.14f)
-        isGlass -> Color(0xFF0A84FF).copy(alpha = 0.30f)
-        isLight -> Color(0xFFF1EEFF)
-        isAmoled -> Ivy.copy(alpha = 0.28f)
-        else -> Ivy.copy(alpha = 0.22f)
+    // The liquid pill and the active tab read the accent-reactive primary tokens:
+    // primary in light mode, the readable companion (primary1) in dark/AMOLED.
+    val pillBg = if (isLight) {
+        UI.colors.primary.copy(alpha = 0.13f)
+    } else {
+        UI.colors.primary.copy(alpha = if (isAmoled) 0.28f else 0.24f)
     }
 
-    val activeTabColor = when {
-        isGlass && isLight -> Color(0xFF0A6BD8)
-        isGlass -> Color(0xFF6FB0FF)
-        isLight -> Ivy
-        isAmoled -> Color(0xFFA592FF)
-        else -> Color(0xFF9B82FF)
-    }
+    val activeTabColor = if (isLight) UI.colors.primary else UI.colors.primary1
 
     val unselectedTabColor = when {
         isGlass && isLight -> Color(0xFF5C6470)

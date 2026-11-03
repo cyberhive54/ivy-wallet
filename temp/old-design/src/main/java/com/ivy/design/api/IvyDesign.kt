@@ -1,5 +1,6 @@
 package com.ivy.design.api
 
+import com.ivy.base.legacy.Accent
 import com.ivy.base.legacy.Look
 import com.ivy.base.legacy.Theme
 import com.ivy.design.IvyContext
@@ -16,7 +17,12 @@ interface IvyDesign {
     fun typography(): IvyTypography
 
     @Deprecated("Old design system. Use `:ivy-design` and Material3")
-    fun colors(theme: Theme, isDarkModeEnabled: Boolean, look: Look): IvyColors
+    fun colors(
+        theme: Theme,
+        isDarkModeEnabled: Boolean,
+        look: Look,
+        accent: Accent = Accent.DEFAULT,
+    ): IvyColors
 
     @Deprecated("Old design system. Use `:ivy-design` and Material3")
     fun shapes(): IvyShapes

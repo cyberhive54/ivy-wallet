@@ -15,5 +15,6 @@ data class SettingsState(
     val progressState: Boolean,
     val languageOptionVisible: Boolean,
     val look: String,
-    val accentColor: String
+    val accentColor: String,
+    val dockTranslucent: Boolean
 )

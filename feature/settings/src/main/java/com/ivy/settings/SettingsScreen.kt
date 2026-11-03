@@ -51,20 +51,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ivy.base.legacy.Accent
 import com.ivy.base.legacy.Theme
-import com.ivy.design.l0_system.Green2
+import com.ivy.design.api.systems.AccentFamilies
 import com.ivy.design.l0_system.UI
 import com.ivy.legacy.Constants
 import com.ivy.legacy.IvyWalletPreview
 import com.ivy.legacy.rootScreen
 import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
-import com.ivy.wallet.ui.theme.Blue
-import com.ivy.wallet.ui.theme.Green
-import com.ivy.wallet.ui.theme.Ivy
-import com.ivy.wallet.ui.theme.Orange
 import com.ivy.wallet.ui.theme.Red
-import com.ivy.wallet.ui.theme.Red3
 import com.ivy.wallet.ui.theme.components.IvySwitch
 import java.util.Locale
 
@@ -87,6 +83,7 @@ internal fun BoxWithConstraintsScope.SettingsRootContent(
         theme = uiState.currentTheme,
         look = uiState.look,
         accentColor = uiState.accentColor,
+        dockTranslucent = uiState.dockTranslucent,
         lockApp = uiState.lockApp,
         showNotifications = uiState.showNotifications,
         hideCurrentBalance = uiState.hideCurrentBalance,
@@ -116,6 +113,9 @@ internal fun BoxWithConstraintsScope.SettingsRootContent(
         },
         onSetAccentColor = {
             viewModel.onEvent(SettingsEvent.SetAccentColor(it))
+        },
+        onSetDockTranslucent = {
+            viewModel.onEvent(SettingsEvent.SetDockTranslucent(it))
         },
         onSetLockApp = {
             viewModel.onEvent(SettingsEvent.SetLockApp(it))
@@ -153,6 +153,7 @@ private fun BoxWithConstraintsScope.UI(
     theme: Theme,
     look: String,
     accentColor: String,
+    dockTranslucent: Boolean,
     lockApp: Boolean,
     nameLocalAccount: String?,
     languageOptionVisible: Boolean,
@@ -169,6 +170,7 @@ private fun BoxWithConstraintsScope.UI(
     onSetTheme: (Theme) -> Unit = {},
     onSetLook: (String) -> Unit = {},
     onSetAccentColor: (String) -> Unit = {},
+    onSetDockTranslucent: (Boolean) -> Unit = {},
     onSetLockApp: (Boolean) -> Unit = {},
     onSetShowNotifications: (Boolean) -> Unit = {},
     onSetTreatTransfersAsIncExp: (Boolean) -> Unit = {},
@@ -260,8 +262,10 @@ private fun BoxWithConstraintsScope.UI(
                 query = searchQuery,
                 showNotifications = showNotifications,
                 treatTransfersAsIncomeExpense = treatTransfersAsIncomeExpense,
+                dockTranslucent = dockTranslucent,
                 onSetShowNotifications = onSetShowNotifications,
                 onSetTreatTransfersAsIncExp = onSetTreatTransfersAsIncExp,
+                onSetDockTranslucent = onSetDockTranslucent,
                 onAdvancedFeatures = {
                     onOpenPage(SettingsChildPage.Features)
                 }
@@ -594,11 +598,15 @@ private fun AppearanceSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             listOf(
-                SettingsAppearance.ACCENT_IVY to Ivy,
-                SettingsAppearance.ACCENT_GREEN to Green2,
-                SettingsAppearance.ACCENT_BLUE to Blue,
-                SettingsAppearance.ACCENT_ORANGE to Orange,
-                SettingsAppearance.ACCENT_PINK to Red3
+                SettingsAppearance.ACCENT_DEFAULT to AccentFamilies.signature(
+                    UI.colors.look,
+                    UI.colors.isLight
+                ),
+                SettingsAppearance.ACCENT_IVY to AccentFamilies.primaryColor(Accent.IVY, UI.colors.isLight),
+                SettingsAppearance.ACCENT_GREEN to AccentFamilies.primaryColor(Accent.GREEN, UI.colors.isLight),
+                SettingsAppearance.ACCENT_BLUE to AccentFamilies.primaryColor(Accent.BLUE, UI.colors.isLight),
+                SettingsAppearance.ACCENT_ORANGE to AccentFamilies.primaryColor(Accent.ORANGE, UI.colors.isLight),
+                SettingsAppearance.ACCENT_PINK to AccentFamilies.primaryColor(Accent.PINK, UI.colors.isLight)
             ).forEach { (accent, color) ->
                 AccentSwatch(
                     color = color,
@@ -946,8 +954,10 @@ private fun BehaviorSection(
     query: String,
     showNotifications: Boolean,
     treatTransfersAsIncomeExpense: Boolean,
+    dockTranslucent: Boolean,
     onSetShowNotifications: (Boolean) -> Unit,
     onSetTreatTransfersAsIncExp: (Boolean) -> Unit,
+    onSetDockTranslucent: (Boolean) -> Unit,
     onAdvancedFeatures: () -> Unit,
 ) {
     val notificationsRow: (@Composable () -> Unit)? = if (matches(
@@ -998,9 +1008,26 @@ private fun BehaviorSection(
         null
     }
 
+    val dockTranslucentRow: (@Composable () -> Unit)? = if (matches(
+            query, "dock", "translucent", "glass", "blur", "navbar", "pill"
+        )
+    ) {
+        {
+            SettingSwitchRow(
+                icon = R.drawable.ic_vue_design_color_swatch,
+                title = stringResource(R.string.settings_dock_translucent),
+                description = stringResource(R.string.settings_dock_translucent_description),
+                checked = dockTranslucent,
+                onToggle = onSetDockTranslucent
+            )
+        }
+    } else {
+        null
+    }
+
     RowsCard(
         header = stringResource(R.string.settings_section_behavior),
-        rows = listOf(notificationsRow, transfersRow, advancedFeaturesRow)
+        rows = listOf(notificationsRow, transfersRow, dockTranslucentRow, advancedFeaturesRow)
     )
 }
 
@@ -1435,7 +1462,8 @@ private fun Preview(theme: Theme = Theme.LIGHT) {
             nameLocalAccount = null,
             theme = theme,
             look = SettingsAppearance.LOOK_IVY,
-            accentColor = SettingsAppearance.ACCENT_IVY,
+            accentColor = SettingsAppearance.ACCENT_DEFAULT,
+            dockTranslucent = false,
             lockApp = false,
             currencyCode = "BGN",
             onSetCurrency = {},

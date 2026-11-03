@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.biometric.BiometricPrompt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ivy.base.legacy.Accent
 import com.ivy.base.legacy.Look
 import com.ivy.base.legacy.SharedPrefs
 import com.ivy.base.legacy.Theme
@@ -72,6 +73,17 @@ class RootViewModel @Inject constructor(
                     ?: Look.parse(sharedPrefs.getString(SharedPrefs.SETTINGS_MOCK_THEME, null))
                     ?: Look.IVY
                 ivyContext.switchLook(look)
+
+                // Accent axis - DEFAULT keeps each material's signature accent. Older builds
+                // persisted "ivy" as the implicit default; parsed directly, same behavior.
+                val accent = Accent.parse(
+                    sharedPrefs.getString(SharedPrefs.SETTINGS_ACCENT_COLOR, null)
+                ) ?: Accent.DEFAULT
+                ivyContext.switchAccent(accent)
+
+                ivyContext.switchDockTranslucent(
+                    sharedPrefs.getBoolean(SharedPrefs.SETTINGS_DOCK_TRANSLUCENT, false)
+                )
 
                 ivyContext.initStartDayOfMonthInMemory(sharedPrefs = sharedPrefs)
             }

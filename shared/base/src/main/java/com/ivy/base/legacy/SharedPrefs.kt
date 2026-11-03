@@ -28,6 +28,7 @@ class SharedPrefs @Inject constructor(
         const val SETTINGS_LOOK = "settings_look"
         const val SETTINGS_MOCK_THEME = "settings_mock_theme"
         const val SETTINGS_ACCENT_COLOR = "settings_accent_color"
+        const val SETTINGS_DOCK_TRANSLUCENT = "settings_dock_translucent"
         // ----------------------------- App Settings -----------------------------------------------
 
         // -------------------------------- Customer Journey ----------------------------------------

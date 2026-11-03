@@ -9,6 +9,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ivy.base.legacy.Accent
 import com.ivy.base.legacy.Look
 import com.ivy.base.legacy.Theme
 import com.ivy.design.api.IvyDesign
@@ -166,14 +167,36 @@ abstract class IvyWalletDesign : IvyDesign {
     private val GlassAmoledCard = Color(0xCC151A24)
 
     @Deprecated("Old design system. Use `:ivy-design` and Material3")
-    override fun colors(theme: Theme, isDarkModeEnabled: Boolean, look: Look): IvyColors {
-        return when (look) {
+    override fun colors(
+        theme: Theme,
+        isDarkModeEnabled: Boolean,
+        look: Look,
+        accent: Accent,
+    ): IvyColors {
+        val base = when (look) {
             Look.IVY -> ivyPalette(theme, isDarkModeEnabled, look)
             Look.FOREST -> forestPalette(theme, isDarkModeEnabled)
             Look.GRAPHITE -> graphitePalette(theme, isDarkModeEnabled)
             Look.GLASS -> glassPalette(theme, isDarkModeEnabled)
         }
+        return applyAccent(base, accent)
     }
+
+    /**
+     * Remaps the primary token family onto the chosen [Accent]. DEFAULT is a no-op so each
+     * material keeps its signature accent. Implemented by delegation so material palettes
+     * stay untouched and the green/orange/red semantic tokens never shift.
+     */
+    private fun applyAccent(base: IvyColors, accent: Accent): IvyColors =
+        if (accent == Accent.DEFAULT) {
+            base
+        } else {
+            val family = AccentFamilies.family(accent)
+            object : IvyColors by base {
+                override val primary = if (base.isLight) family.light else family.night
+                override val primary1 = if (base.isLight) family.deep else family.pale
+            }
+        }
 
     private fun ivyPalette(theme: Theme, isDarkModeEnabled: Boolean, look: Look): IvyColors {
         return when (theme) {
@@ -443,6 +466,7 @@ abstract class IvyWalletDesign : IvyDesign {
         }
     }
 
+
     @Suppress("LongParameterList")
     private fun ivyColorsOf(
         look: Look,
@@ -506,5 +530,78 @@ abstract class IvyWalletDesign : IvyDesign {
             override val r4Top = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
             override val r4Bot = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
         }
+    }
+}
+
+/**
+ * The accent color families behind the [com.ivy.base.legacy.Accent] axis. Light palettes use
+ * [Family.light]/[Family.deep]; dark and AMOLED use [Family.night]/[Family.pale]. Every light
+ * shade is contrast-checked against white labels (>= 3:1), mirroring the Glass palette's rule.
+ *
+ * [signature] is the per-material accent used when the user keeps the DEFAULT accent - it
+ * mirrors the primary tokens hardcoded in the palette functions above.
+ */
+object AccentFamilies {
+    data class Family(
+        val light: Color,
+        val deep: Color,
+        val night: Color,
+        val pale: Color,
+    )
+
+    private val IVY_FAMILY = Family(
+        light = Color(0xFF6B4DFF),
+        deep = Color(0xFF352680),
+        night = Color(0xFF6B4DFF),
+        pale = Color(0xFFD5CCFF),
+    )
+
+    private val GREEN_FAMILY = Family(
+        light = Color(0xFF248A3D),
+        deep = Color(0xFF176332),
+        night = Color(0xFF30D158),
+        pale = Color(0xFFA5EEBD),
+    )
+
+    private val BLUE_FAMILY = Family(
+        light = Color(0xFF0A6BD8),
+        deep = Color(0xFF084B99),
+        night = Color(0xFF0A84FF),
+        pale = Color(0xFF9ECDFF),
+    )
+
+    private val ORANGE_FAMILY = Family(
+        light = Color(0xFFC77000),
+        deep = Color(0xFF8F4E00),
+        night = Color(0xFFFF9F0A),
+        pale = Color(0xFFFFD9A8),
+    )
+
+    private val PINK_FAMILY = Family(
+        light = Color(0xFFD6294F),
+        deep = Color(0xFF9E1A3A),
+        night = Color(0xFFFF375F),
+        pale = Color(0xFFFFB2C6),
+    )
+
+    fun family(accent: Accent): Family = when (accent) {
+        Accent.IVY -> IVY_FAMILY
+        Accent.GREEN -> GREEN_FAMILY
+        Accent.BLUE -> BLUE_FAMILY
+        Accent.ORANGE -> ORANGE_FAMILY
+        Accent.PINK -> PINK_FAMILY
+        Accent.DEFAULT -> IVY_FAMILY // never used - DEFAULT short-circuits before remapping
+    }
+
+    /** The primary color a given accent resolves to in the given mode. */
+    fun primaryColor(accent: Accent, isLight: Boolean): Color =
+        if (isLight) family(accent).light else family(accent).night
+
+    /** The signature accent of each material in the given mode - what DEFAULT resolves to. */
+    fun signature(look: Look, isLight: Boolean): Color = when (look) {
+        Look.IVY -> Color(0xFF6B4DFF)
+        Look.FOREST -> if (isLight) Color(0xFF178563) else Color(0xFF8FD9BC)
+        Look.GRAPHITE -> if (isLight) Color(0xFF2F2F35) else Color(0xFF78787F)
+        Look.GLASS -> if (isLight) Color(0xFF0A6BD8) else Color(0xFF0A84FF)
     }
 }

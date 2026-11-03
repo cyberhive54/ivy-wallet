@@ -526,5 +526,7 @@
     <string name="settings_accent_color">Accent color</string>
     <string name="settings_amoled_dark">AMOLED dark</string>
     <string name="settings_amoled_dark_description">True black for OLED displays</string>
+    <string name="settings_dock_translucent">Translucent dock</string>
+    <string name="settings_dock_translucent_description">Glass-style floating dock regardless of the selected material. Follows your accent color and mode.</string>
     <string name="settings_account">Account</string>
 </resources>

@@ -20,6 +20,7 @@ sealed interface SettingsEvent {
     data class SetTheme(val theme: Theme) : SettingsEvent
     data class SetLook(val look: String) : SettingsEvent
     data class SetAccentColor(val accentColor: String) : SettingsEvent
+    data class SetDockTranslucent(val translucent: Boolean) : SettingsEvent
     data object DeleteCloudUserData : SettingsEvent
     data object DeleteAllUserData : SettingsEvent
     data object SwitchLanguage : SettingsEvent
