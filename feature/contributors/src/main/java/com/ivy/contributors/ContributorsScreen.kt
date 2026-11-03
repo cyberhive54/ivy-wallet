@@ -234,7 +234,9 @@ private fun ContributorsErrorState(
 @Preview
 @Composable
 private fun PreviewSuccess(isDark: Boolean = false) {
-    PreviewSuccessContent()
+    IvyWalletPreview(theme = if (isDark) Theme.DARK else Theme.LIGHT) {
+        PreviewSuccessContent()
+    }
 }
 
 /** For screenshot testing */

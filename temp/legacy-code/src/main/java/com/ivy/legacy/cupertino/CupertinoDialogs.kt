@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -169,7 +170,7 @@ fun CupertinoAlertModal(
 }
 
 @Composable
-fun CupertinoAlertButton(
+fun RowScope.CupertinoAlertButton(
     label: String,
     weight: Float,
     filled: Boolean,

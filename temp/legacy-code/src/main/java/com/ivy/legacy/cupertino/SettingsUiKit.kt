@@ -50,6 +50,7 @@ import com.ivy.wallet.ui.theme.components.IvySwitch
 /** Bottom clearance for the floating dock rendered by MainScreen. */
 val CupertinoDockClearance: Dp = 130.dp
 
+@Composable
 fun cupertinoHairline(): Color = UI.colors.pureInverse.copy(alpha = 0.08f)
 
 /**
@@ -94,7 +95,11 @@ fun BoxWithConstraintsScope.CupertinoChildPage(
             }
         }
 
-        Box(Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
             content()
         }
     }

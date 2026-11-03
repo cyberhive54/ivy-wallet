@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,6 +35,7 @@ import com.ivy.importdata.csvimport.flow.ImportSteps
 import com.ivy.legacy.cupertino.CupertinoChildPage
 import com.ivy.legacy.cupertino.CupertinoDockClearance
 import com.ivy.legacy.cupertino.CupertinoFilledButton
+import com.ivy.legacy.cupertino.CupertinoSheetSeparator
 import com.ivy.legacy.domain.deprecated.logic.csv.model.ImportType
 import com.ivy.legacy.utils.drawColoredShadow
 import com.ivy.ui.R
@@ -93,6 +95,8 @@ fun VideoArticleRow(
     videoUrl: String?,
     articleUrl: String?
 ) {
+    val rootScreen = com.ivy.legacy.rootScreen()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -107,7 +111,6 @@ fun VideoArticleRow(
                 subtitle = stringResource(R.string.how_to),
                 external = true,
                 onClick = {
-                    val rootScreen = com.ivy.legacy.rootScreen()
                     rootScreen.openUrlInBrowser(videoUrl)
                 }
             )
@@ -124,7 +127,6 @@ fun VideoArticleRow(
                 subtitle = stringResource(R.string.how_to),
                 external = true,
                 onClick = {
-                    val rootScreen = com.ivy.legacy.rootScreen()
                     rootScreen.openUrlInBrowser(articleUrl)
                 }
             )

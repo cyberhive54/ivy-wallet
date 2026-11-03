@@ -35,7 +35,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 @SuppressLint("ComposeModifierMissing")
 @Composable
-fun BoxWithConstraintsScope.ImportResultUI(
+fun ImportResultUI(
     result: ImportResult,
     launchedFromOnboarding: Boolean,
     isManualCsvImport: Boolean = false,

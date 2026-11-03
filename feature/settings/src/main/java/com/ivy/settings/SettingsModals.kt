@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ivy.design.l0_system.UI
 import com.ivy.legacy.Constants
-import com.ivy.legacy.domain.data.IvyCurrency
+import com.ivy.wallet.domain.data.IvyCurrency
 import com.ivy.ui.R
 
 // -----------------------------------------------------------------------------------------

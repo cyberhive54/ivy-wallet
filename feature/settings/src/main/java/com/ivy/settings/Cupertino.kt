@@ -17,6 +17,7 @@ import com.ivy.legacy.cupertino.cupertinoHairline
 // unlike the legacy Box-overlay modals. Back press and outside tap dismiss.
 // -----------------------------------------------------------------------------------------
 
+@Composable
 internal fun hairline() = cupertinoHairline()
 
 /**
