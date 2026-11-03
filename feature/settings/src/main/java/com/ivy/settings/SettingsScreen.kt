@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -73,6 +75,7 @@ fun BoxWithConstraintsScope.SettingsScreen() {
 @Composable
 internal fun BoxWithConstraintsScope.SettingsRootContent(
     onOpenPage: (SettingsChildPage) -> Unit,
+    listState: LazyListState,
 ) {
     val viewModel: SettingsViewModel = screenScopedViewModel()
     val uiState = viewModel.uiState()
@@ -137,7 +140,8 @@ internal fun BoxWithConstraintsScope.SettingsRootContent(
         onSwitchLanguage = {
             viewModel.onEvent(SettingsEvent.SwitchLanguage)
         },
-        onOpenPage = onOpenPage
+        onOpenPage = onOpenPage,
+        listState = listState
     )
 }
 
@@ -172,7 +176,8 @@ private fun BoxWithConstraintsScope.UI(
     onSetStartDateOfMonth: (Int) -> Unit = {},
     onDeleteAllUserData: () -> Unit = {},
     onSwitchLanguage: () -> Unit = {},
-    onOpenPage: (SettingsChildPage) -> Unit = {}
+    onOpenPage: (SettingsChildPage) -> Unit = {},
+    listState: LazyListState = rememberLazyListState()
 ) {
     var currencyModalVisible by remember { mutableStateOf(false) }
     var nameModalVisible by remember { mutableStateOf(false) }
@@ -183,6 +188,7 @@ private fun BoxWithConstraintsScope.UI(
     var searchQuery by remember { mutableStateOf("") }
 
     LazyColumn(
+        state = listState,
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()

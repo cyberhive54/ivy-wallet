@@ -90,8 +90,19 @@ class IvyWalletCtx @Inject constructor() : IvyContext() {
     var mainTab by mutableStateOf(com.ivy.legacy.data.model.MainTab.HOME)
         private set
 
+    /**
+     * Increments every time the dock re-selects the tab that is already active
+     * (e.g. tapping "Settings" while already in Settings). Screens observe this
+     * counter to implement the iOS convention "tap current tab -> scroll to top".
+     */
+    var mainTabReclick by mutableStateOf(0)
+        private set
+
     @Deprecated("Legacy code. Don't use it, please.")
     fun selectMainTab(tab: com.ivy.legacy.data.model.MainTab) {
+        if (tab == mainTab) {
+            mainTabReclick += 1
+        }
         mainTab = tab
     }
 

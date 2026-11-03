@@ -178,6 +178,9 @@ fun RowScope.CupertinoAlertButton(
     onClick: () -> Unit,
 ) {
     val textColor = when {
+        // Filled destructive (red) button: white label in both light and dark modes.
+        // Never use `UI.colors.red` for the label here - red on red renders invisible.
+        filled && destructive -> Color.White
         destructive -> UI.colors.red
         filled -> UI.colors.pure
         else -> UI.colors.pureInverse

@@ -2,6 +2,7 @@ package com.ivy.contributors
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +44,9 @@ import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
 import com.ivy.ui.typography.ivyInter
 import kotlinx.collections.immutable.persistentListOf
+
+/** Number of contributor rows grouped into one inset card (iOS-style grouped list). */
+private const val CONTRIBUTORS_PER_GROUP = 15
 
 @Composable
 fun BoxWithConstraintsScope.ContributorsScreenImpl(
@@ -72,12 +77,22 @@ private fun BoxWithConstraintsScope.ContributorsUi(
         else -> stringResource(R.string.project_contributors)
     }
 
+    // Group contributors into cards of N rows with hairline separators. Rendering one
+    // card per row makes the rounded corners of adjacent cards meet and reads as
+    // inconsistent spacing between rows.
+    val contributors = (uiState.contributorsResponse as? ContributorsResponse.Success)
+        ?.contributors
+    val contributorGroups = remember(contributors) {
+        contributors?.chunked(CONTRIBUTORS_PER_GROUP) ?: emptyList()
+    }
+
     CupertinoChildPage(
         title = title,
         onClose = onClose,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             when (uiState.contributorsResponse) {
                 is ContributorsResponse.Error -> item(key = "error") {
@@ -108,15 +123,27 @@ private fun BoxWithConstraintsScope.ContributorsUi(
                     }
 
                     items(
-                        items = uiState.contributorsResponse.contributors
-                    ) { contributor ->
-                        ContributorRow(
-                            contributor = contributor,
-                            onClick = {
-                                if (contributor.githubProfileUrl.isNotBlank()) {
-                                    browser.openUri(contributor.githubProfileUrl)
-                                }
+                        count = contributorGroups.size,
+                        key = { groupIndex -> "contributor_group_$groupIndex" }
+                    ) { groupIndex ->
+                        val group = contributorGroups[groupIndex]
+                        val rows = mutableListOf<@Composable () -> Unit>()
+                        group.forEach { contributor ->
+                            rows += {
+                                ContributorRow(
+                                    contributor = contributor,
+                                    onClick = {
+                                        if (contributor.githubProfileUrl.isNotBlank()) {
+                                            browser.openUri(contributor.githubProfileUrl)
+                                        }
+                                    }
+                                )
                             }
+                        }
+
+                        CupertinoRowsCard(
+                            separatorStartIndent = 16.dp,
+                            rows = rows
                         )
                     }
                 }
@@ -159,39 +186,34 @@ private fun ProjectInfoCard(
     )
 }
 
+/** A single contributor row rendered inside a grouped [CupertinoRowsCard]. */
 @Composable
 private fun ContributorRow(
     contributor: Contributor,
     onClick: () -> Unit,
 ) {
-    CupertinoRowsCard(
-        rows = listOf(
-            {
-                CupertinoNavRow(
-                    icon = null,
-                    title = contributor.name,
-                    description = when (contributor.contributionsCount.toInt()) {
-                        1 -> stringResource(R.string.one_contribution)
-                        else -> stringResource(
-                            R.string.contributions_number,
-                            contributor.contributionsCount
-                        )
-                    },
-                    onClick = onClick,
-                    trailing = {
-                        AsyncImage(
-                            model = contributor.photoUrl,
-                            contentDescription = contributor.name,
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(UI.colors.medium)
-                                .background(cupertinoHairline())
-                        )
-                    }
-                )
-            }
-        )
+    CupertinoNavRow(
+        icon = null,
+        title = contributor.name,
+        description = when (contributor.contributionsCount.toInt()) {
+            1 -> stringResource(R.string.one_contribution)
+            else -> stringResource(
+                R.string.contributions_number,
+                contributor.contributionsCount
+            )
+        },
+        onClick = onClick,
+        trailing = {
+            AsyncImage(
+                model = contributor.photoUrl,
+                contentDescription = contributor.name,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(UI.colors.medium)
+                    .background(cupertinoHairline())
+            )
+        }
     )
 }
 

@@ -8,22 +8,28 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import com.ivy.attributions.AttributionsScreenImpl
 import com.ivy.contributors.ContributorsScreenImpl
 import com.ivy.exchangerates.ExchangeRatesScreen
 import com.ivy.features.FeaturesScreenImpl
 import com.ivy.importdata.csv.CSVScreen as CsvScreenUi
 import com.ivy.importdata.csvimport.ImportCSVScreen
+import com.ivy.legacy.ivyWalletCtx
 import com.ivy.navigation.CSVScreen
 import com.ivy.navigation.ImportScreen
 import com.ivy.navigation.navigation
+import com.ivy.navigation.screenScopedViewModel
 import com.ivy.releases.ReleasesScreenImpl
 
 /**
@@ -56,10 +62,45 @@ internal enum class SettingsChildPage {
 @Composable
 internal fun BoxWithConstraintsScope.SettingsFlowHost() {
     val nav = navigation()
+    val viewModel: SettingsViewModel = screenScopedViewModel()
+    val ivyContext = ivyWalletCtx()
 
     // Persisted as a CSV string for robust saveable state across process death.
     var stackRaw by rememberSaveable { mutableStateOf("") }
     var pushing by remember { mutableStateOf(true) }
+
+    // Hoisted ABOVE the child-page stack so the Settings root list keeps its scroll
+    // position when a child page is pushed on top of it (the root content is disposed
+    // while a child page is shown). Initial values come from the Activity-scoped
+    // ViewModel, which also preserves the position across dock tab switches.
+    val rootListState = rememberLazyListState(
+        initialFirstVisibleItemIndex = viewModel.rootListScrollIndex.intValue,
+        initialFirstVisibleItemScrollOffset = viewModel.rootListScrollOffset.intValue
+    )
+
+    // Continuously mirror the scroll position into the ViewModel.
+    LaunchedEffect(rootListState) {
+        snapshotFlow {
+            rootListState.firstVisibleItemIndex to rootListState.firstVisibleItemScrollOffset
+        }.collect { (index, offset) ->
+            viewModel.saveRootListScroll(index, offset)
+        }
+    }
+
+    // iOS convention: tapping the already-active Settings dock tab pops the child
+    // stack back to the root and scrolls the list to the top.
+    var lastSeenTabReclick by remember { mutableIntStateOf(ivyContext.mainTabReclick) }
+    LaunchedEffect(ivyContext.mainTabReclick) {
+        if (ivyContext.mainTabReclick == lastSeenTabReclick) return@LaunchedEffect
+        lastSeenTabReclick = ivyContext.mainTabReclick
+
+        if (stackRaw.isNotBlank()) {
+            pushing = false
+            stackRaw = ""
+        }
+        viewModel.saveRootListScroll(0, 0)
+        rootListState.animateScrollToItem(0)
+    }
 
     val stack: List<SettingsChildPage> = remember(stackRaw) {
         if (stackRaw.isBlank()) {
@@ -112,7 +153,8 @@ internal fun BoxWithConstraintsScope.SettingsFlowHost() {
     ) { page ->
         when (page) {
             null -> SettingsRootContent(
-                onOpenPage = { push(it) }
+                onOpenPage = { push(it) },
+                listState = rootListState
             )
 
             SettingsChildPage.ExchangeRates -> ExchangeRatesScreen(

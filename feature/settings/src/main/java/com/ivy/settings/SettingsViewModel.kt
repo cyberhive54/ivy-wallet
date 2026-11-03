@@ -73,6 +73,17 @@ class SettingsViewModel @Inject constructor(
     private val mockTheme = mutableStateOf(SettingsAppearance.MOCK_THEME_IVY)
     private val accentColor = mutableStateOf(SettingsAppearance.ACCENT_IVY)
 
+    // Root Settings list scroll position, synced from the UI. Backed by the
+    // (Activity-scoped) ViewModel so the position survives child-page push/pop
+    // and dock tab switches - it only resets on explicit scroll-to-top.
+    val rootListScrollIndex = mutableIntStateOf(0)
+    val rootListScrollOffset = mutableIntStateOf(0)
+
+    fun saveRootListScroll(index: Int, offset: Int) {
+        rootListScrollIndex.intValue = index
+        rootListScrollOffset.intValue = offset
+    }
+
     @Composable
     override fun uiState(): SettingsState {
         LaunchedEffect(Unit) {

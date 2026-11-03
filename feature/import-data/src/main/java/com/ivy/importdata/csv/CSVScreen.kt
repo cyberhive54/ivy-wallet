@@ -3,7 +3,9 @@ package com.ivy.importdata.csv
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,16 +14,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,7 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
@@ -39,12 +42,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ivy.design.l0_system.UI
-import com.ivy.design.l0_system.colorAs
-import com.ivy.design.l0_system.style
-import com.ivy.design.utils.thenIf
 import com.ivy.importdata.csvimport.flow.ImportProcessing
 import com.ivy.importdata.csvimport.flow.ImportResultUI
 import com.ivy.legacy.cupertino.CupertinoBackRow
+import com.ivy.legacy.cupertino.CupertinoFilledButton
+import com.ivy.legacy.cupertino.CupertinoInputContainer
+import com.ivy.legacy.cupertino.CupertinoSectionHeader
+import com.ivy.legacy.cupertino.cupertinoHairline
 import com.ivy.navigation.CSVScreen
 import com.ivy.onboarding.viewmodel.OnboardingViewModel
 import com.ivy.ui.R
@@ -97,7 +101,7 @@ private fun ImportUI(
         modifier = Modifier
             .fillMaxSize()
             .background(UI.colors.pure)
-            .systemBarsPadding()
+            .statusBarsPadding()
     ) {
         CupertinoBackRow(
             onClose = onClose,
@@ -109,62 +113,56 @@ private fun ImportUI(
         )
 
         Text(
-            modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 8.dp),
             text = stringResource(R.string.import_csv_file),
             style = ivyInter(34.sp, FontWeight.Bold, letterSpacing = (-0.5).sp),
             color = UI.colors.pureInverse
         )
 
         LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(
-                horizontal = 8.dp,
-                vertical = 16.dp,
-            )
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 20.dp)
         ) {
-        item(key = "import_btn") {
-            Spacer8()
-            Spacer8()
-            ImportButton(
-                onFilePick = {
-                    onEvent(CSVEvent.FilePicked(it))
+            item(key = "import_btn") {
+                ImportButton(
+                    onFilePick = {
+                        onEvent(CSVEvent.FilePicked(it))
+                    }
+                )
+                if (!launchedFromOnboarding) {
+                    Spacer8()
+                    Text(
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        text = stringResource(R.string.warning_import_csv_file).trimIndent(),
+                        style = ivyInter(13.sp, FontWeight.SemiBold),
+                        color = UI.colors.red
+                    )
+                } else {
+                    Spacer8()
+                    Text(
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        text = stringResource(R.string.import_a_csv_file_to_continue),
+                        style = ivyInter(15.sp, FontWeight.SemiBold),
+                        color = UI.colors.pureInverse
+                    )
                 }
-            )
-            if (!launchedFromOnboarding) {
-                Spacer8()
-                Text(
-                    text = stringResource(R.string.warning_import_csv_file).trimIndent(),
-                    style = UI.typo.c.colorAs(UI.colors.red),
-                    fontWeight = FontWeight.Bold,
-                )
-            } else {
-                Spacer8()
-                Spacer8()
-                Text(
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    text = stringResource(R.string.import_a_csv_file_to_continue),
-                    style = UI.typo.b2,
-                    fontWeight = FontWeight.SemiBold,
-                )
             }
-        }
-        if (state.csv != null) {
-            spacer8()
-            csvTable(state.csv)
-        }
-        if (state.columns != null && state.important != null) {
-            importantFields(state.columns, importantFields = state.important, onEvent = onEvent)
-        }
-        if (state.columns != null && state.transfer != null) {
-            transferFields(state.columns, state.transfer, onEvent = onEvent)
-        }
-        if (state.columns != null && state.optional != null) {
-            optionalFields(state.columns, state.optional, onEvent = onEvent)
-        }
-        continueButton(state.continueEnabled, onEvent)
-        item(key = "dock_clearance") {
-            Spacer(modifier = Modifier.height(130.dp))
-        }
+            if (state.csv != null) {
+                csvTable(state.csv)
+            }
+            if (state.columns != null && state.important != null) {
+                importantFields(state.columns, importantFields = state.important, onEvent = onEvent)
+            }
+            if (state.columns != null && state.transfer != null) {
+                transferFields(state.columns, state.transfer, onEvent = onEvent)
+            }
+            if (state.columns != null && state.optional != null) {
+                optionalFields(state.columns, state.optional, onEvent = onEvent)
+            }
+            continueButton(state.continueEnabled, onEvent)
+            item(key = "dock_clearance") {
+                Spacer(modifier = Modifier.height(130.dp))
+            }
         }
     }
 }
@@ -174,24 +172,15 @@ private fun ImportButton(
     onFilePick: (Uri) -> Unit,
 ) {
     val ivyContext = com.ivy.legacy.ivyWalletCtx()
-    Button(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
+    CupertinoFilledButton(
+        modifier = Modifier.padding(top = 8.dp),
+        label = stringResource(R.string.import_csv_file),
         onClick = {
             ivyContext.openFile {
                 onFilePick(it)
             }
         }
-    ) {
-        Text(
-            text = stringResource(R.string.import_csv_file),
-            style = UI.typo.b2.style(
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            ),
-        )
-    }
+    )
 }
 
 fun LazyListScope.spacer8() {
@@ -212,15 +201,20 @@ fun Spacer8(horizontal: Boolean = false) {
 private fun LazyListScope.csvTable(
     csv: List<CSVRow>,
 ) {
-    item {
+    item(key = "csv_table") {
+        Spacer(modifier = Modifier.height(16.dp))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(UI.colors.medium)
+                .border(1.dp, cupertinoHairline(), RoundedCornerShape(16.dp))
+                .padding(vertical = 4.dp)
                 .horizontalScroll(rememberScrollState())
         ) {
             val visibleRows = remember(csv) { csv.take(10) }
             visibleRows.forEachIndexed { index, row ->
-                CSVRow(row = row, header = index == 0, even = index % 2 == 0)
+                CSVRow(row = row, header = index == 0)
             }
         }
     }
@@ -230,16 +224,21 @@ private fun LazyListScope.csvTable(
 private fun CSVRow(
     row: CSVRow,
     header: Boolean,
-    even: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-    ) {
-        row.values.forEach { value ->
-            CSVCell(text = value, header = header, even = even)
+    Column(modifier = modifier) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            row.values.forEach { value ->
+                CSVCell(text = value, header = header)
+            }
         }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(cupertinoHairline())
+        )
     }
 }
 
@@ -247,20 +246,14 @@ private fun CSVRow(
 private fun CSVCell(
     text: String,
     header: Boolean,
-    even: Boolean,
 ) {
-    val medium = UI.colors.medium
     Text(
         modifier = Modifier
             .width(140.dp)
-            .border(1.dp, UI.colors.pureInverse)
-            .thenIf(even) {
-                this.background(medium)
-            }
-            .padding(all = 4.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         text = text.ifEmpty { " " },
-        style = UI.typo.nB1,
-        fontWeight = if (header) FontWeight.Bold else FontWeight.Normal,
+        style = ivyInter(13.sp, if (header) FontWeight.SemiBold else FontWeight.Normal),
+        color = if (header) UI.colors.pureInverse else UI.colors.gray,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
     )
@@ -275,29 +268,52 @@ private fun <M> LazyListScope.mappingRow(
 ) {
     item {
         Spacer8()
+        val borderColor = when {
+            mapping.required && !status.success -> UI.colors.red
+            status.success -> UI.colors.green
+            else -> cupertinoHairline()
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(
-                    width = 2.dp,
-                    color = when {
-                        mapping.required && !status.success -> UI.colors.red
-                        status.success -> UI.colors.green
-                        else -> UI.colors.medium
-                    },
-                    shape = RoundedCornerShape(4.dp),
-                )
-                .padding(vertical = 8.dp, horizontal = 8.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(UI.colors.medium)
+                .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+                .padding(all = 16.dp)
         ) {
-            Text(
-                text = mapping.ivyColumn,
-                style = UI.typo.b1.colorAs(UI.colors.primary),
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(
+                            when {
+                                mapping.required && !status.success -> UI.colors.red
+                                status.success -> UI.colors.green
+                                else -> UI.colors.gray
+                            }
+                        )
+                )
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Text(
+                    text = mapping.ivyColumn,
+                    style = ivyInter(17.sp, FontWeight.Medium),
+                    color = UI.colors.pureInverse
+                )
+            }
+
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = mapping.helpInfo, style = UI.typo.c.colorAs(UI.colors.gray))
+            Text(text = mapping.helpInfo, style = ivyInter(13.sp), color = UI.colors.gray)
             Spacer8()
-            Text(text = "Choose a matching CSV column:", style = UI.typo.b2)
-            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Choose a matching CSV column:",
+                style = ivyInter(13.sp, FontWeight.Medium),
+                color = UI.colors.pureInverse
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -305,9 +321,9 @@ private fun <M> LazyListScope.mappingRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 columns.values.forEachIndexed { index, column ->
-                    EnabledButton(
+                    CupertinoChip(
                         text = column,
-                        enabled = column == mapping.name
+                        selected = column == mapping.name
                     ) {
                         onMapTo(index, column)
                     }
@@ -322,27 +338,67 @@ private fun <M> LazyListScope.mappingRow(
 
             if (status.sampleValues.isNotEmpty()) {
                 Spacer8()
-                CSVRow(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    row = CSVRow(status.sampleValues),
-                    header = false,
-                    even = true
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(UI.colors.pure)
+                        .border(1.dp, cupertinoHairline(), RoundedCornerShape(12.dp))
+                        .padding(all = 8.dp)
+                ) {
+                    CSVRow(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        row = CSVRow(status.sampleValues),
+                        header = false
+                    )
+                }
             }
         }
     }
 }
 
+/** iOS-style selection pill used for mapping CSV columns and options. */
+@Composable
+private fun CupertinoChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(if (selected) UI.colors.pureInverse else UI.colors.pure)
+            .border(
+                width = 1.dp,
+                color = if (selected) {
+                    UI.colors.pureInverse
+                } else {
+                    cupertinoHairline()
+                },
+                shape = RoundedCornerShape(999.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = text,
+            style = ivyInter(13.sp, if (selected) FontWeight.SemiBold else FontWeight.Normal),
+            color = if (selected) UI.colors.pure else UI.colors.pureInverse,
+            maxLines = 1
+        )
+    }
+}
+
 fun LazyListScope.sectionDivider(text: String) {
     item {
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(text = text, style = UI.typo.b1)
+        CupertinoSectionHeader(text = text)
         Text(
+            modifier = Modifier.padding(start = 32.dp, end = 32.dp),
             text = """
                 Match the CSV column with the appropriate Ivy type.
                 If the parsing is successful the border will turn green.
             """.trimIndent(),
-            style = UI.typo.nB2,
+            style = ivyInter(13.sp),
             color = UI.colors.gray
         )
         Spacer8()
@@ -425,9 +481,10 @@ private fun AmountMetadata(
     multiplier: Int,
     onMetaChange: (Int) -> Unit,
 ) {
-    Text(text = "Multiplier", style = UI.typo.nB2)
+    Text(text = "Multiplier", style = ivyInter(13.sp, FontWeight.Medium), color = UI.colors.gray)
+    Spacer(modifier = Modifier.height(6.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Button(onClick = {
+        CupertinoPillAction(text = "/10") {
             onMetaChange(
                 when {
                     multiplier < 0 -> multiplier * 10
@@ -435,8 +492,6 @@ private fun AmountMetadata(
                     else -> multiplier / 10
                 }
             )
-        }) {
-            Text(text = "/10")
         }
         Spacer8(horizontal = true)
         Text(
@@ -445,11 +500,11 @@ private fun AmountMetadata(
                 multiplier > 1 -> "*${abs(multiplier)}"
                 else -> "None"
             },
-            style = UI.typo.nB2,
-            color = UI.colors.primary,
+            style = ivyInter(15.sp, FontWeight.SemiBold),
+            color = UI.colors.pureInverse,
         )
         Spacer8(horizontal = true)
-        Button(onClick = {
+        CupertinoPillAction(text = "*10") {
             onMetaChange(
                 when {
                     multiplier == -10 -> 1
@@ -458,9 +513,29 @@ private fun AmountMetadata(
                     else -> multiplier / 10
                 }
             )
-        }) {
-            Text(text = "*10")
         }
+    }
+}
+
+/** Small filled pill for compact inline actions (e.g. "/10", "*10"). */
+@Composable
+private fun CupertinoPillAction(
+    text: String,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(UI.colors.pureInverse)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = text,
+            style = ivyInter(13.sp, FontWeight.SemiBold),
+            color = UI.colors.pure,
+            maxLines = 1
+        )
     }
 }
 
@@ -490,7 +565,7 @@ private fun TypeMetadata(
         }
     )
     Spacer8()
-    Text(text = "(optional)", style = UI.typo.c)
+    Text(text = "(optional)", style = ivyInter(12.sp), color = UI.colors.gray)
     LabelContainsField(
         label = "Transfer",
         value = metadata.transfer ?: "",
@@ -507,21 +582,32 @@ fun LabelContainsField(
     onValueChange: (String) -> Unit,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = label, color = UI.colors.primary, style = UI.typo.nB1)
-        Text(text = " contains ", style = UI.typo.c)
+        Text(
+            text = label,
+            color = UI.colors.pureInverse,
+            style = ivyInter(15.sp, FontWeight.Medium)
+        )
+        Text(text = " contains ", style = ivyInter(13.sp), color = UI.colors.gray)
         Spacer8(horizontal = true)
         var textField by remember {
             // move the cursor at the end of the text
             mutableStateOf(TextFieldValue(value, TextRange(value.length)))
         }
-        TextField(
-            value = textField,
-            onValueChange = {
-                textField = it
-                onValueChange(it.text)
-            },
-            singleLine = true
-        )
+        Box(modifier = Modifier.weight(1f)) {
+            CupertinoInputContainer {
+                BasicTextField(
+                    value = textField,
+                    onValueChange = {
+                        textField = it
+                        onValueChange(it.text)
+                    },
+                    singleLine = true,
+                    textStyle = ivyInter(15.sp).copy(color = UI.colors.pureInverse),
+                    cursorBrush = SolidColor(UI.colors.pureInverse),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
     }
 }
 // endregion
@@ -531,41 +617,28 @@ private fun DateMetadataUI(
     metadata: DateMetadata,
     onEvent: (CSVEvent) -> Unit,
 ) {
-    Text(text = "Which is first in the format?")
+    Text(
+        text = "Which is first in the format?",
+        style = ivyInter(13.sp, FontWeight.Medium),
+        color = UI.colors.gray
+    )
+    Spacer(modifier = Modifier.height(6.dp))
     Row {
-        EnabledButton(
-            enabled = metadata == DateMetadata.DateFirst,
+        CupertinoChip(
+            selected = metadata == DateMetadata.DateFirst,
             text = "Date/Day (1,2,3...31)",
             onClick = {
                 onEvent(CSVEvent.DataMetaChange(DateMetadata.DateFirst))
             }
         )
         Spacer8(horizontal = true)
-        EnabledButton(
-            enabled = metadata == DateMetadata.MonthFirst,
+        CupertinoChip(
+            selected = metadata == DateMetadata.MonthFirst,
             text = "Month (1,2..12 / Jan, Feb..Dec)",
             onClick = {
                 onEvent(CSVEvent.DataMetaChange(DateMetadata.MonthFirst))
             }
         )
-    }
-}
-
-@Composable
-private fun EnabledButton(
-    text: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Button(
-        colors = if (enabled) {
-            ButtonDefaults.buttonColors()
-        } else {
-            ButtonDefaults.outlinedButtonColors()
-        },
-        onClick = onClick
-    ) {
-        Text(text = text)
     }
 }
 // endregion
@@ -669,27 +742,15 @@ private fun LazyListScope.continueButton(
     enabled: Boolean,
     onEvent: (CSVEvent) -> Unit,
 ) {
-    item {
+    item(key = "continue_btn") {
         Spacer8()
-        Spacer8()
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
+        CupertinoFilledButton(
+            label = stringResource(R.string.import_csv_continue),
             enabled = enabled,
             onClick = {
                 onEvent(CSVEvent.Continue)
             }
-        ) {
-            Text(
-                text = stringResource(R.string.import_csv_continue),
-                style = UI.typo.b2.style(
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                ),
-            )
-        }
-        Spacer8()
+        )
         Spacer8()
     }
 }
