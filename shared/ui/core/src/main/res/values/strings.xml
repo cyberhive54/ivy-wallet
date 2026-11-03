@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="accounts">Accounts</string>
+    <string name="menu">Menu</string>
     <string name="total">Total: %1$s %2$s</string>
     <string name="month_income">INCOME THIS MONTH</string>
     <string name="month_expenses">EXPENSES THIS MONTH</string>

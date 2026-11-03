@@ -14,6 +14,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ivy.accounts.AccountsTab
 import com.ivy.base.model.TransactionType
 import com.ivy.home.HomeTab
+import com.ivy.home.MenuTab
+import com.ivy.settings.SettingsScreen
 import com.ivy.legacy.IvyWalletPreview
 import com.ivy.legacy.data.model.MainTab
 import com.ivy.legacy.ivyWalletCtx
@@ -63,6 +65,8 @@ private fun BoxWithConstraintsScope.UI(
     when (tab) {
         MainTab.HOME -> HomeTab()
         MainTab.ACCOUNTS -> AccountsTab()
+        MainTab.MENU -> MenuTab()
+        MainTab.SETTINGS -> SettingsScreen()
     }
 
     var accountModalData: AccountModalData? by remember { mutableStateOf(null) }

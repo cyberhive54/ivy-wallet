@@ -3,21 +3,29 @@ package com.ivy.main
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,6 +37,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -37,8 +47,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.ivy.design.l0_system.TrueBlack
 import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
 import com.ivy.design.utils.thenIf
@@ -46,6 +58,7 @@ import com.ivy.legacy.data.model.MainTab
 import com.ivy.legacy.ivyWalletCtx
 import com.ivy.legacy.utils.clickableNoIndication
 import com.ivy.legacy.utils.densityScope
+import com.ivy.legacy.utils.drawColoredShadow
 import com.ivy.legacy.utils.lerp
 import com.ivy.legacy.utils.navigationBarInset
 import com.ivy.legacy.utils.rememberInteractionSource
@@ -71,6 +84,10 @@ import kotlin.math.roundToInt
 
 val TRN_BUTTON_CLICK_AREA_HEIGHT = 150.dp
 val FAB_BUTTON_SIZE = 56.dp
+val DOCK_HEIGHT = 68.dp
+val DOCK_BOTTOM_MARGIN = 14.dp
+val DOCK_HORIZONTAL_MARGIN = 16.dp
+val CENTER_FAB_SIZE = 52.dp
 
 @Deprecated("Old design system. Use `:ivy-design` and Material3")
 @Composable
@@ -114,36 +131,179 @@ fun BoxWithConstraintsScope.BottomBar(
         animationSpec = springBounceFast()
     )
 
-    Row(
+    val isLight = UI.colors.pure == White
+    val isAmoled = UI.colors.pure == TrueBlack
+
+    val dockBg = when {
+        isLight -> Color(0xFFFFFFFF).copy(alpha = 0.96f)
+        isAmoled -> Color(0xFF141418).copy(alpha = 0.97f)
+        else -> Color(0xFF262732).copy(alpha = 0.95f)
+    }
+
+    val dockBorderColor = when {
+        isLight -> Color(0xFFE2E4EB).copy(alpha = 0.85f)
+        isAmoled -> Color.White.copy(alpha = 0.18f)
+        else -> Color.White.copy(alpha = 0.14f)
+    }
+
+    val shadowColor = when {
+        isLight -> Color(0xFF0F172A)
+        isAmoled -> Ivy
+        else -> Color.Black
+    }
+
+    val shadowAlpha = when {
+        isLight -> 0.18f
+        isAmoled -> 0.22f
+        else -> 0.50f
+    }
+
+    val pillBg = when {
+        isLight -> Color(0xFFF1EEFF)
+        isAmoled -> Ivy.copy(alpha = 0.28f)
+        else -> Ivy.copy(alpha = 0.22f)
+    }
+
+    val activeTabColor = when {
+        isLight -> Ivy
+        isAmoled -> Color(0xFFA592FF)
+        else -> Color(0xFF9B82FF)
+    }
+
+    val unselectedTabColor = when {
+        isLight -> Color(0xFF525763)
+        isAmoled -> Color.White.copy(alpha = 0.65f)
+        else -> Color.White.copy(alpha = 0.55f)
+    }
+
+    val targetSlot = when (tab) {
+        MainTab.HOME -> 0f
+        MainTab.ACCOUNTS -> 1f
+        MainTab.MENU -> 3f
+        MainTab.SETTINGS -> 4f
+    }
+
+    val animatedSlot by animateFloatAsState(
+        targetValue = targetSlot,
+        animationSpec = spring(
+            dampingRatio = 0.74f,
+            stiffness = 380f
+        ),
+        label = "dock_sliding_pill"
+    )
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .align(Alignment.BottomCenter)
-            .background(pureBlur())
             .alpha(1f - buttonsShownPercent)
             .navigationBarsPadding()
+            .padding(
+                bottom = DOCK_BOTTOM_MARGIN,
+                start = DOCK_HORIZONTAL_MARGIN,
+                end = DOCK_HORIZONTAL_MARGIN
+            )
+            .drawColoredShadow(
+                color = shadowColor,
+                alpha = shadowAlpha,
+                borderRadius = 35.dp,
+                shadowRadius = 24.dp,
+                offsetY = 6.dp
+            )
+            .shadow(
+                elevation = if (isLight) 10.dp else 12.dp,
+                shape = RoundedCornerShape(35.dp),
+                clip = false,
+                spotColor = Color.Black.copy(alpha = if (isLight) 0.20f else 0.45f),
+                ambientColor = Color.Black.copy(alpha = if (isLight) 0.08f else 0.25f)
+            )
+            .clip(RoundedCornerShape(35.dp))
+            .background(dockBg)
+            .border(
+                width = 1.dp,
+                color = dockBorderColor,
+                shape = RoundedCornerShape(35.dp)
+            )
+            .height(DOCK_HEIGHT)
             .clickableNoIndication(rememberInteractionSource()) {
                 // consume click
-            },
-        verticalAlignment = Alignment.CenterVertically
+            }
     ) {
-        Tab(
-            icon = R.drawable.ic_home,
-            name = stringResource(R.string.home),
-            selected = tab == MainTab.HOME,
-            selectedColor = Ivy
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize()
         ) {
-            selectTab(MainTab.HOME)
-        }
+            val totalWidthPx = constraints.maxWidth.toFloat()
+            val totalHeightPx = constraints.maxHeight.toFloat()
+            val slotWidthPx = totalWidthPx / 5f
+            val slotWidthDp = densityScope { slotWidthPx.toDensityDp() }
+            val pillWidth = (slotWidthDp - 4.dp).coerceAtLeast(42.dp)
+            val pillHeight = 58.dp
 
-        Spacer(Modifier.width(FAB_BUTTON_SIZE))
+            // Liquid Sliding Pill Indicator
+            Box(
+                modifier = Modifier
+                    .offset {
+                        val pillWidthPx = pillWidth.toPx()
+                        val pillHeightPx = pillHeight.toPx()
+                        val x = (animatedSlot * slotWidthPx + (slotWidthPx - pillWidthPx) / 2f).roundToInt()
+                        val y = ((totalHeightPx - pillHeightPx) / 2f).roundToInt()
+                        IntOffset(x, y)
+                    }
+                    .size(width = pillWidth, height = pillHeight)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(pillBg)
+            )
 
-        Tab(
-            icon = R.drawable.ic_accounts,
-            name = stringResource(R.string.accounts),
-            selected = tab == MainTab.ACCOUNTS,
-            selectedColor = Green
-        ) {
-            selectTab(MainTab.ACCOUNTS)
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                DockTab(
+                    activeIcon = R.drawable.ic_home_filled,
+                    inactiveIcon = R.drawable.ic_home,
+                    name = stringResource(R.string.home),
+                    selected = tab == MainTab.HOME,
+                    selectedColor = activeTabColor,
+                    unselectedColor = unselectedTabColor
+                ) {
+                    selectTab(MainTab.HOME)
+                }
+
+                DockTab(
+                    activeIcon = R.drawable.ic_accounts_filled,
+                    inactiveIcon = R.drawable.ic_accounts,
+                    name = stringResource(R.string.accounts),
+                    selected = tab == MainTab.ACCOUNTS,
+                    selectedColor = activeTabColor,
+                    unselectedColor = unselectedTabColor
+                ) {
+                    selectTab(MainTab.ACCOUNTS)
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                DockTab(
+                    activeIcon = R.drawable.ic_menu_filled,
+                    inactiveIcon = R.drawable.ic_menu,
+                    name = stringResource(R.string.menu),
+                    selected = tab == MainTab.MENU,
+                    selectedColor = activeTabColor,
+                    unselectedColor = unselectedTabColor
+                ) {
+                    selectTab(MainTab.MENU)
+                }
+
+                DockTab(
+                    activeIcon = R.drawable.ic_settings_filled,
+                    inactiveIcon = R.drawable.ic_settings,
+                    name = stringResource(R.string.settings),
+                    selected = tab == MainTab.SETTINGS,
+                    selectedColor = activeTabColor,
+                    unselectedColor = unselectedTabColor
+                ) {
+                    selectTab(MainTab.SETTINGS)
+                }
+            }
         }
     }
 
@@ -161,9 +321,13 @@ fun BoxWithConstraintsScope.BottomBar(
     }
 
     // ------------------------------------ BUTTONS--------------------------------------------------
-    val fabStartX = ivyContext.screenWidth / 2 - FAB_BUTTON_SIZE.toDensityPx() / 2
+    val dockBottomMarginPx = densityScope { DOCK_BOTTOM_MARGIN.toDensityPx() }
+    val dockHeightPx = densityScope { DOCK_HEIGHT.toDensityPx() }
+    val centerFabSizePx = densityScope { CENTER_FAB_SIZE.toDensityPx() }
+
+    val fabStartX = ivyContext.screenWidth / 2f - centerFabSizePx / 2f
     val fabStartY = ivyContext.screenHeight - navigationBarInset() -
-            30.dp.toDensityPx() - FAB_BUTTON_SIZE.toDensityPx()
+            dockBottomMarginPx - (dockHeightPx / 2f) - (centerFabSizePx / 2f)
 
     TransactionButtons(
         buttonsShownPercent = buttonsShownPercent,
@@ -192,10 +356,10 @@ fun BoxWithConstraintsScope.BottomBar(
                     )
                 }
             }
-            .size(FAB_BUTTON_SIZE)
+            .size(CENTER_FAB_SIZE)
             .rotate(fabRotation)
             .zIndex(200f)
-            .thenIf(tab == MainTab.HOME) {
+            .thenIf(tab != MainTab.ACCOUNTS) {
                 pointerInput(Unit) {
                     detectDragGestures(
                         onDragCancel = {
@@ -237,30 +401,27 @@ fun BoxWithConstraintsScope.BottomBar(
                 }
             }
             .testTag("fab_add"),
-        backgroundPadding = 8.dp,
+        backgroundPadding = 6.dp,
         icon = R.drawable.ic_add,
         backgroundGradient = when (tab) {
-            MainTab.HOME -> {
-                if (!expanded) GradientIvy else Gradient.solid(UI.colors.gray)
-            }
-
             MainTab.ACCOUNTS -> {
                 GradientGreen
             }
+
+            else -> {
+                if (!expanded) GradientIvy else Gradient.solid(UI.colors.gray)
+            }
         },
         hasShadow = !expanded,
-        tint = when (tab) {
-            MainTab.HOME -> White
-            MainTab.ACCOUNTS -> White
-        }
+        tint = White
     ) {
         when (tab) {
-            MainTab.HOME -> {
-                expanded = !expanded
-            }
-
             MainTab.ACCOUNTS -> {
                 showAddAccountModal()
+            }
+
+            else -> {
+                expanded = !expanded
             }
         }
     }
@@ -610,38 +771,53 @@ private fun AddTransferButton(
 }
 
 @Composable
-private fun RowScope.Tab(
-    @DrawableRes icon: Int,
+private fun RowScope.DockTab(
+    @DrawableRes activeIcon: Int,
+    @DrawableRes inactiveIcon: Int,
     name: String,
     selected: Boolean,
     selectedColor: Color,
+    unselectedColor: Color,
     onClick: () -> Unit,
 ) {
-    Row(
+    val iconScale by animateFloatAsState(
+        targetValue = if (selected) 1.08f else 1f,
+        animationSpec = spring(
+            dampingRatio = 0.65f,
+            stiffness = 400f
+        ),
+        label = "dock_tab_scale"
+    )
+
+    Column(
         modifier = Modifier
             .weight(1f)
-            .clip(UI.shapes.rFull)
-            .clickable(onClick = onClick)
-            .padding(top = 12.dp, bottom = 16.dp)
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(percent = 50))
+            .clickableNoIndication(rememberInteractionSource()) {
+                onClick()
+            }
             .testTag(name.lowercase()),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         IvyIcon(
-            icon = icon,
-            tint = if (selected) selectedColor else UI.colors.pureInverse
+            modifier = Modifier
+                .size(24.dp)
+                .scale(iconScale),
+            icon = if (selected) activeIcon else inactiveIcon,
+            tint = if (selected) selectedColor else unselectedColor
         )
 
-        if (selected) {
-            Spacer(modifier = Modifier.width(4.dp))
+        Spacer(Modifier.height(2.dp))
 
-            Text(
-                text = name,
-                style = UI.typo.c.style(
-                    fontWeight = FontWeight.Bold,
-                    color = selectedColor
-                )
+        Text(
+            text = name,
+            style = UI.typo.c.style(
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                color = if (selected) selectedColor else unselectedColor,
+                textAlign = TextAlign.Center
             )
-        }
+        )
     }
 }

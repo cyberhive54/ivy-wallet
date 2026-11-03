@@ -186,7 +186,7 @@ fun BoxWithConstraintsScope.MoreMenu(
                 setExpanded(false)
             }
 
-            Content(
+            MoreMenuContent(
                 theme = theme,
                 onSwitchTheme = onSwitchTheme,
                 balance = balance,
@@ -223,7 +223,7 @@ fun BoxWithConstraintsScope.MoreMenu(
 }
 
 @Composable
-private fun ColumnScope.Content(
+internal fun ColumnScope.MoreMenuContent(
     balance: Double,
     buffer: Double,
     currency: String,
