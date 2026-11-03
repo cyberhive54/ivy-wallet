@@ -1,188 +1,110 @@
 package com.ivy.features
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.ivy.design.system.colors.IvyColors.Gray
-import com.ivy.navigation.navigation
+import com.ivy.legacy.cupertino.CupertinoChildPage
+import com.ivy.legacy.cupertino.CupertinoDockClearance
+import com.ivy.legacy.cupertino.CupertinoRowsCard
+import com.ivy.legacy.cupertino.CupertinoSwitchRow
 import com.ivy.navigation.screenScopedViewModel
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-fun FeaturesScreenImpl(
-    viewModel: FeaturesViewModel = screenScopedViewModel()
+fun BoxWithConstraintsScope.FeaturesScreenImpl(
+    onClose: (() -> Unit)? = null,
+    viewModel: FeaturesViewModel = screenScopedViewModel(),
 ) {
     FeaturesUi(
         uiState = viewModel.uiState(),
-        onEvent = viewModel::onEvent
+        onEvent = viewModel::onEvent,
+        onClose = onClose ?: {}
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FeaturesUi(
+private fun BoxWithConstraintsScope.FeaturesUi(
     uiState: FeaturesUiState,
     onEvent: (FeaturesUiEvent) -> Unit,
+    onClose: () -> Unit,
 ) {
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Title()
-                },
-                navigationIcon = {
-                    BackButton()
-                },
-            )
-        },
-        content = { innerPadding ->
-            Content(
-                modifier = Modifier.padding(innerPadding),
-                items = uiState.featureItemViewStates,
-                onToggleFeature = {
-                    onEvent(FeaturesUiEvent.ToggleFeature(it))
-                }
-            )
-        }
-    )
-}
-
-@Composable
-private fun BackButton(
-    modifier: Modifier = Modifier,
-) {
-    val nav = navigation()
-    IconButton(
-        modifier = modifier,
-        onClick = {
-            nav.back()
-        }
+    CupertinoChildPage(
+        title = "Features",
+        onClose = onClose,
     ) {
-        Icon(
-            imageVector = Icons.Filled.ArrowBack,
-            contentDescription = "Back"
-        )
-    }
-}
-
-@Composable
-private fun Title(
-    modifier: Modifier = Modifier,
-) {
-    Text(
-        modifier = modifier,
-        text = "Features",
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis
-    )
-}
-
-@Composable
-private fun Content(
-    items: ImmutableList<FeatureItemViewState>,
-    onToggleFeature: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = PaddingValues(
-            horizontal = 16.dp,
-            vertical = 12.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(items) { item ->
-            when (item) {
-                is FeatureItemViewState.FeatureHeaderViewState -> {
-                    FeatureSectionDivider(text = item.name)
-                }
-
-                is FeatureItemViewState.FeatureToggleViewState -> {
-                    FeatureRow(
-                        feature = item,
-                        onToggleClick = { onToggleFeature(item.key) }
-                    )
-                }
-            }
+        val groups = remember(uiState.featureItemViewStates) {
+            groupFeatureItems(uiState.featureItemViewStates)
         }
-    }
-}
 
-@Composable
-private fun FeatureRow(
-    feature: FeatureItemViewState.FeatureToggleViewState,
-    onToggleClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxSize(),
-        onClick = onToggleClick,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = feature.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.W700
-                )
-                if (feature.description != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = feature.description,
-                        style = MaterialTheme.typography.bodySmall,
+            groups.forEach { group ->
+                item(key = group.header) {
+                    CupertinoRowsCard(
+                        header = group.header,
+                        separatorStartIndent = 16.dp,
+                        rows = group.features.map { feature ->
+                            {
+                                CupertinoSwitchRow(
+                                    icon = null,
+                                    title = feature.name,
+                                    description = feature.description,
+                                    checked = feature.enabled,
+                                    onToggle = { onEvent(FeaturesUiEvent.ToggleFeature(feature.key)) }
+                                )
+                            }
+                        }
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Switch(checked = feature.enabled, onCheckedChange = { onToggleClick() })
+
+            item(key = "dock_clearance") {
+                Spacer(Modifier.height(CupertinoDockClearance))
+            }
         }
     }
 }
 
-@Composable
-private fun FeatureSectionDivider(
-    text: String,
-    color: Color = Gray
-) {
-    Column {
-        Spacer(Modifier.height(16.dp))
+private data class FeatureGroup(
+    val header: String?,
+    val features: List<FeatureItemViewState.FeatureToggleViewState>,
+)
 
-        Text(
-            modifier = Modifier.padding(start = 16.dp),
-            text = text,
-            style = MaterialTheme.typography.titleMedium.copy(
-                color = color,
-                fontWeight = FontWeight.Bold
-            )
-        )
+private fun groupFeatureItems(
+    items: ImmutableList<FeatureItemViewState>,
+): List<FeatureGroup> {
+    val groups = mutableListOf<FeatureGroup>()
+    var currentHeader: String? = null
+    var currentFeatures = mutableListOf<FeatureItemViewState.FeatureToggleViewState>()
+
+    fun flush() {
+        if (currentFeatures.isNotEmpty()) {
+            groups.add(FeatureGroup(header = currentHeader, features = currentFeatures.toList()))
+        }
+        currentFeatures = mutableListOf()
     }
+
+    items.forEach { item ->
+        when (item) {
+            is FeatureItemViewState.FeatureHeaderViewState -> {
+                flush()
+                currentHeader = item.name
+            }
+
+            is FeatureItemViewState.FeatureToggleViewState -> {
+                currentFeatures.add(item)
+            }
+        }
+    }
+    flush()
+
+    return groups
 }

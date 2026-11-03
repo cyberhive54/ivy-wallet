@@ -1,12 +1,24 @@
 package com.ivy.exchangerates
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -15,36 +27,42 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ivy.base.legacy.Theme
 import com.ivy.design.l0_system.UI
-import com.ivy.design.l0_system.style
-import com.ivy.design.l1_buildingBlocks.ColumnRoot
-import com.ivy.design.l1_buildingBlocks.DividerW
-import com.ivy.design.l1_buildingBlocks.SpacerHor
-import com.ivy.design.l1_buildingBlocks.SpacerVer
-import com.ivy.exchangerates.component.RateItem
 import com.ivy.exchangerates.data.RateUi
-import com.ivy.exchangerates.modal.AddRateModal
 import com.ivy.legacy.IvyWalletPreview
-import com.ivy.legacy.ui.SearchInput
-import com.ivy.legacy.utils.selectEndTextFieldValue
-import com.ivy.navigation.navigation
-import com.ivy.wallet.ui.theme.modal.edit.AmountModal
-import kotlinx.collections.immutable.persistentListOf
-import java.util.UUID
+import com.ivy.legacy.cupertino.CupertinoChildPage
+import com.ivy.legacy.cupertino.CupertinoDockClearance
+import com.ivy.legacy.cupertino.CupertinoFilledButton
+import com.ivy.legacy.cupertino.CupertinoSectionHeader
+import com.ivy.legacy.cupertino.cupertinoHairline
+import com.ivy.legacy.utils.format
+import com.ivy.ui.R
+import com.ivy.ui.typography.ivyInter
+import com.ivy.wallet.ui.theme.components.DeleteButton
 
 @Composable
-fun BoxWithConstraintsScope.ExchangeRatesScreen() {
+fun BoxWithConstraintsScope.ExchangeRatesScreen(
+    onClose: (() -> Unit)? = null,
+) {
     val viewModel: ExchangeRatesViewModel = viewModel()
     val state = viewModel.uiState()
 
     UI(
         state = state,
         onEvent = viewModel::onEvent,
+        onClose = onClose,
     )
 }
 
@@ -52,117 +70,139 @@ fun BoxWithConstraintsScope.ExchangeRatesScreen() {
 private fun BoxWithConstraintsScope.UI(
     state: RatesState,
     onEvent: (RatesEvent) -> Unit,
+    onClose: (() -> Unit)? = null,
 ) {
-    val nav = navigation()
-    var amountModalVisible by remember {
-        mutableStateOf(false)
-    }
     var rateToUpdate by remember {
         mutableStateOf<RateUi?>(null)
     }
-    var amountModalId by remember {
-        mutableStateOf(UUID.randomUUID())
-    }
-    val onRateClick = { rate: RateUi ->
-        rateToUpdate = rate
-        amountModalId = UUID.randomUUID()
-        amountModalVisible = true
-    }
-
-    ColumnRoot {
-        SpacerVer(height = 16.dp)
-        SearchField(onSearch = { onEvent(RatesEvent.Search(it)) })
-        SpacerVer(height = 4.dp)
-        LazyColumn {
-            ratesSection(text = "Manual")
-            items(items = state.manual) { rate ->
-                SpacerVer(height = 4.dp)
-                RateItem(
-                    rate = rate,
-                    onDelete = { onEvent(RatesEvent.RemoveOverride(rate)) },
-                    onClick = { onRateClick(rate) }
-                )
-            }
-            ratesSection(text = "Automatic")
-            items(items = state.automatic) { rate ->
-                SpacerVer(height = 4.dp)
-                RateItem(
-                    rate = rate,
-                    onDelete = null,
-                    onClick = { onRateClick(rate) }
-                )
-            }
-            item(key = "last_item_spacer") {
-                SpacerVer(height = 480.dp)
-            }
-        }
-    }
-
     var addRateModalVisible by remember {
         mutableStateOf(false)
     }
 
-    ExchangeRatesBottomBar(
-        onClose = { nav.back() },
-        onAddRate = { addRateModalVisible = true }
-    )
+    CupertinoChildPage(
+        title = stringResource(R.string.exchange_rates),
+        onClose = onClose ?: {},
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item(key = "search") {
+                    SearchField(
+                        onSearch = { onEvent(RatesEvent.Search(it)) }
+                    )
+                }
 
-    AddRateModal(
+                item(key = "manual_header") {
+                    CupertinoSectionHeader(text = "Manual")
+                }
+
+                items(items = state.manual) { rate ->
+                    RateRow(
+                        rate = rate,
+                        canDelete = true,
+                        onDelete = { onEvent(RatesEvent.RemoveOverride(rate)) },
+                        onClick = { rateToUpdate = rate }
+                    )
+                }
+
+                item(key = "automatic_header") {
+                    CupertinoSectionHeader(text = "Automatic")
+                }
+
+                items(items = state.automatic) { rate ->
+                    RateRow(
+                        rate = rate,
+                        canDelete = false,
+                        onDelete = null,
+                        onClick = { rateToUpdate = rate }
+                    )
+                }
+
+                item(key = "dock_clearance") {
+                    Spacer(Modifier.height(CupertinoDockClearance + 72.dp))
+                }
+            }
+
+            CupertinoFilledButton(
+                label = stringResource(R.string.add_manual_exchange_rate),
+                enabled = true,
+                onClick = { addRateModalVisible = true },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = CupertinoDockClearance)
+            )
+        }
+    }
+
+    AddRateSheet(
         visible = addRateModalVisible,
         baseCurrency = state.baseCurrency,
-        dismiss = {
+        dismiss = { addRateModalVisible = false },
+        onAdd = { newRate ->
+            onEvent(RatesEvent.AddRate(newRate))
             addRateModalVisible = false
-        },
-        onAdd = onEvent
-    )
-
-    AmountModal(
-        id = amountModalId,
-        visible = amountModalVisible,
-        currency = "",
-        initialAmount = rateToUpdate?.rate,
-        dismiss = {
-            amountModalVisible = false
-        },
-        decimalCountMax = 12,
-        Header = {
-            rateToUpdate?.let {
-                SpacerVer(height = 24.dp)
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    text = "${it.from}-${it.to}",
-                    style = UI.typo.nH2.style(
-                        textAlign = TextAlign.Center,
-                        color = UI.colors.primary
-                    )
-                )
-            }
-        },
-        onAmountChanged = { newRate ->
-            rateToUpdate?.let {
-                onEvent(RatesEvent.UpdateRate(rateToUpdate!!, newRate))
-            }
         }
     )
+
+    rateToUpdate?.let { rate ->
+        EditRateSheet(
+            rate = rate,
+            dismiss = { rateToUpdate = null },
+            onDone = { newRate ->
+                onEvent(RatesEvent.UpdateRate(rate, newRate))
+                rateToUpdate = null
+            }
+        )
+    }
 }
 
-private fun LazyListScope.ratesSection(
-    text: String
+@Composable
+private fun RateRow(
+    rate: RateUi,
+    canDelete: Boolean,
+    onDelete: (() -> Unit)?,
+    onClick: () -> Unit,
 ) {
-    item {
-        SpacerVer(height = 24.dp)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            DividerW()
-            SpacerHor(width = 16.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(UI.colors.medium)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f)) {
             Text(
-                text = text,
-                style = UI.typo.h2
+                text = "${rate.from} → ${rate.to}",
+                style = ivyInter(17.sp, FontWeight.Medium),
+                color = UI.colors.pureInverse
             )
-            SpacerHor(width = 16.dp)
-            DividerW()
+
+            Spacer(Modifier.height(2.dp))
+
+            Text(
+                text = rate.rate.format(currencyCode = rate.to),
+                style = ivyInter(13.sp),
+                color = UI.colors.gray
+            )
         }
+
+        if (canDelete && onDelete != null) {
+            DeleteButton(onClick = onDelete)
+
+            Spacer(Modifier.width(8.dp))
+        }
+
+        Icon(
+            painter = painterResource(R.drawable.ic_arrow_right),
+            contentDescription = null,
+            tint = UI.colors.gray,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
@@ -170,20 +210,67 @@ private fun LazyListScope.ratesSection(
 private fun SearchField(
     onSearch: (String) -> Unit,
 ) {
-    var searchQueryTextFieldValue by remember {
-        mutableStateOf(selectEndTextFieldValue(""))
+    var query by remember {
+        mutableStateOf("")
     }
 
-    SearchInput(
-        searchQueryTextFieldValue = searchQueryTextFieldValue,
-        hint = "Search currency",
-        focus = false,
-        showClearIcon = searchQueryTextFieldValue.text.isNotEmpty(),
-        onSetSearchQueryTextField = {
-            searchQueryTextFieldValue = it
-            onSearch(it.text)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .height(44.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(UI.colors.medium)
+            .border(1.dp, cupertinoHairline(), RoundedCornerShape(14.dp))
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_search),
+            contentDescription = null,
+            tint = UI.colors.gray,
+            modifier = Modifier.size(20.dp)
+        )
+
+        Spacer(Modifier.width(10.dp))
+
+        Box(Modifier.weight(1f)) {
+            if (query.isEmpty()) {
+                Text(
+                    text = "Search currency",
+                    style = ivyInter(16.sp),
+                    color = UI.colors.gray
+                )
+            }
+
+            BasicTextField(
+                value = query,
+                onValueChange = {
+                    query = it
+                    onSearch(it)
+                },
+                singleLine = true,
+                textStyle = ivyInter(16.sp).copy(color = UI.colors.pureInverse),
+                cursorBrush = SolidColor(UI.colors.pureInverse),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
-    )
+
+        if (query.isNotEmpty()) {
+            Icon(
+                painter = painterResource(R.drawable.ic_dismiss_close),
+                contentDescription = stringResource(R.string.settings_clear_search),
+                tint = UI.colors.gray,
+                modifier = Modifier
+                    .size(20.dp)
+                    .clickable {
+                        query = ""
+                        onSearch("")
+                    }
+            )
+        }
+    }
 }
 
 @Preview
@@ -193,26 +280,18 @@ private fun Preview(theme: Theme = Theme.LIGHT) {
         UI(
             state = RatesState(
                 baseCurrency = "BGN",
-                manual = persistentListOf(
+                manual = kotlinx.collections.immutable.persistentListOf(
                     RateUi("BGN", "USD", 1.85),
                     RateUi("BGN", "EUR", 1.96),
                 ),
-                automatic = persistentListOf(
-                    RateUi("XXX", "YYY", 1.23),
-                    RateUi("XXX", "YYY", 1.23),
-                    RateUi("XXX", "YYY", 1.23),
-                    RateUi("XXX", "YYY", 1.23),
-                    RateUi("XXX", "YYY", 1.23),
-                    RateUi("XXX", "YYY", 1.23),
-                    RateUi("XXX", "YYY", 1.23),
-                    RateUi("XXX", "YYY", 1.23),
-                    RateUi("XXX", "YYY", 1.23),
+                automatic = kotlinx.collections.immutable.persistentListOf(
                     RateUi("XXX", "YYY", 1.23),
                     RateUi("XXX", "YYY", 1.23),
                     RateUi("XXX", "YYY", 1.23),
                 )
             ),
-            onEvent = {}
+            onEvent = {},
+            onClose = null,
         )
     }
 }
@@ -220,9 +299,5 @@ private fun Preview(theme: Theme = Theme.LIGHT) {
 /** For screenshot testing */
 @Composable
 fun ExchangeRatesScreenUiTest(isDark: Boolean) {
-    val theme = when (isDark) {
-        true -> Theme.DARK
-        false -> Theme.LIGHT
-    }
-    Preview(theme)
+    Preview(theme = if (isDark) Theme.DARK else Theme.LIGHT)
 }

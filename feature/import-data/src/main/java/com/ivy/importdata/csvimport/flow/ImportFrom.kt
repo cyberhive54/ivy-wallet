@@ -9,32 +9,32 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ivy.design.l0_system.UI
-import com.ivy.design.l0_system.style
+import com.ivy.legacy.cupertino.CupertinoChildPage
+import com.ivy.legacy.cupertino.CupertinoDockClearance
+import com.ivy.legacy.cupertino.CupertinoNavRow
+import com.ivy.legacy.cupertino.CupertinoRowsCard
+import com.ivy.legacy.cupertino.CupertinoSectionHeader
 import com.ivy.legacy.domain.deprecated.logic.csv.model.ImportType
-import com.ivy.navigation.CSVScreen
-import com.ivy.navigation.navigation
-import com.ivy.onboarding.components.OnboardingToolbar
 import com.ivy.ui.R
-import com.ivy.wallet.ui.theme.components.GradientCutBottom
+import com.ivy.ui.typography.ivyInter
 import com.ivy.wallet.ui.theme.components.IvyIcon
 
 @ExperimentalFoundationApi
@@ -43,80 +43,61 @@ fun BoxWithConstraintsScope.ImportFrom(
     hasSkip: Boolean,
     launchedFromOnboarding: Boolean,
 
+    onBack: () -> Unit = {},
+    onOpenCsv: (() -> Unit)? = null,
     onSkip: () -> Unit = {},
     onImportFrom: (ImportType) -> Unit = {},
 ) {
     val importTypes = ImportType.values()
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
+    CupertinoChildPage(
+        title = stringResource(R.string.import_data),
+        onClose = onBack,
+        backLabel = if (launchedFromOnboarding) {
+            stringResource(R.string.back)
+        } else {
+            stringResource(R.string.settings)
+        },
+        onSkip = if (hasSkip) onSkip else null,
     ) {
-        stickyHeader {
-            val nav = navigation()
-            OnboardingToolbar(
-                hasSkip = hasSkip,
-                onBack = { nav.onBackPressed() },
-                onSkip = onSkip
-            )
-            // onboarding toolbar include paddingBottom 16.dp
-        }
-
-        item {
-            Spacer(Modifier.height(8.dp))
-            val nav = navigation()
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .padding(horizontal = 16.dp),
-                onClick = {
-                    nav.navigateTo(CSVScreen(launchedFromOnboarding))
-                }
-            ) {
-                Text(
-                    text = stringResource(id = R.string.manual_csv_import),
-                    style = UI.typo.b2.style(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            item(key = "manual_csv") {
+                CupertinoRowsCard(
+                    rows = listOf(
+                        {
+                            CupertinoNavRow(
+                                icon = R.drawable.ic_export_csv,
+                                title = stringResource(R.string.manual_csv_import),
+                                external = false,
+                                onClick = {
+                                    onOpenCsv?.invoke()
+                                }
+                            )
+                        }
                     )
                 )
             }
-            Spacer(Modifier.height(16.dp))
-        }
 
-        item {
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                modifier = Modifier.padding(start = 32.dp),
-                text = stringResource(R.string.import_from),
-                style = UI.typo.h2.style(
-                    fontWeight = FontWeight.Black
+            item(key = "sources_header") {
+                CupertinoSectionHeader(
+                    text = stringResource(R.string.import_from)
                 )
-            )
+            }
 
-            Spacer(Modifier.height(24.dp))
-        }
+            items(importTypes) { importType ->
+                ImportOption(
+                    importType = importType,
+                    onImportFrom = onImportFrom
+                )
+            }
 
-        items(importTypes) {
-            ImportOption(
-                importType = it,
-                onImportFrom = onImportFrom
-            )
-        }
-
-        item {
-            // last spacer
-            Spacer(Modifier.height(96.dp))
+            item(key = "dock_clearance") {
+                Spacer(Modifier.height(CupertinoDockClearance))
+            }
         }
     }
-
-    GradientCutBottom(
-        height = 96.dp
-    )
 }
 
 @Composable
@@ -127,44 +108,33 @@ private fun ImportOption(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(UI.shapes.r3)
-            .background(UI.colors.medium, UI.shapes.r3)
-            .clickable {
-                onImportFrom(importType)
-            }
-            .padding(vertical = 24.dp),
+            .padding(horizontal = 20.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(UI.colors.medium)
+            .clickable { onImportFrom(importType) }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Spacer(Modifier.width(20.dp))
-
         IvyIcon(
             modifier = Modifier.size(32.dp),
             icon = importType.logo(),
             tint = Color.Unspecified
         )
 
+        Spacer(Modifier.width(14.dp))
+
         Text(
-            modifier = Modifier.padding(start = 16.dp, end = 32.dp),
+            modifier = Modifier.weight(1f),
             text = importType.listName(),
-            style = UI.typo.b2.style(
-                fontWeight = FontWeight.Bold,
-                color = UI.colors.pureInverse
-            )
+            style = ivyInter(17.sp, FontWeight.Medium),
+            color = UI.colors.pureInverse
         )
-    }
 
-    Spacer(Modifier.height(8.dp))
-}
-
-@ExperimentalFoundationApi
-@Preview
-@Composable
-private fun Preview() {
-    com.ivy.legacy.IvyWalletPreview {
-        ImportFrom(
-            hasSkip = true,
-            launchedFromOnboarding = false,
+        Icon(
+            painter = painterResource(R.drawable.ic_arrow_right),
+            contentDescription = null,
+            tint = UI.colors.gray,
+            modifier = Modifier.size(20.dp)
         )
     }
 }

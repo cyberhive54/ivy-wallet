@@ -96,7 +96,12 @@ data object SettingsScreen : Screen {
 }
 
 data class ImportScreen(
-    val launchedFromOnboarding: Boolean
+    val launchedFromOnboarding: Boolean,
+    /**
+     * When true, the screen is hosted inside the Settings tab (in-tab child stack)
+     * instead of the global navigation graph. Exit is done via callback, not [Navigation].
+     */
+    val inlineHosted: Boolean = false
 ) : Screen {
     override val isLegacy: Boolean
         get() = true

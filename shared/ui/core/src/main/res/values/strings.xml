@@ -499,6 +499,14 @@
 
     <string name="settings_search_hint">Search settings</string>
     <string name="settings_clear_search">Clear search</string>
+    <string name="settings_help_feedback">Help &amp; feedback</string>
+    <string name="settings_join_community">Join the community</string>
+    <string name="settings_your_name">Your name</string>
+    <string name="settings_save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="back">Back</string>
+    <string name="opens_externally">Opens outside the app</string>
+    <string name="settings_select_start_day">Select the day the month starts on</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_preferences">Preferences</string>
     <string name="settings_section_privacy">Privacy</string>

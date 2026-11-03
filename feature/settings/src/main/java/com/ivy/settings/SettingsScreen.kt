@@ -43,14 +43,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ivy.base.legacy.Theme
@@ -58,16 +54,8 @@ import com.ivy.design.l0_system.UI
 import com.ivy.legacy.Constants
 import com.ivy.legacy.IvyWalletPreview
 import com.ivy.legacy.rootScreen
-import com.ivy.navigation.AttributionsScreen
-import com.ivy.navigation.ContributorsScreen
-import com.ivy.navigation.ExchangeRatesScreen
-import com.ivy.navigation.FeaturesScreen
-import com.ivy.navigation.ImportScreen
-import com.ivy.navigation.ReleasesScreen
-import com.ivy.navigation.navigation
 import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
-import com.ivy.wallet.domain.data.IvyCurrency
 import com.ivy.wallet.ui.theme.Blue
 import com.ivy.wallet.ui.theme.Green
 import com.ivy.wallet.ui.theme.Ivy
@@ -75,37 +63,17 @@ import com.ivy.wallet.ui.theme.Orange
 import com.ivy.wallet.ui.theme.Red
 import com.ivy.wallet.ui.theme.Red3
 import com.ivy.wallet.ui.theme.components.IvySwitch
-import com.ivy.wallet.ui.theme.modal.ChooseStartDateOfMonthModal
-import com.ivy.wallet.ui.theme.modal.CurrencyModal
-import com.ivy.wallet.ui.theme.modal.DeleteModal
-import com.ivy.wallet.ui.theme.modal.NameModal
-import com.ivy.wallet.ui.theme.modal.ProgressModal
 import java.util.Locale
-
-// -----------------------------------------------------------------------------------------
-// Apple-inspired typography (Inter - SIL Open Font License, an SF Pro analog)
-// -----------------------------------------------------------------------------------------
-private val Inter = FontFamily(
-    Font(R.font.inter_regular, FontWeight.Normal),
-    Font(R.font.inter_medium, FontWeight.Medium),
-    Font(R.font.inter_semibold, FontWeight.SemiBold),
-    Font(R.font.inter_bold, FontWeight.Bold),
-    Font(R.font.inter_extrabold, FontWeight.ExtraBold),
-)
-
-private fun inter(
-    size: TextUnit,
-    weight: FontWeight = FontWeight.Normal,
-    letterSpacing: TextUnit = TextUnit.Unspecified,
-): TextStyle = TextStyle(
-    fontFamily = Inter,
-    fontSize = size,
-    fontWeight = weight,
-    letterSpacing = letterSpacing,
-)
 
 @Composable
 fun BoxWithConstraintsScope.SettingsScreen() {
+    SettingsFlowHost()
+}
+
+@Composable
+internal fun BoxWithConstraintsScope.SettingsRootContent(
+    onOpenPage: (SettingsChildPage) -> Unit,
+) {
     val viewModel: SettingsViewModel = screenScopedViewModel()
     val uiState = viewModel.uiState()
     val rootScreen = rootScreen()
@@ -168,7 +136,8 @@ fun BoxWithConstraintsScope.SettingsScreen() {
         },
         onSwitchLanguage = {
             viewModel.onEvent(SettingsEvent.SwitchLanguage)
-        }
+        },
+        onOpenPage = onOpenPage
     )
 }
 
@@ -202,15 +171,16 @@ private fun BoxWithConstraintsScope.UI(
     onSetHideIncome: (Boolean) -> Unit = {},
     onSetStartDateOfMonth: (Int) -> Unit = {},
     onDeleteAllUserData: () -> Unit = {},
-    onSwitchLanguage: () -> Unit = {}
+    onSwitchLanguage: () -> Unit = {},
+    onOpenPage: (SettingsChildPage) -> Unit = {}
 ) {
     var currencyModalVisible by remember { mutableStateOf(false) }
     var nameModalVisible by remember { mutableStateOf(false) }
     var chooseStartDateOfMonthVisible by remember { mutableStateOf(false) }
     var deleteAllDataModalVisible by remember { mutableStateOf(false) }
     var deleteAllDataModalFinalVisible by remember { mutableStateOf(false) }
+    var helpFeedbackVisible by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
-    val nav = navigation()
 
     LazyColumn(
         modifier = Modifier
@@ -270,11 +240,11 @@ private fun BoxWithConstraintsScope.UI(
                 onBackupData = onBackupData,
                 onExportToCSV = onExportToCSV,
                 onImportData = {
-                    nav.navigateTo(
-                        ImportScreen(launchedFromOnboarding = false)
-                    )
+                    onOpenPage(SettingsChildPage.Import)
                 },
-                onExchangeRates = { nav.navigateTo(ExchangeRatesScreen) }
+                onExchangeRates = {
+                    onOpenPage(SettingsChildPage.ExchangeRates)
+                }
             )
         }
 
@@ -285,20 +255,31 @@ private fun BoxWithConstraintsScope.UI(
                 treatTransfersAsIncomeExpense = treatTransfersAsIncomeExpense,
                 onSetShowNotifications = onSetShowNotifications,
                 onSetTreatTransfersAsIncExp = onSetTreatTransfersAsIncExp,
-                onAdvancedFeatures = { nav.navigateTo(FeaturesScreen) }
+                onAdvancedFeatures = {
+                    onOpenPage(SettingsChildPage.Features)
+                }
             )
         }
 
         item {
-            SupportSection(query = searchQuery)
+            SupportSection(
+                query = searchQuery,
+                onHelpFeedback = { helpFeedbackVisible = true }
+            )
         }
 
         item {
             AboutSection(
                 query = searchQuery,
-                onReleases = { nav.navigateTo(ReleasesScreen) },
-                onContributors = { nav.navigateTo(ContributorsScreen) },
-                onAttributions = { nav.navigateTo(AttributionsScreen) }
+                onReleases = {
+                    onOpenPage(SettingsChildPage.Releases)
+                },
+                onContributors = {
+                    onOpenPage(SettingsChildPage.Contributors)
+                },
+                onAttributions = {
+                    onOpenPage(SettingsChildPage.Attributions)
+                }
             )
         }
 
@@ -314,62 +295,69 @@ private fun BoxWithConstraintsScope.UI(
         }
     }
 
-    CurrencyModal(
-        title = stringResource(R.string.set_currency),
-        initialCurrency = IvyCurrency.fromCode(currencyCode),
+    SettingsCurrencySheet(
         visible = currencyModalVisible,
-        dismiss = { currencyModalVisible = false }
-    ) {
-        onSetCurrency(it)
-    }
+        initialCurrencyCode = currencyCode,
+        dismiss = { currencyModalVisible = false },
+        onSetCurrency = onSetCurrency
+    )
 
-    NameModal(
+    SettingsNameSheet(
         visible = nameModalVisible,
-        name = nameLocalAccount ?: "",
-        dismiss = { nameModalVisible = false }
-    ) {
-        onSetName(it)
-    }
+        initialName = nameLocalAccount ?: "",
+        dismiss = { nameModalVisible = false },
+        onSetName = onSetName
+    )
 
-    ChooseStartDateOfMonthModal(
+    SettingsStartDaySheet(
         visible = chooseStartDateOfMonthVisible,
-        selectedStartDateOfMonth = startDateOfMonth,
-        dismiss = { chooseStartDateOfMonthVisible = false }
-    ) {
-        onSetStartDateOfMonth(it)
-    }
+        selectedDay = startDateOfMonth,
+        dismiss = { chooseStartDateOfMonthVisible = false },
+        onSelectDay = onSetStartDateOfMonth
+    )
 
-    DeleteModal(
+    CupertinoAlert(
+        visible = deleteAllDataModalVisible,
         title = stringResource(R.string.delete_all_user_data_question),
-        description = stringResource(
+        message = stringResource(
             R.string.delete_all_user_data_warning,
             stringResource(R.string.your_account)
         ),
-        visible = deleteAllDataModalVisible,
-        dismiss = { deleteAllDataModalVisible = false },
-        onDelete = {
+        confirmLabel = stringResource(R.string.delete),
+        dismissLabel = stringResource(R.string.cancel),
+        destructive = true,
+        onConfirm = {
             deleteAllDataModalVisible = false
             deleteAllDataModalFinalVisible = true
-        }
+        },
+        onDismiss = { deleteAllDataModalVisible = false }
     )
 
-    DeleteModal(
+    CupertinoAlert(
+        visible = deleteAllDataModalFinalVisible,
         title = stringResource(
             R.string.confirm_all_userd_data_deletion,
             stringResource(R.string.all_of_your_data)
         ),
-        description = stringResource(R.string.final_deletion_warning),
-        visible = deleteAllDataModalFinalVisible,
-        dismiss = { deleteAllDataModalFinalVisible = false },
-        onDelete = {
+        message = stringResource(R.string.final_deletion_warning),
+        confirmLabel = stringResource(R.string.delete),
+        dismissLabel = stringResource(R.string.cancel),
+        destructive = true,
+        onConfirm = {
             onDeleteAllUserData()
-        }
+        },
+        onDismiss = { deleteAllDataModalFinalVisible = false }
     )
 
-    ProgressModal(
+    CupertinoProgressCard(
+        visible = progressState,
         title = stringResource(R.string.exporting_data),
-        description = stringResource(R.string.exporting_data_description),
-        visible = progressState
+        message = stringResource(R.string.exporting_data_description)
+    )
+
+    HelpFeedbackSheet(
+        visible = helpFeedbackVisible,
+        dismiss = { helpFeedbackVisible = false }
     )
 }
 
@@ -772,6 +760,7 @@ private fun PreferencesSection(
                 icon = R.drawable.ic_vue_location_global,
                 title = stringResource(R.string.language),
                 value = Locale.getDefault().displayName,
+                external = true,
                 onClick = onSwitchLanguage
             )
         }
@@ -1006,66 +995,21 @@ private fun BehaviorSection(
 }
 
 @Composable
-private fun SupportSection(query: String) {
-    val uriHandler = LocalUriHandler.current
-    val rootScreen = rootScreen()
-
-    val helpCenterRow: (@Composable () -> Unit)? = if (matches(
-            query, "help", "center", "faq", "guide", "docs"
-        )
-    ) {
-        {
-            SettingNavRow(
-                icon = R.drawable.ic_custom_education_m,
-                title = stringResource(R.string.help_center),
-                onClick = { uriHandler.openUri(Constants.URL_HELP_CENTER) }
-            )
-        }
-    } else {
-        null
-    }
-
-    val reportBugRow: (@Composable () -> Unit)? = if (matches(
-            query, "bug", "report", "issue"
-        )
-    ) {
-        {
-            SettingNavRow(
-                icon = R.drawable.ic_vue_dev_arrow,
-                title = stringResource(R.string.report_bug),
-                onClick = { uriHandler.openUri(Constants.URL_GITHUB_NEW_ISSUE) }
-            )
-        }
-    } else {
-        null
-    }
-
-    val requestFeatureRow: (@Composable () -> Unit)? = if (matches(
-            query, "request", "feature", "suggest"
-        )
-    ) {
-        {
-            SettingNavRow(
-                icon = R.drawable.ic_custom_programming_m,
-                title = stringResource(R.string.request_a_feature),
-                onClick = { uriHandler.openUri(Constants.URL_GITHUB_NEW_ISSUE) }
-            )
-        }
-    } else {
-        null
-    }
-
-    val communityRow: (@Composable () -> Unit)? = if (matches(
-            query, "community", "support", "contact", "telegram"
+private fun SupportSection(
+    query: String,
+    onHelpFeedback: () -> Unit,
+) {
+    val helpFeedbackRow: (@Composable () -> Unit)? = if (matches(
+            query,
+            "help", "feedback", "support", "bug", "report", "feature", "community", "contact", "telegram"
         )
     ) {
         {
             SettingNavRow(
                 icon = R.drawable.ic_support,
-                title = stringResource(R.string.contact_support),
-                onClick = {
-                    rootScreen.openUrlInBrowser(Constants.URL_IVY_TELEGRAM_INVITE)
-                }
+                title = stringResource(R.string.settings_help_feedback),
+                value = null,
+                onClick = onHelpFeedback
             )
         }
     } else {
@@ -1074,7 +1018,7 @@ private fun SupportSection(query: String) {
 
     RowsCard(
         header = stringResource(R.string.settings_section_support),
-        rows = listOf(helpCenterRow, reportBugRow, requestFeatureRow, communityRow)
+        rows = listOf(helpFeedbackRow)
     )
 }
 
@@ -1096,6 +1040,7 @@ private fun AboutSection(
             SettingNavRow(
                 icon = R.drawable.ic_custom_star_m,
                 title = stringResource(R.string.rate_us_on_google_play),
+                external = true,
                 onClick = { rootScreen.reviewIvyWallet(dismissReviewCard = false) }
             )
         }
@@ -1126,6 +1071,7 @@ private fun AboutSection(
             SettingNavRow(
                 icon = R.drawable.github_logo,
                 title = stringResource(R.string.ivy_wallet_is_opensource),
+                external = true,
                 onClick = {
                     rootScreen.openUrlInBrowser(Constants.URL_IVY_WALLET_REPO)
                 }
@@ -1188,6 +1134,7 @@ private fun AboutSection(
             SettingNavRow(
                 icon = R.drawable.ic_vue_security_shield,
                 title = stringResource(R.string.terms_conditions),
+                external = true,
                 onClick = { uriHandler.openUri(Constants.URL_TC) }
             )
         }
@@ -1203,6 +1150,7 @@ private fun AboutSection(
             SettingNavRow(
                 icon = R.drawable.ic_vue_security_shield,
                 title = stringResource(R.string.privacy_policy),
+                external = true,
                 onClick = { uriHandler.openUri(Constants.URL_PRIVACY_POLICY) }
             )
         }
@@ -1340,6 +1288,7 @@ private fun SettingNavRow(
     description: String? = null,
     value: String? = null,
     tint: Color = UI.colors.pureInverse,
+    external: Boolean = false,
     onClick: () -> Unit,
 ) {
     Row(
@@ -1390,8 +1339,18 @@ private fun SettingNavRow(
         Spacer(Modifier.width(10.dp))
 
         Icon(
-            painter = painterResource(R.drawable.ic_arrow_right),
-            contentDescription = null,
+            painter = painterResource(
+                if (external) {
+                    R.drawable.ic_arrow_up_right
+                } else {
+                    R.drawable.ic_arrow_right
+                }
+            ),
+            contentDescription = if (external) {
+                stringResource(R.string.opens_externally)
+            } else {
+                null
+            },
             tint = UI.colors.gray,
             modifier = Modifier.size(20.dp)
         )

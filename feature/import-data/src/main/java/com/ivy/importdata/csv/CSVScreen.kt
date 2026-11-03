@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.colorAs
@@ -43,14 +44,17 @@ import com.ivy.design.l0_system.style
 import com.ivy.design.utils.thenIf
 import com.ivy.importdata.csvimport.flow.ImportProcessing
 import com.ivy.importdata.csvimport.flow.ImportResultUI
+import com.ivy.legacy.cupertino.CupertinoBackRow
 import com.ivy.navigation.CSVScreen
 import com.ivy.onboarding.viewmodel.OnboardingViewModel
 import com.ivy.ui.R
+import com.ivy.ui.typography.ivyInter
 import kotlin.math.abs
 
 @Composable
 fun CSVScreen(
     screen: CSVScreen,
+    onClose: (() -> Unit)? = null,
 ) {
     val viewModel: CSVViewModel = viewModel()
     val state = viewModel.uiState()
@@ -60,6 +64,7 @@ fun CSVScreen(
         UIState.Idle -> ImportUI(
             state = state,
             launchedFromOnboarding = screen.launchedFromOnboarding,
+            onClose = onClose ?: {},
             onEvent = viewModel::onEvent
         )
 
@@ -85,17 +90,38 @@ fun CSVScreen(
 private fun ImportUI(
     state: CSVState,
     launchedFromOnboarding: Boolean,
+    onClose: () -> Unit,
     onEvent: (CSVEvent) -> Unit,
 ) {
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .systemBarsPadding(),
-        contentPadding = PaddingValues(
-            horizontal = 8.dp,
-            vertical = 16.dp,
-        )
+            .background(UI.colors.pure)
+            .systemBarsPadding()
     ) {
+        CupertinoBackRow(
+            onClose = onClose,
+            label = if (launchedFromOnboarding) {
+                stringResource(R.string.back)
+            } else {
+                stringResource(R.string.settings)
+            }
+        )
+
+        Text(
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
+            text = stringResource(R.string.import_csv_file),
+            style = ivyInter(34.sp, FontWeight.Bold, letterSpacing = (-0.5).sp),
+            color = UI.colors.pureInverse
+        )
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(
+                horizontal = 8.dp,
+                vertical = 16.dp,
+            )
+        ) {
         item(key = "import_btn") {
             Spacer8()
             Spacer8()
@@ -136,6 +162,10 @@ private fun ImportUI(
             optionalFields(state.columns, state.optional, onEvent = onEvent)
         }
         continueButton(state.continueEnabled, onEvent)
+        item(key = "dock_clearance") {
+            Spacer(modifier = Modifier.height(130.dp))
+        }
+        }
     }
 }
 

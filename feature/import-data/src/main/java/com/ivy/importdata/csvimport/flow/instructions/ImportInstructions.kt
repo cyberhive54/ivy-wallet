@@ -11,40 +11,34 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ivy.design.l0_system.UI
-import com.ivy.design.l0_system.style
 import com.ivy.importdata.csvimport.flow.ImportSteps
+import com.ivy.legacy.cupertino.CupertinoChildPage
+import com.ivy.legacy.cupertino.CupertinoDockClearance
+import com.ivy.legacy.cupertino.CupertinoFilledButton
 import com.ivy.legacy.domain.deprecated.logic.csv.model.ImportType
 import com.ivy.legacy.utils.drawColoredShadow
-import com.ivy.navigation.navigation
-import com.ivy.onboarding.components.OnboardingToolbar
 import com.ivy.ui.R
-import com.ivy.wallet.ui.theme.GradientIvy
-import com.ivy.wallet.ui.theme.Gray
-import com.ivy.wallet.ui.theme.White
-import com.ivy.wallet.ui.theme.components.GradientCutBottom
-import com.ivy.wallet.ui.theme.components.IvyDividerLine
+import com.ivy.ui.typography.ivyInter
 import com.ivy.wallet.ui.theme.components.IvyIcon
-import com.ivy.wallet.ui.theme.components.OnboardingButton
 
 @ExperimentalFoundationApi
 @Composable
@@ -52,83 +46,46 @@ fun BoxWithConstraintsScope.ImportInstructions(
     hasSkip: Boolean,
     importType: ImportType,
 
+    onBack: () -> Unit = {},
     onSkip: () -> Unit,
     onUploadClick: () -> Unit,
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
+    CupertinoChildPage(
+        title = importType.listName(),
+        subtitle = stringResource(R.string.how_to_import),
+        onClose = onBack,
+        backLabel = if (hasSkip) {
+            stringResource(R.string.back)
+        } else {
+            stringResource(R.string.settings)
+        },
+        onSkip = if (hasSkip) onSkip else null,
     ) {
-        stickyHeader {
-            val nav = navigation()
-            OnboardingToolbar(
-                hasSkip = hasSkip,
-                onBack = { nav.onBackPressed() },
-                onSkip = onSkip
-            )
-            // onboarding toolbar include paddingBottom 16.dp
-        }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            item(key = "app_row") {
+                App(importType = importType)
+            }
 
-        item {
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                modifier = Modifier.padding(start = 32.dp),
-                text = stringResource(R.string.how_to_import),
-                style = UI.typo.h2.style(
-                    fontWeight = FontWeight.Black
+            item(key = "steps_header") {
+                Text(
+                    modifier = Modifier.padding(start = 32.dp, top = 16.dp, bottom = 8.dp),
+                    text = stringResource(R.string.steps),
+                    style = ivyInter(13.sp, FontWeight.SemiBold, letterSpacing = 0.6.sp),
+                    color = UI.colors.gray
                 )
-            )
+            }
 
-            Spacer(Modifier.height(8.dp))
+            item(key = "steps") {
+                importType.ImportSteps(onUploadClick = onUploadClick)
+            }
 
-            Text(
-                modifier = Modifier.padding(start = 32.dp),
-                text = stringResource(R.string.open),
-                style = UI.typo.b2.style(
-                    color = Gray,
-                    fontWeight = Bold
-                )
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            App(
-                importType = importType
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            IvyDividerLine(
-                modifier = Modifier.padding(horizontal = 32.dp)
-            )
-        }
-
-        item {
-            Spacer(Modifier.height(24.dp))
-
-            Text(
-                modifier = Modifier.padding(start = 32.dp),
-                text = stringResource(R.string.steps),
-                style = UI.typo.b1.style(
-                    fontWeight = FontWeight.Black
-                )
-            )
-
-            importType.ImportSteps(onUploadClick = onUploadClick)
-        }
-
-        item {
-            // last spacer
-            Spacer(Modifier.height(96.dp))
+            item(key = "dock_clearance") {
+                Spacer(Modifier.height(CupertinoDockClearance))
+            }
         }
     }
-
-    GradientCutBottom(
-        height = 96.dp
-    )
 }
 
 @Composable
@@ -136,67 +93,106 @@ fun VideoArticleRow(
     videoUrl: String?,
     articleUrl: String?
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(UI.colors.medium)
     ) {
-        val rootScreen = com.ivy.legacy.rootScreen()
-
-        Spacer(Modifier.width(16.dp))
-
         if (videoUrl != null) {
-            VideoButton(
-                modifier = Modifier.weight(1f)
-            ) {
-                rootScreen.openUrlInBrowser(videoUrl)
-            }
+            VideoArticleAction(
+                icon = R.drawable.ic_import_video,
+                title = stringResource(R.string.video),
+                subtitle = stringResource(R.string.how_to),
+                external = true,
+                onClick = {
+                    val rootScreen = com.ivy.legacy.rootScreen()
+                    rootScreen.openUrlInBrowser(videoUrl)
+                }
+            )
         }
 
         if (videoUrl != null && articleUrl != null) {
-            Spacer(Modifier.width(8.dp))
+            CupertinoSheetSeparator()
         }
 
         if (articleUrl != null) {
-            ArticleButton(
-                modifier = Modifier.weight(1f)
-            ) {
-                rootScreen.openUrlInBrowser(articleUrl)
-            }
+            VideoArticleAction(
+                icon = R.drawable.ic_import_web,
+                title = stringResource(R.string.article),
+                subtitle = stringResource(R.string.how_to),
+                external = true,
+                onClick = {
+                    val rootScreen = com.ivy.legacy.rootScreen()
+                    rootScreen.openUrlInBrowser(articleUrl)
+                }
+            )
+        }
+    }
+
+    Spacer(Modifier.height(16.dp))
+}
+
+@Composable
+private fun VideoArticleAction(
+    @DrawableRes icon: Int?,
+    title: String,
+    subtitle: String,
+    external: Boolean = false,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            IvyIcon(
+                modifier = Modifier
+                    .background(UI.colors.pure, CircleShape)
+                    .size(28.dp),
+                icon = icon,
+                tint = Color.Unspecified
+            )
+
+            Spacer(Modifier.width(14.dp))
         }
 
-        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = ivyInter(16.sp, FontWeight.Medium),
+                color = UI.colors.pureInverse
+            )
+
+            Text(
+                text = subtitle,
+                style = ivyInter(12.sp),
+                color = UI.colors.gray
+            )
+        }
+
+        Icon(
+            painter = painterResource(
+                if (external) {
+                    R.drawable.ic_arrow_up_right
+                } else {
+                    R.drawable.ic_arrow_right
+                }
+            ),
+            contentDescription = stringResource(R.string.opens_externally),
+            tint = UI.colors.gray,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
-@Composable
-fun VideoButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    InstructionButton(
-        modifier = modifier,
-        icon = R.drawable.ic_import_video,
-        caption = stringResource(R.string.how_to),
-        text = stringResource(R.string.video)
-    ) {
-        onClick()
-    }
-}
-
-@Composable
-fun ArticleButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    InstructionButton(
-        modifier = modifier,
-        icon = R.drawable.ic_import_web,
-        caption = stringResource(R.string.how_to),
-        text = stringResource(R.string.article)
-    ) {
-        onClick()
-    }
-}
-
+@Deprecated(
+    "Replaced by VideoArticleAction. Kept for compatibility with per-source step lists."
+)
 @Composable
 fun InstructionButton(
     modifier: Modifier = Modifier,
@@ -206,47 +202,12 @@ fun InstructionButton(
 
     onClick: () -> Unit
 ) {
-    Row(
-        modifier = modifier
-            .clip(UI.shapes.r3)
-            .background(UI.colors.medium, UI.shapes.r3)
-            .clickable {
-                onClick()
-            }
-            .padding(vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Spacer(Modifier.width(16.dp))
-
-        if (icon != null) {
-            IvyIcon(
-                modifier = Modifier.background(UI.colors.pure, CircleShape),
-                icon = icon,
-                tint = Color.Unspecified
-            )
-        }
-
-        Spacer(Modifier.width(if (icon != null) 24.dp else 12.dp))
-
-        Column {
-            Text(
-                text = caption,
-                style = UI.typo.c.style(
-                    color = Gray,
-                    fontWeight = Bold
-                )
-            )
-
-            Spacer(Modifier.height(2.dp))
-
-            Text(
-                text = text,
-                style = UI.typo.b2.style(
-                    fontWeight = Bold
-                )
-            )
-        }
-    }
+    VideoArticleAction(
+        icon = icon,
+        title = text,
+        subtitle = caption,
+        onClick = onClick
+    )
 }
 
 @Composable
@@ -263,18 +224,13 @@ fun UploadFileStep(
 
     Spacer(Modifier.height(16.dp))
 
-    OnboardingButton(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        text = btnTitle,
-        textColor = White,
-        backgroundGradient = GradientIvy,
-        hasNext = false,
-        iconStart = R.drawable.ic_upload
-    ) {
-        onUploadClick()
-    }
+    CupertinoFilledButton(
+        label = btnTitle,
+        onClick = onUploadClick,
+        modifier = Modifier.padding(horizontal = 20.dp)
+    )
+
+    Spacer(Modifier.height(16.dp))
 }
 
 @Suppress("MultipleEmitters")
@@ -285,29 +241,26 @@ fun StepTitle(
     description: String? = null,
 ) {
     Row(
+        modifier = Modifier.padding(horizontal = 24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Spacer(Modifier.width(24.dp))
-
         Text(
             modifier = Modifier
                 .size(24.dp)
-                .background(UI.colors.medium, CircleShape),
+                .background(UI.colors.pureInverse, CircleShape),
             text = number.toString(),
-            style = UI.typo.nB2.style(
-                fontWeight = Bold,
-                textAlign = TextAlign.Center
-            )
+            style = ivyInter(12.sp, FontWeight.SemiBold),
+            color = UI.colors.pure,
+            textAlign = TextAlign.Center
         )
 
+        Spacer(Modifier.width(10.dp))
+
         Text(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 8.dp, end = 32.dp),
+            modifier = Modifier.weight(1f),
             text = title,
-            style = UI.typo.b2.style(
-                fontWeight = Bold
-            )
+            style = ivyInter(15.sp, FontWeight.SemiBold),
+            color = UI.colors.pureInverse
         )
     }
 
@@ -317,12 +270,12 @@ fun StepTitle(
         Text(
             modifier = Modifier.padding(horizontal = 24.dp),
             text = description,
-            style = UI.typo.c.style(
-                fontWeight = Bold,
-                color = Gray
-            )
+            style = ivyInter(12.sp),
+            color = UI.colors.gray
         )
     }
+
+    Spacer(Modifier.height(10.dp))
 }
 
 @Composable
@@ -333,12 +286,16 @@ private fun App(
 
     Row(
         modifier = Modifier
-            .padding(horizontal = 32.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(UI.colors.medium)
             .clickable {
                 rootScreen.openGooglePlayAppPage(
                     appId = importType.appId()
                 )
-            },
+            }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IvyIcon(
@@ -349,27 +306,20 @@ private fun App(
             tint = Color.Unspecified
         )
 
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(14.dp))
 
         Text(
             text = importType.appName(),
-            style = UI.typo.b2.style(
-                fontWeight = Bold
-            )
+            style = ivyInter(17.sp, FontWeight.Medium),
+            color = UI.colors.pureInverse,
+            modifier = Modifier.weight(1f)
         )
-    }
-}
 
-@ExperimentalFoundationApi
-@Preview
-@Composable
-private fun Preview() {
-    com.ivy.legacy.IvyWalletPreview {
-        ImportInstructions(
-            hasSkip = true,
-            importType = ImportType.MONEY_MANAGER,
-            onSkip = {}
-        ) {
-        }
+        Icon(
+            painter = painterResource(R.drawable.ic_arrow_up_right),
+            contentDescription = stringResource(R.string.opens_externally),
+            tint = UI.colors.gray,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }

@@ -1,6 +1,8 @@
 package com.ivy.importdata.csvimport.flow
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,70 +10,60 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ivy.data.backup.ImportResult
 import com.ivy.design.l0_system.UI
-import com.ivy.design.l0_system.style
-import com.ivy.importdata.csv.Spacer8
+import com.ivy.legacy.IvyWalletPreview
+import com.ivy.legacy.cupertino.CupertinoBackRow
+import com.ivy.legacy.cupertino.CupertinoFilledButton
+import com.ivy.legacy.cupertino.CupertinoNavRow
+import com.ivy.legacy.cupertino.CupertinoRowsCard
 import com.ivy.legacy.utils.format
-import com.ivy.navigation.CSVScreen
-import com.ivy.navigation.navigation
 import com.ivy.ui.R
-import com.ivy.wallet.ui.theme.GradientIvy
+import com.ivy.ui.typography.ivyInter
 import com.ivy.wallet.ui.theme.Gray
 import com.ivy.wallet.ui.theme.Green
 import com.ivy.wallet.ui.theme.Red
-import com.ivy.wallet.ui.theme.White
-import com.ivy.wallet.ui.theme.components.BackButton
-import com.ivy.wallet.ui.theme.components.IvyDividerLine
-import com.ivy.wallet.ui.theme.components.OnboardingButton
 import kotlinx.collections.immutable.persistentListOf
 
 @SuppressLint("ComposeModifierMissing")
 @Composable
-fun ImportResultUI(
+fun BoxWithConstraintsScope.ImportResultUI(
     result: ImportResult,
     launchedFromOnboarding: Boolean,
     isManualCsvImport: Boolean = false,
     onTryAgain: (() -> Unit)? = null,
+    onBack: () -> Unit = {},
+    onOpenCsv: (() -> Unit)? = null,
     onFinish: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(UI.colors.pure)
             .systemBarsPadding()
     ) {
-        Spacer(Modifier.height(16.dp))
+        CupertinoBackRow(onClose = onBack)
 
-        val nav = navigation()
-        BackButton(
-            modifier = Modifier.padding(start = 20.dp)
-        ) {
-            nav.onBackPressed()
-        }
-
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(8.dp))
 
         val importSuccess = result.transactionsImported > 0 &&
                 result.transactionsImported > result.rowsFound / 2
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
+            modifier = Modifier.padding(horizontal = 24.dp),
             text = if (importSuccess) stringResource(R.string.success) else stringResource(R.string.failure),
-            style = UI.typo.h2.style(
-                fontWeight = FontWeight.Black,
-                color = if (importSuccess) UI.colors.pureInverse else Red
-            )
+            style = ivyInter(34.sp, FontWeight.Bold, letterSpacing = (-0.5).sp),
+            color = if (importSuccess) UI.colors.pureInverse else Red
         )
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(16.dp))
 
         val successPercent = if (result.rowsFound > 0) {
             (result.transactionsImported / result.rowsFound.toDouble()) * 100
@@ -84,16 +76,10 @@ fun ImportResultUI(
             successPercent = successPercent,
         )
 
-        IvyDividerLine(
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-
         FailedSectionUI(
             result = result,
             successPercent = successPercent,
         )
-
-        // TODO: Implement "See failed imports"
 
         if (!isManualCsvImport) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -101,61 +87,47 @@ fun ImportResultUI(
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
+                    .padding(horizontal = 24.dp),
                 text = stringResource(R.string.csv_import_failed),
-                color = UI.colors.pureInverse,
+                style = ivyInter(13.sp),
+                color = UI.colors.gray
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .padding(horizontal = 16.dp),
-                onClick = {
-                    nav.navigateTo(CSVScreen(launchedFromOnboarding = launchedFromOnboarding))
-                }
-            ) {
-                Text(
-                    text = stringResource(id = R.string.manual_csv_import),
-                    style = UI.typo.b2.style(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+            CupertinoRowsCard(
+                rows = listOf(
+                    {
+                        CupertinoNavRow(
+                            icon = null,
+                            title = stringResource(R.string.manual_csv_import),
+                            onClick = {
+                                onOpenCsv?.invoke()
+                            }
+                        )
+                    }
                 )
-            }
+            )
         }
 
         Spacer(Modifier.weight(1f))
 
-        Spacer8()
-
-        OnboardingButton(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            text = stringResource(R.string.finish),
-            textColor = White,
-            backgroundGradient = GradientIvy,
-            hasNext = true,
-            enabled = true
-        ) {
-            onFinish()
-        }
+        CupertinoFilledButton(
+            label = stringResource(R.string.finish),
+            enabled = true,
+            onClick = onFinish,
+            modifier = Modifier.padding(horizontal = 20.dp)
+        )
 
         if (onTryAgain != null) {
             Spacer(Modifier.height(12.dp))
 
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+            CupertinoFilledButton(
+                label = stringResource(R.string.try_again),
+                enabled = true,
                 onClick = onTryAgain,
-                enabled = true
-            ) {
-                Text(text = stringResource(R.string.try_again))
-            }
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -167,58 +139,44 @@ private fun SuccessSectionUI(
     result: ImportResult,
     successPercent: Double,
 ) {
-    Column {
+    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
             text = stringResource(R.string.imported),
-            style = UI.typo.b1.style(
-                color = Green,
-                fontWeight = FontWeight.Black
-            )
+            style = ivyInter(13.sp, FontWeight.SemiBold, letterSpacing = 0.6.sp),
+            color = Green
         )
 
         Spacer(Modifier.height(8.dp))
 
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
             text = "${successPercent.format(2)}%",
-            style = UI.typo.nH2.style(
-                fontWeight = FontWeight.Normal
-            )
+            style = ivyInter(28.sp, FontWeight.Bold),
+            color = UI.colors.pureInverse
         )
 
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
             text = stringResource(R.string.transactions_imported, result.transactionsImported),
-            style = UI.typo.nB2.style(
-                fontWeight = FontWeight.Bold,
-                color = Gray
-            )
+            style = ivyInter(13.sp, FontWeight.Medium),
+            color = Gray
         )
 
         Spacer(Modifier.height(4.dp))
 
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
             text = stringResource(R.string.accounts_imported, result.accountsImported),
-            style = UI.typo.nB2.style(
-                fontWeight = FontWeight.Bold,
-                color = Gray
-            )
+            style = ivyInter(13.sp, FontWeight.Medium),
+            color = Gray
         )
 
         Spacer(Modifier.height(4.dp))
 
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
             text = stringResource(R.string.categories_imported, result.categoriesImported),
-            style = UI.typo.nB2.style(
-                fontWeight = FontWeight.Bold,
-                color = Gray
-            )
+            style = ivyInter(13.sp, FontWeight.Medium),
+            color = Gray
         )
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(16.dp))
     }
 }
 
@@ -227,38 +185,28 @@ private fun FailedSectionUI(
     result: ImportResult,
     successPercent: Double,
 ) {
-    Column {
-        Spacer(Modifier.height(32.dp))
-
+    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
             text = stringResource(R.string.failed),
-            style = UI.typo.b1.style(
-                fontWeight = FontWeight.Black,
-                color = Red
-            )
+            style = ivyInter(13.sp, FontWeight.SemiBold, letterSpacing = 0.6.sp),
+            color = Red
         )
 
         Spacer(Modifier.height(8.dp))
 
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
             text = "${(100 - successPercent).format(2)}%",
-            style = UI.typo.nH2.style(
-                fontWeight = FontWeight.Normal
-            )
+            style = ivyInter(28.sp, FontWeight.Bold),
+            color = UI.colors.pureInverse
         )
 
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
             text = stringResource(
                 R.string.rows_from_csv_not_recognized,
                 result.rowsFound - result.transactionsImported
             ),
-            style = UI.typo.nB2.style(
-                fontWeight = FontWeight.Bold,
-                color = Gray
-            )
+            style = ivyInter(13.sp, FontWeight.Medium),
+            color = Gray
         )
     }
 }
@@ -266,7 +214,7 @@ private fun FailedSectionUI(
 @Preview(device = "id:pixel_3", showBackground = true, showSystemUi = true)
 @Composable
 private fun Preview() {
-    com.ivy.legacy.IvyWalletPreview {
+    IvyWalletPreview {
         ImportResultUI(
             result = ImportResult(
                 rowsFound = 356,

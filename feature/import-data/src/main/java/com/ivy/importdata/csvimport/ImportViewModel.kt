@@ -168,19 +168,25 @@ class ImportViewModel @Inject constructor(
 
     fun skip(
         screen: ImportScreen,
-        onboardingViewModel: OnboardingViewModel
+        onboardingViewModel: OnboardingViewModel,
+        exit: () -> Unit = {}
     ) {
         if (screen.launchedFromOnboarding) {
             onboardingViewModel.importSkip()
         }
 
-        nav.back()
+        if (screen.inlineHosted) {
+            exit()
+        } else {
+            nav.back()
+        }
         resetState()
     }
 
     fun finish(
         screen: ImportScreen,
-        onboardingViewModel: OnboardingViewModel
+        onboardingViewModel: OnboardingViewModel,
+        exit: () -> Unit = {}
     ) {
         if (screen.launchedFromOnboarding) {
             val importSuccess = importResult.value?.transactionsImported?.let { it > 0 } ?: false
@@ -189,8 +195,28 @@ class ImportViewModel @Inject constructor(
             )
         }
 
-        nav.back()
+        if (screen.inlineHosted) {
+            exit()
+        } else {
+            nav.back()
+        }
         resetState()
+    }
+
+    /**
+     * Goes one wizard step back (INSTRUCTIONS/RESULT → IMPORT_FROM).
+     * Used by the in-tab hosted BackHandler; system back on IMPORT_FROM pops the page instead.
+     */
+    fun backFromStep() {
+        when (importStep.value) {
+            ImportStep.INSTRUCTIONS, ImportStep.RESULT -> {
+                _importStep.value = ImportStep.IMPORT_FROM
+            }
+
+            else -> {
+                // LOADING: back is disabled, IMPORT_FROM: pops the page (host BackHandler)
+            }
+        }
     }
 
     private fun resetState() {

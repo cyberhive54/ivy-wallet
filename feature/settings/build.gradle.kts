@@ -16,5 +16,13 @@ dependencies {
     implementation(projects.temp.oldDesign)
     implementation(projects.widget.balance)
 
+    // In-tab settings child pages (dock-aware hosting)
+    implementation(projects.feature.attributions)
+    implementation(projects.feature.contributors)
+    implementation(projects.feature.exchangeRates)
+    implementation(projects.feature.features)
+    implementation(projects.feature.importData)
+    implementation(projects.feature.releases)
+
     testImplementation(projects.shared.ui.testing)
 }
