@@ -1,13 +1,13 @@
 package com.ivy.main
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -34,15 +34,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
@@ -53,6 +56,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.ivy.base.legacy.Look
+import com.ivy.design.api.systems.AccentFamilies
+import com.ivy.design.l0_system.Black
 import com.ivy.design.l0_system.TrueBlack
 import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
@@ -71,25 +76,39 @@ import com.ivy.legacy.utils.toDensityPx
 import com.ivy.ui.R
 import com.ivy.wallet.ui.theme.Gradient
 import com.ivy.wallet.ui.theme.GradientGreen
-import com.ivy.wallet.ui.theme.GradientIvy
 import com.ivy.wallet.ui.theme.White
 import com.ivy.wallet.ui.theme.components.IvyCircleButton
 import com.ivy.wallet.ui.theme.components.IvyIcon
-import com.ivy.wallet.ui.theme.components.IvyOutlinedButton
-import com.ivy.wallet.ui.theme.gradientExpenses
 import com.ivy.wallet.ui.theme.modal.AddModalBackHandling
-import com.ivy.wallet.ui.theme.pureBlur
 import java.util.UUID
 import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.hypot
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
-val TRN_BUTTON_CLICK_AREA_HEIGHT = 150.dp
-val FAB_BUTTON_SIZE = 56.dp
 val DOCK_HEIGHT = 68.dp
 val DOCK_BOTTOM_MARGIN = 14.dp
 val DOCK_HORIZONTAL_MARGIN = 16.dp
 val CENTER_FAB_SIZE = 52.dp
 
+// Radial add menu geometry - all angles are in Compose canvas space
+// (0 deg = east, 90 deg = south, 270 deg = straight up).
+private val RING_RADIUS = 128.dp
+private val BAND_WIDTH = 60.dp
+private const val WEDGE_SWEEP_DEG = 41f
+private const val INCOME_CENTER_DEG = 226.5f
+private const val EXPENSE_CENTER_DEG = 270f
+private const val TRANSFER_CENTER_DEG = 313.5f
+
+/**
+ * The bottom dock. The + button blooms a radial add menu: three sector wedges
+ * (Income / Expense / Transfer) fanning out of the + with a bouncy spring and a
+ * Planned Payment capsule riding above the fan. The dock stays visible on top of
+ * the opaque scrim - tapping the scrim, the X (morphed +) or anywhere outside a
+ * wedge collapses the menu.
+ */
 @Deprecated("Old design system. Use `:ivy-design` and Material3")
 @Composable
 fun BoxWithConstraintsScope.BottomBar(
@@ -115,22 +134,6 @@ fun BoxWithConstraintsScope.BottomBar(
     ) {
         expanded = false
     }
-
-    val screenHeightDp = densityScope { ivyContext.screenHeight.toDp() }
-    val expandedBackgroundOffset by animateDpAsState(
-        targetValue = if (expanded) 0.dp else screenHeightDp,
-        animationSpec = springBounceFast()
-    )
-
-    val fabRotation by animateFloatAsState(
-        targetValue = if (expanded) 45f else 0f,
-        animationSpec = springBounceFast()
-    )
-
-    val buttonsShownPercent by animateFloatAsState(
-        targetValue = if (expanded) 1f else 0f,
-        animationSpec = springBounceFast()
-    )
 
     // Material-aware dock colors. isLight comes from the token (not a color equality
     // check) so the Forest / Graphite light palettes keep their light dock.
@@ -211,7 +214,9 @@ fun BoxWithConstraintsScope.BottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .align(Alignment.BottomCenter)
-            .alpha(1f - buttonsShownPercent)
+            // The dock rides above the radial menu's opaque scrim and stays
+            // fully visible while the add menu is open.
+            .zIndex(110f)
             .navigationBarsPadding()
             .padding(
                 bottom = DOCK_BOTTOM_MARGIN,
@@ -267,7 +272,8 @@ fun BoxWithConstraintsScope.BottomBar(
             )
             .height(DOCK_HEIGHT)
             .clickableNoIndication(rememberInteractionSource()) {
-                // consume click
+                // Tapping the dock body (outside a tab) collapses the add menu.
+                expanded = false
             }
     ) {
         BoxWithConstraints(
@@ -307,6 +313,7 @@ fun BoxWithConstraintsScope.BottomBar(
                     selectedColor = activeTabColor,
                     unselectedColor = unselectedTabColor
                 ) {
+                    expanded = false
                     selectTab(MainTab.HOME)
                 }
 
@@ -318,6 +325,7 @@ fun BoxWithConstraintsScope.BottomBar(
                     selectedColor = activeTabColor,
                     unselectedColor = unselectedTabColor
                 ) {
+                    expanded = false
                     selectTab(MainTab.ACCOUNTS)
                 }
 
@@ -331,6 +339,7 @@ fun BoxWithConstraintsScope.BottomBar(
                     selectedColor = activeTabColor,
                     unselectedColor = unselectedTabColor
                 ) {
+                    expanded = false
                     selectTab(MainTab.MENU)
                 }
 
@@ -342,26 +351,14 @@ fun BoxWithConstraintsScope.BottomBar(
                     selectedColor = activeTabColor,
                     unselectedColor = unselectedTabColor
                 ) {
+                    expanded = false
                     selectTab(MainTab.SETTINGS)
                 }
             }
         }
     }
 
-    if (expandedBackgroundOffset < screenHeightDp) {
-        Spacer(
-            modifier = Modifier
-                .fillMaxSize()
-                .offset(y = expandedBackgroundOffset)
-                .background(UI.colors.pure.copy(alpha = 0.95f))
-                .clickableNoIndication(rememberInteractionSource()) {
-                    // consume click, do nothing
-                }
-                .zIndex(100f)
-        )
-    }
-
-    // ------------------------------------ BUTTONS--------------------------------------------------
+    // ------------------------------------ Radial add menu ----------------------------------------
     val dockBottomMarginPx = densityScope { DOCK_BOTTOM_MARGIN.toDensityPx() }
     val dockHeightPx = densityScope { DOCK_HEIGHT.toDensityPx() }
     val centerFabSizePx = densityScope { CENTER_FAB_SIZE.toDensityPx() }
@@ -370,22 +367,68 @@ fun BoxWithConstraintsScope.BottomBar(
     val fabStartY = ivyContext.screenHeight - navigationBarInset() -
             dockBottomMarginPx - (dockHeightPx / 2f) - (centerFabSizePx / 2f)
 
-    TransactionButtons(
-        buttonsShownPercent = buttonsShownPercent,
+    val fabCenterXPx = fabStartX + centerFabSizePx / 2f
+    val fabCenterYPx = fabStartY + centerFabSizePx / 2f
 
-        fabStartX = fabStartX,
-        fabStartY = fabStartY,
-
-        onAddIncome = onAddIncome,
-        onAddExpense = onAddExpense,
-        onAddTransfer = onAddTransfer,
-        onAddPlannedPayment = onAddPlannedPayment
+    RadialAddMenu(
+        expanded = expanded,
+        fabCenterXPx = fabCenterXPx,
+        fabCenterYPx = fabCenterYPx,
+        // The scrim is fully opaque (not translucent) - it reads as the screen
+        // darkening to a near-black canvas while the dock and the menu stay lit.
+        scrimColor = when {
+            isAmoled -> TrueBlack
+            isLight -> Color(0xFF15171E)
+            else -> Color(0xFF08090D)
+        },
+        // The menu lives on a dark canvas, so the accent uses the night shade -
+        // it follows the user's accent pick in every Look and mode.
+        accentColor = AccentFamilies.primaryColor(
+            accent = ivyContext.accent,
+            isLight = false
+        ),
+        incomeColor = UI.colors.green,
+        expenseColor = UI.colors.red,
+        onDismiss = { expanded = false },
+        onIncome = {
+            expanded = false
+            onAddIncome()
+        },
+        onExpense = {
+            expanded = false
+            onAddExpense()
+        },
+        onTransfer = {
+            expanded = false
+            onAddTransfer()
+        },
+        onPlanned = {
+            expanded = false
+            onAddPlannedPayment()
+        }
     )
 
+    // ------------------------------------ + & x button -------------------------------------------
     var dragOffset by remember {
         mutableStateOf(Offset.Zero)
     }
-    // + & x button
+
+    // + morphs into x with a bouncy rotation + scale pop.
+    val fabRotation by animateFloatAsState(
+        targetValue = if (expanded) 45f else 0f,
+        animationSpec = spring(
+            dampingRatio = 0.58f,
+            stiffness = 420f
+        ),
+        label = "fab_morph"
+    )
+
+    val fabScale by animateFloatAsState(
+        targetValue = if (expanded) 1.06f else 1f,
+        animationSpec = springBounceFast(),
+        label = "fab_pop"
+    )
+
     IvyCircleButton(
         modifier = Modifier
             .layout { measurable, constraints ->
@@ -398,6 +441,7 @@ fun BoxWithConstraintsScope.BottomBar(
                 }
             }
             .size(CENTER_FAB_SIZE)
+            .scale(fabScale)
             .rotate(fabRotation)
             .zIndex(200f)
             .thenIf(tab != MainTab.ACCOUNTS) {
@@ -420,6 +464,7 @@ fun BoxWithConstraintsScope.BottomBar(
                                         dragOffset.y < -verticalThreshold -> {
                                     // swipe up
                                     dragOffset = Offset.Zero // prevent double open of the screen
+                                    expanded = false
                                     onAddExpense()
                                 }
 
@@ -427,6 +472,7 @@ fun BoxWithConstraintsScope.BottomBar(
                                         dragOffset.y < -verticalThreshold -> {
                                     // swipe up left
                                     dragOffset = Offset.Zero // prevent double open of the screen
+                                    expanded = false
                                     onAddIncome()
                                 }
 
@@ -434,6 +480,7 @@ fun BoxWithConstraintsScope.BottomBar(
                                         dragOffset.y < -verticalThreshold -> {
                                     // swipe up right
                                     dragOffset = Offset.Zero // prevent double open of the screen
+                                    expanded = false
                                     onAddTransfer()
                                 }
                             }
@@ -445,16 +492,20 @@ fun BoxWithConstraintsScope.BottomBar(
         backgroundPadding = 6.dp,
         icon = R.drawable.ic_add,
         backgroundGradient = when (tab) {
-            MainTab.ACCOUNTS -> {
-                GradientGreen
-            }
-
-            else -> {
-                if (!expanded) GradientIvy else Gradient.solid(UI.colors.gray)
+            MainTab.ACCOUNTS -> GradientGreen
+            else -> if (!expanded) {
+                // Accent-driven: the + follows the user's accent pick.
+                Gradient.solid(UI.colors.primary)
+            } else {
+                // The x reads as a bright close control on the dark canvas.
+                Gradient.solid(White)
             }
         },
         hasShadow = !expanded,
-        tint = White
+        tint = when (tab) {
+            MainTab.ACCOUNTS -> White
+            else -> if (!expanded) White else Black
+        }
     ) {
         when (tab) {
             MainTab.ACCOUNTS -> {
@@ -468,347 +519,335 @@ fun BoxWithConstraintsScope.BottomBar(
     }
 }
 
+/**
+ * The radial add menu: an opaque full-screen scrim, three sector wedges fanning
+ * out of the + button and the Planned Payment capsule riding above the fan.
+ *
+ * Layering (z-order): scrim 100 -> wedge canvas 105 -> dock 110 ->
+ * wedge labels 155 -> planned capsule 160 -> + button 200.
+ * The canvas sits below the dock so the dock stays fully interactive while
+ * the menu is open (tapping a tab collapses the menu and switches instantly).
+ */
 @Composable
-private fun TransactionButtons(
-    buttonsShownPercent: Float,
-
-    fabStartX: Float,
-    fabStartY: Float,
-
-    onAddIncome: () -> Unit,
-    onAddExpense: () -> Unit,
-    onAddTransfer: () -> Unit,
-    onAddPlannedPayment: () -> Unit,
+private fun BoxWithConstraintsScope.RadialAddMenu(
+    expanded: Boolean,
+    fabCenterXPx: Float,
+    fabCenterYPx: Float,
+    scrimColor: Color,
+    accentColor: Color,
+    incomeColor: Color,
+    expenseColor: Color,
+    onDismiss: () -> Unit,
+    onIncome: () -> Unit,
+    onExpense: () -> Unit,
+    onTransfer: () -> Unit,
+    onPlanned: () -> Unit,
 ) {
-    val ivyContext = ivyWalletCtx()
+    // The wedges fan out of the + with overshoot; collapsing folds them back in.
+    val fan by animateFloatAsState(
+        targetValue = if (expanded) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = 0.62f,
+            stiffness = 215f
+        ),
+        label = "radial_fan"
+    )
 
-    val bH = 48.dp
-    val bV = 20.dp // 24.dp
-    val bCenterV = 74.dp // 80.dp
+    val scrimAlpha by animateFloatAsState(
+        targetValue = if (expanded) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = 0.95f,
+            stiffness = 460f
+        ),
+        label = "radial_scrim"
+    )
 
-    if (buttonsShownPercent > 0.01f) {
-        val buttonLeftX = bH.toDensityPx()
-        val buttonRightX = ivyContext.screenWidth - bH.toDensityPx() - FAB_BUTTON_SIZE.toDensityPx()
+    // The capsule lags the fan slightly for a choreographed entrance.
+    val plannedProgress by animateFloatAsState(
+        targetValue = if (expanded) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = 0.55f,
+            stiffness = 185f
+        ),
+        label = "radial_planned"
+    )
 
-        val sideButtonsY = fabStartY - bV.toDensityPx() - FAB_BUTTON_SIZE.toDensityPx()
-        val buttonCenterY = fabStartY - bCenterV.toDensityPx() - FAB_BUTTON_SIZE.toDensityPx()
+    if (fan <= 0.004f && scrimAlpha <= 0.004f) return
 
-        val clickAreaWidth = ivyContext.screenWidth / 3
+    val isLight = UI.colors.isLight
 
-        IvyOutlinedButton(
+    // 1) Opaque full-screen scrim - tap anywhere to close.
+    if (scrimAlpha > 0.004f) {
+        Box(
             modifier = Modifier
-                .layout { measurable, constraints ->
-                    val placealbe = measurable.measure(constraints)
-                    layout(placealbe.width, placealbe.height) {
-                        placealbe.place(
-                            x = ivyContext.screenWidth / 2 - placealbe.width / 2,
-                            y = buttonCenterY.roundToInt() - 48.dp.roundToPx() - placealbe.height - FAB_BUTTON_SIZE.roundToPx()
-                        )
+                .fillMaxSize()
+                .zIndex(100f)
+                .graphicsLayer { alpha = scrimAlpha }
+                .background(scrimColor)
+                .clickableNoIndication(rememberInteractionSource()) {
+                    onDismiss()
+                }
+                .testTag("radial_scrim")
+        )
+    }
+
+    if (fan <= 0.004f) return
+
+    val ringRadiusPx = densityScope { RING_RADIUS.toDensityPx() }
+    val bandWidthPx = densityScope { BAND_WIDTH.toDensityPx() }
+    val startRingPx = densityScope { (CENTER_FAB_SIZE / 2f + 6.dp).toDensityPx() }
+    val capsuleTravelPx = densityScope { (RING_RADIUS + BAND_WIDTH / 2f + 34.dp).toDensityPx() }
+
+    // The ring grows out of the + while the fan spreads.
+    val ringPx = lerp(startRingPx, ringRadiusPx, fan)
+    val bandAlpha = fan.coerceIn(0f, 1f)
+    val contentAlpha = (fan * 1.6f).coerceAtMost(1f)
+    val contentScale = 0.7f + 0.3f * fan
+
+    // 2) Wedge sectors - crisp annular sectors with hairline gaps.
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(105f)
+            .pointerInput(Unit) {
+                detectTapGestures { pos ->
+                    val dx = pos.x - fabCenterXPx
+                    val dy = pos.y - fabCenterYPx
+                    val dist = hypot(dx, dy)
+                    val innerPx = ringRadiusPx - bandWidthPx / 2f
+                    val outerPx = ringRadiusPx + bandWidthPx / 2f
+
+                    if (dist < innerPx - 16f || dist > outerPx + 16f) {
+                        onDismiss()
+                        return@detectTapGestures
+                    }
+
+                    var angle = Math.toDegrees(atan2(dy, dx).toDouble()).toFloat()
+                    if (angle < 0f) angle += 360f
+
+                    val halfSweep = WEDGE_SWEEP_DEG / 2f + 2f
+                    when {
+                        abs(angle - INCOME_CENTER_DEG) <= halfSweep -> onIncome()
+                        abs(angle - EXPENSE_CENTER_DEG) <= halfSweep -> onExpense()
+                        abs(angle - TRANSFER_CENTER_DEG) <= halfSweep -> onTransfer()
+                        else -> onDismiss()
                     }
                 }
-                .padding(horizontal = 8.dp)
-                .alpha(buttonsShownPercent)
-                .zIndex(200f),
-            iconStart = R.drawable.ic_planned_payments,
-            text = stringResource(R.string.add_planned_payment),
-            solidBackground = true
-        ) {
-            onAddPlannedPayment()
+            }
+            .testTag("radial_menu")
+    ) {
+        val wedges = listOf(
+            INCOME_CENTER_DEG to incomeColor,
+            EXPENSE_CENTER_DEG to expenseColor,
+            TRANSFER_CENTER_DEG to accentColor
+        )
+
+        wedges.forEach { (centerDeg, color) ->
+            val animatedCenter = lerp(EXPENSE_CENTER_DEG, centerDeg, fan)
+            val sweep = (WEDGE_SWEEP_DEG * fan).coerceAtLeast(0.5f)
+            val innerR = ringPx - bandWidthPx / 2f
+            val outerR = ringPx + bandWidthPx / 2f
+
+            val sector = Path()
+            sector.arcTo(
+                rect = Rect(
+                    left = fabCenterXPx - outerR,
+                    top = fabCenterYPx - outerR,
+                    right = fabCenterXPx + outerR,
+                    bottom = fabCenterYPx + outerR
+                ),
+                startAngleDegrees = animatedCenter - sweep / 2f,
+                sweepAngleDegrees = sweep,
+                forceMoveTo = true
+            )
+            sector.arcTo(
+                rect = Rect(
+                    left = fabCenterXPx - innerR,
+                    top = fabCenterYPx - innerR,
+                    right = fabCenterXPx + innerR,
+                    bottom = fabCenterYPx + innerR
+                ),
+                startAngleDegrees = animatedCenter + sweep / 2f,
+                sweepAngleDegrees = -sweep,
+                forceMoveTo = false
+            )
+            sector.close()
+
+            drawPath(
+                path = sector,
+                color = color.copy(alpha = bandAlpha)
+            )
         }
+    }
 
-        // Add INCOME ------------------------------------------------------------------------------
-        AddIncomeButton(
-            buttonsShownPercent = buttonsShownPercent,
-            fabStartX = fabStartX,
-            fabStartY = fabStartY,
-            buttonLeftX = buttonLeftX,
-            sideButtonsY = sideButtonsY,
-            clickAreaWidth = clickAreaWidth,
-            onAddIncome = onAddIncome
-        )
-        // Add INCOME ------------------------------------------------------------------------------
+    // 3) Wedge icon + label overlays riding the animated polar positions.
+    WedgeContent(
+        icon = R.drawable.ic_income,
+        label = stringResource(R.string.income),
+        alphaFactor = contentAlpha,
+        scaleFactor = contentScale,
+        angleDeg = lerp(EXPENSE_CENTER_DEG, INCOME_CENTER_DEG, fan),
+        radiusPx = ringPx,
+        centerX = fabCenterXPx,
+        centerY = fabCenterYPx,
+        testTag = "radial_income"
+    )
 
-        // Add EXPENSE ------------------------------------------------------------------------------
-        AddExpenseButton(
-            buttonsShownPercent = buttonsShownPercent,
-            fabStartX = fabStartX,
-            fabStartY = fabStartY,
-            buttonCenterY = buttonCenterY,
-            clickAreaWidth = clickAreaWidth,
-            onAddExpense = onAddExpense
-        )
-        // Add EXPENSE ------------------------------------------------------------------------------
+    WedgeContent(
+        icon = R.drawable.ic_expense,
+        label = stringResource(R.string.expense),
+        alphaFactor = contentAlpha,
+        scaleFactor = contentScale,
+        angleDeg = lerp(EXPENSE_CENTER_DEG, EXPENSE_CENTER_DEG, fan),
+        radiusPx = ringPx,
+        centerX = fabCenterXPx,
+        centerY = fabCenterYPx,
+        testTag = "radial_expense"
+    )
 
-        // Add TRANSFER ----------------------------------------------------------------------------
-        AddTransferButton(
-            buttonsShownPercent = buttonsShownPercent,
-            fabStartX = fabStartX,
-            fabStartY = fabStartY,
-            buttonRightX = buttonRightX,
-            sideButtonsY = sideButtonsY,
-            clickAreaWidth = clickAreaWidth,
-            onAddTransfer = onAddTransfer
+    WedgeContent(
+        icon = R.drawable.ic_transfer,
+        label = stringResource(R.string.transfer),
+        alphaFactor = contentAlpha,
+        scaleFactor = contentScale,
+        angleDeg = lerp(EXPENSE_CENTER_DEG, TRANSFER_CENTER_DEG, fan),
+        radiusPx = ringPx,
+        centerX = fabCenterXPx,
+        centerY = fabCenterYPx,
+        testTag = "radial_transfer"
+    )
+
+    // 4) Planned Payment capsule above the fan.
+    PlannedPaymentCapsule(
+        progress = plannedProgress,
+        centerX = fabCenterXPx,
+        fromY = fabCenterYPx - startRingPx,
+        toY = fabCenterYPx - capsuleTravelPx,
+        accentColor = accentColor,
+        isLight = isLight,
+        onClick = onPlanned
+    )
+}
+
+@Composable
+private fun BoxWithConstraintsScope.WedgeContent(
+    @DrawableRes icon: Int,
+    label: String,
+    alphaFactor: Float,
+    scaleFactor: Float,
+    angleDeg: Float,
+    radiusPx: Float,
+    centerX: Float,
+    centerY: Float,
+    testTag: String,
+) {
+    if (alphaFactor <= 0.01f) return
+
+    val radians = Math.toRadians(angleDeg.toDouble())
+    val x = centerX + radiusPx * cos(radians).toFloat()
+    val y = centerY + radiusPx * sin(radians).toFloat()
+
+    Column(
+        modifier = Modifier
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                layout(placeable.width, placeable.height) {
+                    placeable.place(
+                        x = (x - placeable.width / 2f).roundToInt(),
+                        y = (y - placeable.height / 2f).roundToInt()
+                    )
+                }
+            }
+            .graphicsLayer {
+                this.alpha = alphaFactor
+                this.scaleX = scaleFactor
+                this.scaleY = scaleFactor
+            }
+            .width(78.dp)
+            .zIndex(155f)
+            .testTag(testTag),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        IvyIcon(
+            modifier = Modifier.size(22.dp),
+            icon = icon,
+            tint = White
         )
-        // Add TRANSFER ----------------------------------------------------------------------------
+
+        Spacer(Modifier.height(3.dp))
+
+        Text(
+            text = label,
+            style = UI.typo.c.style(
+                color = White,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            ),
+            maxLines = 1
+        )
     }
 }
 
 @Composable
-private fun AddIncomeButton(
-    buttonsShownPercent: Float,
-    fabStartX: Float,
-    fabStartY: Float,
-    buttonLeftX: Float,
-    sideButtonsY: Float,
-    clickAreaWidth: Int,
-    onAddIncome: () -> Unit,
+private fun BoxWithConstraintsScope.PlannedPaymentCapsule(
+    progress: Float,
+    centerX: Float,
+    fromY: Float,
+    toY: Float,
+    accentColor: Color,
+    isLight: Boolean,
+    onClick: () -> Unit,
 ) {
-    IvyCircleButton(
+    if (progress <= 0.004f) return
+
+    Row(
         modifier = Modifier
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-
-                val x = lerp(fabStartX, buttonLeftX, buttonsShownPercent)
-                val y = lerp(
-                    fabStartY,
-                    sideButtonsY - FAB_BUTTON_SIZE.roundToPx(),
-                    buttonsShownPercent
-                )
-
-                layout(placeable.width, placeable.height) {
-                    placeable.place(
-                        x = x.roundToInt(),
-                        y = y.roundToInt()
-                    )
-                }
-            }
-            .size(FAB_BUTTON_SIZE)
-            .zIndex(200f),
-        icon = R.drawable.ic_income,
-        backgroundGradient = GradientGreen,
-        tint = White,
-        onClick = onAddIncome
-    )
-
-    Text(
-        modifier = Modifier
-            .width(FAB_BUTTON_SIZE + 16.dp)
             .layout { measurable, constraints ->
                 val placeable = measurable.measure(constraints)
                 layout(placeable.width, placeable.height) {
                     placeable.place(
-                        x = buttonLeftX.roundToInt() - 8.dp.roundToPx(),
-                        y = (sideButtonsY + 12.dp.toPx()).roundToInt()
+                        x = (centerX - placeable.width / 2f).roundToInt(),
+                        y = lerp(fromY, toY, progress).roundToInt()
                     )
                 }
             }
-            .alpha(buttonsShownPercent)
-            .clickableNoIndication(rememberInteractionSource()) {
-                onAddIncome()
+            .graphicsLayer {
+                this.alpha = progress.coerceIn(0f, 1f)
+                this.scaleX = 0.78f + 0.22f * progress
+                this.scaleY = 0.78f + 0.22f * progress
             }
-            .zIndex(200f),
-        text = stringResource(R.string.add_income_uppercase),
-        style = UI.typo.c.style(
-            color = UI.colors.pureInverse,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
-        )
-    )
-
-    // Click area
-    Spacer(
-        modifier = Modifier
-            .size(
-                width = clickAreaWidth.toDensityDp(),
-                height = TRN_BUTTON_CLICK_AREA_HEIGHT
+            .zIndex(160f)
+            .clip(RoundedCornerShape(percent = 50))
+            .background(accentColor.copy(alpha = if (isLight) 0.16f else 0.26f))
+            .border(
+                width = 1.dp,
+                color = accentColor.copy(alpha = if (isLight) 0.42f else 0.55f),
+                shape = RoundedCornerShape(percent = 50)
             )
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-
-                layout(placeable.width, placeable.height) {
-                    placeable.place(
-                        x = 0,
-                        y = sideButtonsY.roundToInt() - FAB_BUTTON_SIZE.roundToPx() - 16.dp.roundToPx()
-                    )
-                }
-            }
-            .zIndex(199f)
             .clickableNoIndication(rememberInteractionSource()) {
-                onAddIncome()
+                onClick()
             }
-    )
-}
-
-@Composable
-private fun AddExpenseButton(
-    buttonsShownPercent: Float,
-    fabStartX: Float,
-    fabStartY: Float,
-    buttonCenterY: Float,
-    clickAreaWidth: Int,
-    onAddExpense: () -> Unit,
-) {
-    IvyCircleButton(
-        modifier = Modifier
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-
-                val y =
-                    lerp(
-                        fabStartY,
-                        buttonCenterY - FAB_BUTTON_SIZE.roundToPx(),
-                        buttonsShownPercent
-                    )
-
-                layout(placeable.width, placeable.height) {
-                    placeable.place(
-                        x = fabStartX.roundToInt(),
-                        y = y.roundToInt()
-                    )
-                }
-            }
-            .size(FAB_BUTTON_SIZE)
-            .zIndex(200f),
-        icon = R.drawable.ic_expense,
-        backgroundGradient = gradientExpenses(),
-        horizontalGradient = false,
-        tint = White,
-        onClick = onAddExpense
-    )
-
-    Text(
-        modifier = Modifier
-            .width(FAB_BUTTON_SIZE + 16.dp)
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-                layout(placeable.width, placeable.height) {
-                    placeable.place(
-                        x = fabStartX.roundToInt() - 8.dp.roundToPx(),
-                        y = (buttonCenterY + 12.dp.toPx()).roundToInt()
-                    )
-                }
-            }
-            .alpha(buttonsShownPercent)
-            .clickableNoIndication(rememberInteractionSource()) {
-                onAddExpense()
-            }
-            .zIndex(200f),
-        text = stringResource(R.string.add_expense_uppercase),
-        style = UI.typo.c.style(
-            color = UI.colors.pureInverse,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
+            .testTag("radial_planned")
+            .padding(horizontal = 16.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IvyIcon(
+            modifier = Modifier.size(18.dp),
+            icon = R.drawable.ic_planned_payments,
+            tint = accentColor
         )
-    )
 
-    // Click area
-    Spacer(
-        modifier = Modifier
-            .size(
-                width = clickAreaWidth.toDensityDp(),
-                height = TRN_BUTTON_CLICK_AREA_HEIGHT
-            )
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
+        Spacer(Modifier.width(7.dp))
 
-                layout(placeable.width, placeable.height) {
-                    placeable.place(
-                        x = clickAreaWidth,
-                        y = buttonCenterY.roundToInt() - FAB_BUTTON_SIZE.roundToPx() - 16.dp.roundToPx()
-                    )
-                }
-            }
-            .zIndex(199f)
-            .clickableNoIndication(rememberInteractionSource()) {
-                onAddExpense()
-            }
-    )
-}
-
-@Composable
-private fun AddTransferButton(
-    buttonsShownPercent: Float,
-    fabStartX: Float,
-    fabStartY: Float,
-    buttonRightX: Float,
-    sideButtonsY: Float,
-    clickAreaWidth: Int,
-    onAddTransfer: () -> Unit,
-) {
-    IvyCircleButton(
-        modifier = Modifier
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-
-                val x = lerp(fabStartX, buttonRightX, buttonsShownPercent)
-                val y = lerp(
-                    fabStartY,
-                    sideButtonsY - FAB_BUTTON_SIZE.roundToPx(),
-                    buttonsShownPercent
-                )
-
-                layout(placeable.width, placeable.height) {
-                    placeable.place(
-                        x = x.roundToInt(),
-                        y = y.roundToInt()
-                    )
-                }
-            }
-            .size(FAB_BUTTON_SIZE)
-            .zIndex(200f),
-        icon = R.drawable.ic_transfer,
-        backgroundGradient = GradientIvy,
-        tint = White,
-        onClick = onAddTransfer
-    )
-
-    Text(
-        modifier = Modifier
-            .width(FAB_BUTTON_SIZE + 16.dp)
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-                layout(placeable.width, placeable.height) {
-                    placeable.place(
-                        x = buttonRightX.roundToInt() - 8.dp.roundToPx(),
-                        y = (sideButtonsY + 12.dp.toPx()).roundToInt()
-                    )
-                }
-            }
-            .alpha(buttonsShownPercent)
-            .clickableNoIndication(rememberInteractionSource()) {
-                onAddTransfer()
-            }
-            .zIndex(200f),
-        text = stringResource(R.string.account_transfer),
-        style = UI.typo.c.style(
-            color = UI.colors.pureInverse,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
+        Text(
+            text = stringResource(R.string.add_planned_payment),
+            style = UI.typo.b2.style(
+                color = accentColor,
+                fontWeight = FontWeight.SemiBold
+            ),
+            maxLines = 1
         )
-    )
-
-    // Click area
-    Spacer(
-        modifier = Modifier
-            .size(
-                width = clickAreaWidth.toDensityDp(),
-                height = TRN_BUTTON_CLICK_AREA_HEIGHT
-            )
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-
-                layout(placeable.width, placeable.height) {
-                    placeable.place(
-                        x = 2 * clickAreaWidth,
-                        y = sideButtonsY.roundToInt() - FAB_BUTTON_SIZE.roundToPx() - 16.dp.roundToPx()
-                    )
-                }
-            }
-            .zIndex(199f)
-            .clickableNoIndication(rememberInteractionSource()) {
-                onAddTransfer()
-            }
-    )
+    }
 }
 
 @Composable
