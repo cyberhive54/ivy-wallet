@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -44,8 +45,6 @@ import com.ivy.legacy.data.model.MainTab
 import com.ivy.legacy.data.model.Month
 import com.ivy.legacy.data.model.TimePeriod
 import com.ivy.legacy.ivyWalletCtx
-import com.ivy.legacy.ui.component.transaction.TransactionsDividerLine
-import com.ivy.legacy.ui.component.transaction.transactions
 import com.ivy.legacy.utils.horizontalSwipeListener
 import com.ivy.legacy.utils.rememberSwipeListenerState
 import com.ivy.legacy.utils.verticalSwipeListener
@@ -352,15 +351,9 @@ fun HomeLazyColumn(
                 onOpenMoreMenu = onOpenMoreMenu,
                 onBalanceClick = onBalanceClick,
                 onHiddenBalanceClick = onHiddenBalanceClick,
-                percentExpanded = 1f,
                 hideIncome = hideIncome,
                 onHiddenIncomeClick = onHiddenIncomeClick
             )
-        }
-        item {
-            Spacer(Modifier.height(16.dp))
-
-            TransactionsDividerLine()
         }
 
         item {
@@ -370,7 +363,13 @@ fun HomeLazyColumn(
             )
         }
 
-        transactions(
+        item {
+            HomeSectionHeader(
+                text = stringResource(R.string.transactions)
+            )
+        }
+
+        homeTransactions(
             baseData = baseData,
             upcoming = upcoming,
             setUpcomingExpanded = setUpcomingExpanded,

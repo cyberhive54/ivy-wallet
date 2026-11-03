@@ -1,6 +1,7 @@
 package com.ivy.home.customerjourney
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,22 +20,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ivy.design.l0_system.UI
-import com.ivy.design.l0_system.style
+import com.ivy.design.l0_system.dynamicContrast
 import com.ivy.domain.RootScreen
 import com.ivy.legacy.ivyWalletCtx
 import com.ivy.legacy.rootScreen
-import com.ivy.legacy.utils.drawColoredShadow
 import com.ivy.navigation.IvyPreview
 import com.ivy.navigation.navigation
+import com.ivy.home.homeHairline
+import com.ivy.home.homeInter
 import com.ivy.ui.R
-import com.ivy.wallet.ui.theme.Gradient
-import com.ivy.wallet.ui.theme.components.IvyButton
 import com.ivy.wallet.ui.theme.components.IvyIcon
-import com.ivy.wallet.ui.theme.dynamicContrast
-import com.ivy.wallet.ui.theme.findContrastTextColor
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
@@ -49,11 +50,11 @@ fun CustomerJourney(
         val rootScreen = rootScreen()
 
         if (customerJourneyCards.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
         }
 
         for (card in customerJourneyCards) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
 
             CustomerJourneyCard(
                 modifier = modifier,
@@ -77,13 +78,17 @@ fun CustomerJourneyCard(
     modifier: Modifier = Modifier,
     onCTA: () -> Unit,
 ) {
+    // The card's signature color is kept, but demoted from full-bleed background to an
+    // accent: tinted CTA pill on a token-driven Cupertino card.
+    val accent = cardData.background.startColor.dynamicContrast()
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .drawColoredShadow(cardData.background.startColor)
-            .background(cardData.background.asHorizontalBrush(), UI.shapes.r3)
-            .clip(UI.shapes.r3)
+            .padding(horizontal = 20.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(UI.colors.medium)
+            .border(1.dp, homeHairline(), RoundedCornerShape(20.dp))
             .clickable {
                 onCTA()
             }
@@ -96,12 +101,12 @@ fun CustomerJourneyCard(
             Text(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 24.dp, end = 16.dp),
+                    .padding(start = 18.dp, end = 8.dp),
                 text = cardData.title,
-                style = UI.typo.b1.style(
-                    fontWeight = FontWeight.ExtraBold,
-                    color = findContrastTextColor(cardData.background.startColor)
-                )
+                style = homeInter(16.sp, FontWeight.SemiBold, letterSpacing = (-0.2).sp),
+                color = UI.colors.pureInverse,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
 
             if (cardData.hasDismiss) {
@@ -111,51 +116,63 @@ fun CustomerJourneyCard(
                             onDismiss()
                         }
                         .padding(8.dp), // enlarge click area
-                    icon = R.drawable.ic_dismiss,
-                    tint = cardData.background.startColor.dynamicContrast(),
+                    icon = R.drawable.ic_dismiss_close,
+                    tint = UI.colors.gray,
                     contentDescription = "prompt_dismiss",
                 )
 
-                Spacer(Modifier.width(20.dp))
+                Spacer(Modifier.width(10.dp))
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(6.dp))
 
         Text(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, end = 32.dp),
+                .padding(start = 18.dp, end = 24.dp),
             text = cardData.description,
-            style = UI.typo.b2.style(
-                fontWeight = FontWeight.Medium,
-                color = findContrastTextColor(cardData.background.startColor)
-            )
+            style = homeInter(14.sp),
+            color = UI.colors.gray
         )
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(14.dp))
 
         if (cardData.cta != null) {
-            IvyButton(
+            Row(
                 modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(horizontal = 20.dp)
-                    .testTag("cta_prompt_${cardData.id}"),
-                text = cardData.cta,
-                shadowAlpha = 0f,
-                iconStart = cardData.ctaIcon,
-                iconTint = cardData.background.startColor,
-                textStyle = UI.typo.b2.style(
-                    color = cardData.background.startColor,
-                    fontWeight = FontWeight.Bold
-                ),
-                padding = 8.dp,
-                backgroundGradient = Gradient.solid(findContrastTextColor(cardData.background.startColor))
+                    .padding(start = 18.dp, end = 18.dp, bottom = 16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                onCTA()
-            }
+                Spacer(Modifier.weight(1f))
 
-            Spacer(Modifier.height(20.dp))
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(accent.copy(alpha = 0.14f))
+                        .clickable {
+                            onCTA()
+                        }
+                        .padding(horizontal = 14.dp, vertical = 9.dp)
+                        .testTag("cta_prompt_${cardData.id}"),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IvyIcon(
+                        icon = cardData.ctaIcon,
+                        tint = accent,
+                        modifier = Modifier.height(16.dp)
+                    )
+
+                    Spacer(Modifier.width(6.dp))
+
+                    Text(
+                        text = cardData.cta,
+                        style = homeInter(14.sp, FontWeight.SemiBold),
+                        color = accent
+                    )
+                }
+            }
         }
     }
 }
