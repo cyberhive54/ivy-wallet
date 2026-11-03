@@ -40,7 +40,9 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
@@ -50,6 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.ivy.base.legacy.Look
 import com.ivy.design.l0_system.TrueBlack
 import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
@@ -131,46 +134,63 @@ fun BoxWithConstraintsScope.BottomBar(
         animationSpec = springBounceFast()
     )
 
-    val isLight = UI.colors.pure == White
+    // Material-aware dock colors. isLight comes from the token (not a color equality
+    // check) so the Forest / Graphite light palettes keep their light dock.
+    val isLight = UI.colors.isLight
     val isAmoled = UI.colors.pure == TrueBlack
+    val isGlass = UI.colors.look == Look.GLASS
 
     val dockBg = when {
+        isGlass && isLight -> Color(0xFFF6F8FC).copy(alpha = 0.72f)
+        isGlass -> Color(0xFF161C29).copy(alpha = 0.74f)
         isLight -> Color(0xFFFFFFFF).copy(alpha = 0.96f)
         isAmoled -> Color(0xFF141418).copy(alpha = 0.97f)
         else -> Color(0xFF262732).copy(alpha = 0.95f)
     }
 
     val dockBorderColor = when {
+        isGlass && isLight -> Color(0xFFDDE3EE).copy(alpha = 0.70f)
+        isGlass -> Color.White.copy(alpha = 0.16f)
         isLight -> Color(0xFFE2E4EB).copy(alpha = 0.85f)
         isAmoled -> Color.White.copy(alpha = 0.18f)
         else -> Color.White.copy(alpha = 0.14f)
     }
 
     val shadowColor = when {
+        isGlass && isLight -> Color(0xFF0A1220)
+        isGlass -> Color.Black
         isLight -> Color(0xFF0F172A)
         isAmoled -> Ivy
         else -> Color.Black
     }
 
     val shadowAlpha = when {
+        isGlass && isLight -> 0.13f
+        isGlass -> 0.40f
         isLight -> 0.18f
         isAmoled -> 0.22f
         else -> 0.50f
     }
 
     val pillBg = when {
+        isGlass && isLight -> Color(0xFF0A6BD8).copy(alpha = 0.14f)
+        isGlass -> Color(0xFF0A84FF).copy(alpha = 0.30f)
         isLight -> Color(0xFFF1EEFF)
         isAmoled -> Ivy.copy(alpha = 0.28f)
         else -> Ivy.copy(alpha = 0.22f)
     }
 
     val activeTabColor = when {
+        isGlass && isLight -> Color(0xFF0A6BD8)
+        isGlass -> Color(0xFF6FB0FF)
         isLight -> Ivy
         isAmoled -> Color(0xFFA592FF)
         else -> Color(0xFF9B82FF)
     }
 
     val unselectedTabColor = when {
+        isGlass && isLight -> Color(0xFF5C6470)
+        isGlass -> Color.White.copy(alpha = 0.58f)
         isLight -> Color(0xFF525763)
         isAmoled -> Color.White.copy(alpha = 0.65f)
         else -> Color.White.copy(alpha = 0.55f)
@@ -219,9 +239,35 @@ fun BoxWithConstraintsScope.BottomBar(
             )
             .clip(RoundedCornerShape(35.dp))
             .background(dockBg)
+            .then(
+                if (isGlass) {
+                    // Lit pane: a top sheen over the translucent surface.
+                    Modifier.background(
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                Color.White.copy(alpha = if (isLight) 0.24f else 0.09f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = RoundedCornerShape(35.dp)
+                    )
+                } else {
+                    Modifier
+                }
+            )
             .border(
                 width = 1.dp,
-                color = dockBorderColor,
+                brush = if (isGlass) {
+                    // The glass signature: bright top edge fading down.
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = if (isLight) 0.85f else 0.34f),
+                            Color.White.copy(alpha = if (isLight) 0.10f else 0.04f)
+                        )
+                    )
+                } else {
+                    SolidColor(dockBorderColor)
+                },
                 shape = RoundedCornerShape(35.dp)
             )
             .height(DOCK_HEIGHT)

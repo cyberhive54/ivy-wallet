@@ -149,14 +149,29 @@ abstract class IvyWalletDesign : IvyDesign {
     private val GraphiteNightPrimary1 = Color(0xFF78787F)
     private val GraphiteAmoledCard = Color(0xFF0F0F11)
 
+    // Glass - the window. Cards carry alpha so surfaces read as panes over the wash.
+    private val GlassPaper = Color(0xFFEDF0F6)
+    private val GlassInk = Color(0xFF1A1D26)
+    private val GlassSlate = Color(0xFF8A8F9E)
+    private val GlassCard = Color(0xCCFFFFFF)
+    private val GlassChip = Color(0xFF2A2E3A)
+    private val GlassPrimary = Color(0xFF0A6BD8)
+    private val GlassPrimaryDeep = Color(0xFF084B99)
+    private val GlassNight = Color(0xFF0C1017)
+    private val GlassNightCard = Color(0xCC1A2230)
+    private val GlassNightInk = Color(0xFFE8ECF4)
+    private val GlassNightChip = Color(0xFFDCE2EE)
+    private val GlassPrimaryNight = Color(0xFF0A84FF)
+    private val GlassPrimaryPale = Color(0xFF9ECDFF)
+    private val GlassAmoledCard = Color(0xCC151A24)
+
     @Deprecated("Old design system. Use `:ivy-design` and Material3")
     override fun colors(theme: Theme, isDarkModeEnabled: Boolean, look: Look): IvyColors {
         return when (look) {
-            // GLASS reuses the IVY palette until the translucent-surface pass ships;
-            // its look tag still marks it so glass-aware components can branch.
-            Look.IVY, Look.GLASS -> ivyPalette(theme, isDarkModeEnabled, look)
+            Look.IVY -> ivyPalette(theme, isDarkModeEnabled, look)
             Look.FOREST -> forestPalette(theme, isDarkModeEnabled)
             Look.GRAPHITE -> graphitePalette(theme, isDarkModeEnabled)
+            Look.GLASS -> glassPalette(theme, isDarkModeEnabled)
         }
     }
 
@@ -357,6 +372,73 @@ abstract class IvyWalletDesign : IvyDesign {
                 graphitePalette(Theme.DARK, true)
             } else {
                 graphitePalette(Theme.LIGHT, false)
+            }
+        }
+    }
+
+    private fun glassPalette(theme: Theme, isDarkModeEnabled: Boolean): IvyColors {
+        return when (theme) {
+            Theme.LIGHT -> ivyColorsOf(
+                look = Look.GLASS,
+                isLight = true,
+                pure = GlassPaper,
+                pureInverse = GlassInk,
+                gray = GlassSlate,
+                medium = GlassCard,
+                mediumInverse = GlassChip,
+                primary = GlassPrimary,
+                primary1 = GlassPrimaryDeep,
+                green = Green,
+                green1 = GreenLight,
+                orange = Orange,
+                orange1 = OrangeLight,
+                red = Red,
+                red1 = RedLight,
+                red1Inverse = RedDark,
+            )
+
+            Theme.DARK -> ivyColorsOf(
+                look = Look.GLASS,
+                isLight = false,
+                pure = GlassNight,
+                pureInverse = GlassNightInk,
+                gray = GlassSlate,
+                medium = GlassNightCard,
+                mediumInverse = GlassNightChip,
+                primary = GlassPrimaryNight,
+                primary1 = GlassPrimaryPale,
+                green = Green,
+                green1 = GreenDark,
+                orange = Orange,
+                orange1 = OrangeDark,
+                red = Red,
+                red1 = RedDark,
+                red1Inverse = RedLight,
+            )
+
+            Theme.AMOLED_DARK -> ivyColorsOf(
+                look = Look.GLASS,
+                isLight = false,
+                pure = TrueBlack,
+                pureInverse = GlassNightInk,
+                gray = GlassSlate,
+                medium = GlassAmoledCard,
+                mediumInverse = GlassNightChip,
+                primary = GlassPrimaryNight,
+                primary1 = GlassPrimaryPale,
+                green = Green,
+                green1 = GreenDark,
+                orange = Orange,
+                orange1 = OrangeDark,
+                red = Red,
+                red1 = RedDark,
+                red1Inverse = RedLight,
+            )
+
+            Theme.AUTO -> if (isDarkModeEnabled) {
+                glassPalette(Theme.DARK, true)
+            } else {
+                glassPalette(Theme.LIGHT, false)
             }
         }
     }

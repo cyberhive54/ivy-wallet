@@ -67,10 +67,9 @@ class RootViewModel @Inject constructor(
                 ivyContext.switchTheme(theme)
 
                 // Look (material) axis - persisted in SharedPrefs. Migrates the old
-                // mock-theme key; GLASS falls back to IVY until the translucent pass ships.
+                // mock-theme key for upgrades.
                 val look = Look.parse(sharedPrefs.getString(SharedPrefs.SETTINGS_LOOK, null))
                     ?: Look.parse(sharedPrefs.getString(SharedPrefs.SETTINGS_MOCK_THEME, null))
-                        ?.takeIf { it != Look.GLASS }
                     ?: Look.IVY
                 ivyContext.switchLook(look)
 

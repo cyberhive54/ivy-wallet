@@ -175,7 +175,9 @@ private fun LazyListScope.overdueSection(
 
         if (overdue.expanded) {
             item {
-                val isLightTheme = UI.colors.pure == White
+                // Token-based light detection - color equality breaks under the
+                // material Looks (Forest/Graphite/Glass light use tinted paper).
+                val isLightTheme = UI.colors.isLight
                 IvyButton(
                     modifier = Modifier.padding(horizontal = 24.dp),
                     text = stringRes(R.string.skip_all),

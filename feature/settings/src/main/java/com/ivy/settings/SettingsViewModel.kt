@@ -175,7 +175,6 @@ class SettingsViewModel @Inject constructor(
         val persisted = sharedPrefs.getString(SharedPrefs.SETTINGS_LOOK, null)
             ?: sharedPrefs.getString(SharedPrefs.SETTINGS_MOCK_THEME, null)
         look.value = Look.parse(persisted)
-            ?.takeIf { it != Look.GLASS }
             ?.name
             ?.lowercase()
             ?: SettingsAppearance.LOOK_IVY

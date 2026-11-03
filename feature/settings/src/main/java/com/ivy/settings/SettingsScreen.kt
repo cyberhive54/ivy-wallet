@@ -512,8 +512,7 @@ private fun AppearanceSection(
 
         Spacer(Modifier.height(10.dp))
 
-        // The picker offers only the looks that are applied at runtime; GLASS joins
-        // when the translucent-surface pass ships.
+        // Picker options are derived from LOOKS so labels and indices can never diverge.
         val lookLabels = mapOf(
             SettingsAppearance.LOOK_IVY to stringResource(R.string.settings_theme_ivy),
             SettingsAppearance.LOOK_FOREST to stringResource(R.string.settings_theme_forest),

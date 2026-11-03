@@ -6,7 +6,7 @@ package com.ivy.settings
  * [LOOKS] are the material presets (the Look axis) that are actually applied at runtime:
  * each selection persists [com.ivy.base.legacy.SharedPrefs.SETTINGS_LOOK] and switches
  * the app-wide palette through [com.ivy.base.legacy.IvyContext.switchLook].
- * [LOOK_GLASS] ships with the translucent-surface pass and is hidden from the picker until then.
+ * GLASS renders translucent surfaces with window blur (API 31+).
  *
  * [ACCENTS] are accent color choices, persisted for a follow-up release.
  */
@@ -19,6 +19,7 @@ object SettingsAppearance {
     val LOOKS = listOf(
         LOOK_IVY,
         LOOK_FOREST,
+        LOOK_GLASS,
         LOOK_GRAPHITE
     )
 

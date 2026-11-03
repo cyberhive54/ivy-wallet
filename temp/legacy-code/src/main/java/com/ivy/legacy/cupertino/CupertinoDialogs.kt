@@ -1,5 +1,6 @@
 package com.ivy.legacy.cupertino
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,16 +23,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import com.ivy.base.legacy.Look
 import com.ivy.design.l0_system.UI
 import com.ivy.ui.typography.ivyInter
 
@@ -39,7 +48,61 @@ import com.ivy.ui.typography.ivyInter
 // Cupertino dialog primitives shared by Settings child pages.
 //
 // Dialog-based (own window layer) so they render ABOVE the floating dock.
+// In the GLASS look, the dialog window blurs the app content behind it (API 31+)
+// and the surface turns translucent - a frosted pane.
 // -----------------------------------------------------------------------------------------
+
+private const val GLASS_SURFACE_ALPHA = 0.80f
+private const val GLASS_DIM_AMOUNT = 0.16f
+
+/** Translucent pane surface when the GLASS look is active, solid otherwise. */
+@Composable
+internal fun dialogSurfaceColor(): Color {
+    return if (UI.colors.look == Look.GLASS) {
+        UI.colors.pure.copy(alpha = GLASS_SURFACE_ALPHA)
+    } else {
+        UI.colors.pure
+    }
+}
+
+/**
+ * Applies real window blur + reduced dim to the hosting dialog window (API 31+).
+ * No-op on older APIs and outside dialogs - the translucent surface still reads glassy.
+ */
+@Composable
+internal fun Modifier.cupertinoWindowGlass(enabled: Boolean): Modifier {
+    if (!enabled) return this
+
+    val view = LocalView.current
+    val blurRadiusPx = with(LocalDensity.current) { 28.dp.toPx().toInt() }
+
+    SideEffect {
+        val window = (view.parent as? DialogWindowProvider)?.window
+        if (window != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                window.setBackgroundBlurRadius(blurRadiusPx)
+            }
+            window.setDimAmount(GLASS_DIM_AMOUNT)
+        }
+    }
+
+    return this
+}
+
+/** Glass hairline: brighter top edge fading down, mimicking a lit pane border. */
+@Composable
+internal fun glassHairlineBrush(default: Color): Brush {
+    return if (UI.colors.look == Look.GLASS) {
+        Brush.verticalGradient(
+            listOf(
+                UI.colors.pureInverse.copy(alpha = 0.20f),
+                UI.colors.pureInverse.copy(alpha = 0.04f)
+            )
+        )
+    } else {
+        SolidColor(default)
+    }
+}
 
 /**
  * iOS-style bottom sheet. Rounded 20dp top corners, grabber, optional large title,
@@ -66,8 +129,9 @@ fun CupertinoSheetModal(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 180.dp, max = 600.dp)
+                .cupertinoWindowGlass(enabled = UI.colors.look == Look.GLASS)
                 .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                .background(UI.colors.pure)
+                .background(dialogSurfaceColor())
                 .navigationBarsPadding()
                 .padding(horizontal = 20.dp),
         ) {
@@ -123,8 +187,9 @@ fun CupertinoAlertModal(
             modifier = Modifier
                 .widthIn(max = 320.dp)
                 .fillMaxWidth()
+                .cupertinoWindowGlass(enabled = UI.colors.look == Look.GLASS)
                 .clip(RoundedCornerShape(16.dp))
-                .background(UI.colors.pure)
+                .background(dialogSurfaceColor())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -233,8 +298,9 @@ fun CupertinoProgressModal(
             modifier = Modifier
                 .widthIn(min = 240.dp, max = 280.dp)
                 .fillMaxWidth()
+                .cupertinoWindowGlass(enabled = UI.colors.look == Look.GLASS)
                 .clip(RoundedCornerShape(20.dp))
-                .background(UI.colors.pure)
+                .background(dialogSurfaceColor())
                 .padding(28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
