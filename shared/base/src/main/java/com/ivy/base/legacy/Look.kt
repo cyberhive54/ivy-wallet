@@ -21,7 +21,11 @@ enum class Look {
     /** The instrument - all graphite, chroma reserved for meaning. */
     GRAPHITE,
 
-    /** Cupertino liquid glass - translucent surfaces over a tinted wash. Not applied yet. */
+    /**
+     * Cupertino liquid glass - translucent surfaces over a tinted wash.
+     * Ships with real window blur on API 31+; below that it degrades to
+     * translucent surfaces without blur.
+     */
     GLASS;
 
     companion object {
