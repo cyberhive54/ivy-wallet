@@ -90,6 +90,11 @@ data object CategoriesScreen : Screen {
         get() = true
 }
 
+data object TagsScreen : Screen {
+    override val isLegacy: Boolean
+        get() = true
+}
+
 data object SettingsScreen : Screen {
     override val isLegacy: Boolean
         get() = true
