@@ -52,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ivy.base.legacy.Theme
+import com.ivy.design.l0_system.Green2
 import com.ivy.design.l0_system.UI
 import com.ivy.legacy.Constants
 import com.ivy.legacy.IvyWalletPreview
@@ -84,7 +85,7 @@ internal fun BoxWithConstraintsScope.SettingsRootContent(
     UI(
         currencyCode = uiState.currencyCode,
         theme = uiState.currentTheme,
-        mockTheme = uiState.mockTheme,
+        look = uiState.look,
         accentColor = uiState.accentColor,
         lockApp = uiState.lockApp,
         showNotifications = uiState.showNotifications,
@@ -110,8 +111,8 @@ internal fun BoxWithConstraintsScope.SettingsRootContent(
         onSetTheme = {
             viewModel.onEvent(SettingsEvent.SetTheme(it))
         },
-        onSetMockTheme = {
-            viewModel.onEvent(SettingsEvent.SetMockTheme(it))
+        onSetLook = {
+            viewModel.onEvent(SettingsEvent.SetLook(it))
         },
         onSetAccentColor = {
             viewModel.onEvent(SettingsEvent.SetAccentColor(it))
@@ -150,7 +151,7 @@ internal fun BoxWithConstraintsScope.SettingsRootContent(
 private fun BoxWithConstraintsScope.UI(
     currencyCode: String,
     theme: Theme,
-    mockTheme: String,
+    look: String,
     accentColor: String,
     lockApp: Boolean,
     nameLocalAccount: String?,
@@ -166,7 +167,7 @@ private fun BoxWithConstraintsScope.UI(
     onBackupData: () -> Unit = {},
     onExportToCSV: () -> Unit = {},
     onSetTheme: (Theme) -> Unit = {},
-    onSetMockTheme: (String) -> Unit = {},
+    onSetLook: (String) -> Unit = {},
     onSetAccentColor: (String) -> Unit = {},
     onSetLockApp: (Boolean) -> Unit = {},
     onSetShowNotifications: (Boolean) -> Unit = {},
@@ -206,10 +207,10 @@ private fun BoxWithConstraintsScope.UI(
             AppearanceSection(
                 query = searchQuery,
                 theme = theme,
-                mockTheme = mockTheme,
+                look = look,
                 accentColor = accentColor,
                 onSetTheme = onSetTheme,
-                onSetMockTheme = onSetMockTheme,
+                onSetLook = onSetLook,
                 onSetAccentColor = onSetAccentColor
             )
         }
@@ -467,10 +468,10 @@ private fun SettingsSearchField(
 private fun AppearanceSection(
     query: String,
     theme: Theme,
-    mockTheme: String,
+    look: String,
     accentColor: String,
     onSetTheme: (Theme) -> Unit,
-    onSetMockTheme: (String) -> Unit,
+    onSetLook: (String) -> Unit,
     onSetAccentColor: (String) -> Unit,
 ) {
     if (!matches(
@@ -482,8 +483,8 @@ private fun AppearanceSection(
         return
     }
 
-    val mockThemeIndex = SettingsAppearance.MOCK_THEMES
-        .indexOf(mockTheme)
+    val lookIndex = SettingsAppearance.LOOKS
+        .indexOf(look)
         .coerceAtLeast(0)
 
     val modeIndex = when (theme) {
@@ -511,16 +512,20 @@ private fun AppearanceSection(
 
         Spacer(Modifier.height(10.dp))
 
+        // The picker offers only the looks that are applied at runtime; GLASS joins
+        // when the translucent-surface pass ships.
+        val lookLabels = mapOf(
+            SettingsAppearance.LOOK_IVY to stringResource(R.string.settings_theme_ivy),
+            SettingsAppearance.LOOK_FOREST to stringResource(R.string.settings_theme_forest),
+            SettingsAppearance.LOOK_GLASS to stringResource(R.string.settings_theme_glass),
+            SettingsAppearance.LOOK_GRAPHITE to stringResource(R.string.settings_theme_graphite)
+        )
+
         SegmentedPill(
-            options = listOf(
-                stringResource(R.string.settings_theme_ivy),
-                stringResource(R.string.settings_theme_forest),
-                stringResource(R.string.settings_theme_glass),
-                stringResource(R.string.settings_theme_graphite)
-            ),
-            selectedIndex = mockThemeIndex,
+            options = SettingsAppearance.LOOKS.map { look -> lookLabels[look].orEmpty() },
+            selectedIndex = lookIndex,
             onSelect = { index ->
-                onSetMockTheme(SettingsAppearance.MOCK_THEMES[index])
+                onSetLook(SettingsAppearance.LOOKS[index])
             }
         )
 
@@ -591,7 +596,7 @@ private fun AppearanceSection(
         ) {
             listOf(
                 SettingsAppearance.ACCENT_IVY to Ivy,
-                SettingsAppearance.ACCENT_GREEN to Green,
+                SettingsAppearance.ACCENT_GREEN to Green2,
                 SettingsAppearance.ACCENT_BLUE to Blue,
                 SettingsAppearance.ACCENT_ORANGE to Orange,
                 SettingsAppearance.ACCENT_PINK to Red3
@@ -1430,7 +1435,7 @@ private fun Preview(theme: Theme = Theme.LIGHT) {
         UI(
             nameLocalAccount = null,
             theme = theme,
-            mockTheme = SettingsAppearance.MOCK_THEME_IVY,
+            look = SettingsAppearance.LOOK_IVY,
             accentColor = SettingsAppearance.ACCENT_IVY,
             lockApp = false,
             currencyCode = "BGN",

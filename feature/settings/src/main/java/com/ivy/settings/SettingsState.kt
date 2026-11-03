@@ -14,6 +14,6 @@ data class SettingsState(
     val startDateOfMonth: String,
     val progressState: Boolean,
     val languageOptionVisible: Boolean,
-    val mockTheme: String,
+    val look: String,
     val accentColor: String
 )

@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.biometric.BiometricPrompt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ivy.base.legacy.Look
 import com.ivy.base.legacy.SharedPrefs
 import com.ivy.base.legacy.Theme
 import com.ivy.base.legacy.stringRes
@@ -64,6 +65,14 @@ class RootViewModel @Inject constructor(
                 val theme = settingsDao.findAll().firstOrNull()?.theme
                     ?: if (systemDarkMode) Theme.DARK else Theme.LIGHT
                 ivyContext.switchTheme(theme)
+
+                // Look (material) axis - persisted in SharedPrefs. Migrates the old
+                // mock-theme key; GLASS falls back to IVY until the translucent pass ships.
+                val look = Look.parse(sharedPrefs.getString(SharedPrefs.SETTINGS_LOOK, null))
+                    ?: Look.parse(sharedPrefs.getString(SharedPrefs.SETTINGS_MOCK_THEME, null))
+                        ?.takeIf { it != Look.GLASS }
+                    ?: Look.IVY
+                ivyContext.switchLook(look)
 
                 ivyContext.initStartDayOfMonthInMemory(sharedPrefs = sharedPrefs)
             }

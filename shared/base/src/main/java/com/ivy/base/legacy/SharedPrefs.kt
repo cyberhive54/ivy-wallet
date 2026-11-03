@@ -25,6 +25,7 @@ class SharedPrefs @Inject constructor(
         const val HIDE_CURRENT_BALANCE = "hide_current_balance"
         const val HIDE_INCOME = "hide_income"
         const val TRANSFERS_AS_INCOME_EXPENSE = "transfers_as_inc_exp"
+        const val SETTINGS_LOOK = "settings_look"
         const val SETTINGS_MOCK_THEME = "settings_mock_theme"
         const val SETTINGS_ACCENT_COLOR = "settings_accent_color"
         // ----------------------------- App Settings -----------------------------------------------

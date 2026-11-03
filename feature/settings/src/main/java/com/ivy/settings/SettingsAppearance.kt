@@ -3,21 +3,23 @@ package com.ivy.settings
 /**
  * Appearance options for the redesigned Settings screen.
  *
- * [MOCK_THEMES] are visual presets that are persisted but not applied yet -
- * the actual theming will be wired in a follow-up release.
- * [ACCENTS] are accent color choices, also persisted-only for now.
+ * [LOOKS] are the material presets (the Look axis) that are actually applied at runtime:
+ * each selection persists [com.ivy.base.legacy.SharedPrefs.SETTINGS_LOOK] and switches
+ * the app-wide palette through [com.ivy.base.legacy.IvyContext.switchLook].
+ * [LOOK_GLASS] ships with the translucent-surface pass and is hidden from the picker until then.
+ *
+ * [ACCENTS] are accent color choices, persisted for a follow-up release.
  */
 object SettingsAppearance {
-    const val MOCK_THEME_IVY = "ivy"
-    const val MOCK_THEME_FOREST = "forest"
-    const val MOCK_THEME_GLASS = "glass"
-    const val MOCK_THEME_GRAPHITE = "graphite"
+    const val LOOK_IVY = "ivy"
+    const val LOOK_FOREST = "forest"
+    const val LOOK_GLASS = "glass"
+    const val LOOK_GRAPHITE = "graphite"
 
-    val MOCK_THEMES = listOf(
-        MOCK_THEME_IVY,
-        MOCK_THEME_FOREST,
-        MOCK_THEME_GLASS,
-        MOCK_THEME_GRAPHITE
+    val LOOKS = listOf(
+        LOOK_IVY,
+        LOOK_FOREST,
+        LOOK_GRAPHITE
     )
 
     const val ACCENT_IVY = "ivy"

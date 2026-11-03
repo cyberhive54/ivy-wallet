@@ -18,7 +18,7 @@ sealed interface SettingsEvent {
 
     data class SetStartDateOfMonth(val startDate: Int) : SettingsEvent
     data class SetTheme(val theme: Theme) : SettingsEvent
-    data class SetMockTheme(val mockTheme: String) : SettingsEvent
+    data class SetLook(val look: String) : SettingsEvent
     data class SetAccentColor(val accentColor: String) : SettingsEvent
     data object DeleteCloudUserData : SettingsEvent
     data object DeleteAllUserData : SettingsEvent

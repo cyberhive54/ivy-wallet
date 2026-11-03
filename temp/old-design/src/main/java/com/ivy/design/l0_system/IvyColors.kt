@@ -1,6 +1,7 @@
 package com.ivy.design.l0_system
 
 import androidx.compose.ui.graphics.Color
+import com.ivy.base.legacy.Look
 
 @Deprecated("Old design system. Use `:ivy-design` and Material3")
 interface IvyColors {
@@ -23,6 +24,9 @@ interface IvyColors {
     val red: Color
     val red1: Color
     val red1Inverse: Color
+
+    /** The material these colors belong to. Lets components branch for glass / graphite. */
+    val look: Look
 
     val isLight: Boolean
 }

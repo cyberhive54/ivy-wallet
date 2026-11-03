@@ -12,6 +12,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
+import com.ivy.base.legacy.Look
 import com.ivy.base.legacy.SharedPrefs
 import com.ivy.base.legacy.Theme
 import com.ivy.base.legacy.refreshWidget
@@ -70,7 +71,7 @@ class SettingsViewModel @Inject constructor(
     private val treatTransfersAsIncomeExpense = mutableStateOf(false)
     private val startDateOfMonth = mutableIntStateOf(1)
     private val progressState = mutableStateOf(false)
-    private val mockTheme = mutableStateOf(SettingsAppearance.MOCK_THEME_IVY)
+    private val look = mutableStateOf(SettingsAppearance.LOOK_IVY)
     private val accentColor = mutableStateOf(SettingsAppearance.ACCENT_IVY)
 
     // Root Settings list scroll position, synced from the UI. Backed by the
@@ -102,7 +103,7 @@ class SettingsViewModel @Inject constructor(
             progressState = getProgressState(),
             hideIncome = getHideIncome(),
             languageOptionVisible = isLanguageOptionVisible(),
-            mockTheme = getMockTheme(),
+            look = getLook(),
             accentColor = getAccentColor()
         )
     }
@@ -117,7 +118,7 @@ class SettingsViewModel @Inject constructor(
         initializeHideIncome()
         initializeTransfersAsIncomeExpense()
         initializeStartDateOfMonth()
-        initializeMockTheme()
+        initializeLook()
         initializeAccentColor()
     }
 
@@ -170,11 +171,14 @@ class SettingsViewModel @Inject constructor(
         startDateOfMonth.intValue = startDayOfMonthAct(Unit)
     }
 
-    private fun initializeMockTheme() {
-        mockTheme.value = sharedPrefs.getString(
-            SharedPrefs.SETTINGS_MOCK_THEME,
-            SettingsAppearance.MOCK_THEME_IVY
-        ) ?: SettingsAppearance.MOCK_THEME_IVY
+    private fun initializeLook() {
+        val persisted = sharedPrefs.getString(SharedPrefs.SETTINGS_LOOK, null)
+            ?: sharedPrefs.getString(SharedPrefs.SETTINGS_MOCK_THEME, null)
+        look.value = Look.parse(persisted)
+            ?.takeIf { it != Look.GLASS }
+            ?.name
+            ?.lowercase()
+            ?: SettingsAppearance.LOOK_IVY
     }
 
     private fun initializeAccentColor() {
@@ -235,8 +239,8 @@ class SettingsViewModel @Inject constructor(
     }
 
     @Composable
-    private fun getMockTheme(): String {
-        return mockTheme.value
+    private fun getLook(): String {
+        return look.value
     }
 
     @Composable
@@ -271,7 +275,7 @@ class SettingsViewModel @Inject constructor(
 
             is SettingsEvent.SetStartDateOfMonth -> setStartDateOfMonth(event.startDate)
             is SettingsEvent.SetTheme -> setTheme(event.theme)
-            is SettingsEvent.SetMockTheme -> setMockTheme(event.mockTheme)
+            is SettingsEvent.SetLook -> setLook(event.look)
             is SettingsEvent.SetAccentColor -> setAccentColor(event.accentColor)
 
             SettingsEvent.DeleteCloudUserData -> deleteCloudUserData()
@@ -371,11 +375,13 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun setMockTheme(newMockTheme: String) {
-        mockTheme.value = newMockTheme
+    private fun setLook(newLook: String) {
+        val parsed = Look.parse(newLook) ?: Look.IVY
+        look.value = parsed.name.lowercase()
 
         viewModelScope.launch {
-            sharedPrefs.putString(SharedPrefs.SETTINGS_MOCK_THEME, newMockTheme)
+            sharedPrefs.putString(SharedPrefs.SETTINGS_LOOK, look.value)
+            ivyContext.switchLook(parsed)
         }
     }
 

@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.ivy.base.legacy.Look
 import com.ivy.base.legacy.Theme
 import com.ivy.design.api.IvyDesign
 import com.ivy.design.system.IvyMaterial3Theme
@@ -48,9 +49,10 @@ fun IvyTheme(
     theme: Theme,
     design: IvyDesign,
     isDarkTheme: Boolean = isSystemInDarkTheme(),
+    look: Look = Look.IVY,
     content: @Composable () -> Unit
 ) {
-    val colors = design.colors(theme, isDarkTheme)
+    val colors = design.colors(theme, isDarkTheme, look)
     val typography = design.typography()
     val shapes = design.shapes()
 

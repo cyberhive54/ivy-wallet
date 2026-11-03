@@ -1,6 +1,7 @@
 package com.ivy.design.api.systems
 
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -8,6 +9,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ivy.base.legacy.Look
 import com.ivy.base.legacy.Theme
 import com.ivy.design.api.IvyDesign
 import com.ivy.design.l0_system.*
@@ -112,86 +114,294 @@ abstract class IvyWalletDesign : IvyDesign {
         }
     }
 
+    // -----------------------------------------------------------------------------------------
+    // Materials (the Look axis). Each material maps its paper, ink and accent posture into
+    // the same IvyColors tokens; the mode axis (Theme) only decides light / dark / AMOLED.
+    // -----------------------------------------------------------------------------------------
+
+    // Forest - the field notebook
+    private val ForestPaper = Color(0xFFF7F9F3)
+    private val ForestInk = Color(0xFF1B231C)
+    private val ForestSage = Color(0xFF7A8278)
+    private val ForestCard = Color(0xFFECF1E4)
+    private val ForestChip = Color(0xFF26302A)
+    private val ForestPrimary = Color(0xFF178563)
+    private val ForestPrimaryDeep = Color(0xFF0F5C44)
+    private val ForestNight = Color(0xFF0E1512)
+    private val ForestNightCard = Color(0xFF182119)
+    private val ForestNightInk = Color(0xFFE8EFE6)
+    private val ForestNightChip = Color(0xFFD3DECB)
+    private val ForestPrimaryPale = Color(0xFF8FD9BC)
+    private val ForestAmoledCard = Color(0xFF121813)
+
+    // Graphite - the instrument
+    private val GraphitePaper = Color(0xFFF3F3F5)
+    private val GraphiteInk = Color(0xFF17181A)
+    private val GraphiteCard = Color(0xFFE9E9EC)
+    private val GraphiteChip = Color(0xFF2C2C31)
+    private val GraphitePrimary = Color(0xFF2F2F35)
+    private val GraphitePrimary1 = Color(0xFF5B5B63)
+    private val GraphiteNight = Color(0xFF131315)
+    private val GraphiteNightCard = Color(0xFF1D1D20)
+    private val GraphiteNightInk = Color(0xFFEDEDEF)
+    private val GraphiteNightChip = Color(0xFFDEDEE1)
+    private val GraphiteNightPrimary = Color(0xFF3D3D44)
+    private val GraphiteNightPrimary1 = Color(0xFF78787F)
+    private val GraphiteAmoledCard = Color(0xFF0F0F11)
+
     @Deprecated("Old design system. Use `:ivy-design` and Material3")
-    override fun colors(theme: Theme, isDarkModeEnabled: Boolean): IvyColors {
+    override fun colors(theme: Theme, isDarkModeEnabled: Boolean, look: Look): IvyColors {
+        return when (look) {
+            // GLASS reuses the IVY palette until the translucent-surface pass ships;
+            // its look tag still marks it so glass-aware components can branch.
+            Look.IVY, Look.GLASS -> ivyPalette(theme, isDarkModeEnabled, look)
+            Look.FOREST -> forestPalette(theme, isDarkModeEnabled)
+            Look.GRAPHITE -> graphitePalette(theme, isDarkModeEnabled)
+        }
+    }
+
+    private fun ivyPalette(theme: Theme, isDarkModeEnabled: Boolean, look: Look): IvyColors {
         return when (theme) {
-            Theme.LIGHT -> object : IvyColors {
-                override val pure = White
-                override val pureInverse = Black
-                override val gray = Gray
-                override val medium = MediumWhite
-                override val mediumInverse = MediumBlack
+            Theme.LIGHT -> ivyColorsOf(
+                look = look,
+                isLight = true,
+                pure = White,
+                pureInverse = Black,
+                gray = Gray,
+                medium = MediumWhite,
+                mediumInverse = MediumBlack,
+                primary = Purple,
+                primary1 = IvyDark,
+                green = Green,
+                green1 = GreenLight,
+                orange = Orange,
+                orange1 = OrangeLight,
+                red = Red,
+                red1 = RedLight,
+                red1Inverse = RedDark,
+            )
 
-                override val primary = Purple
-                override val primary1 = IvyDark
+            Theme.DARK -> ivyColorsOf(
+                look = look,
+                isLight = false,
+                pure = Black,
+                pureInverse = White,
+                gray = Gray,
+                medium = MediumBlack,
+                mediumInverse = MediumWhite,
+                primary = Purple,
+                primary1 = IvyLight,
+                green = Green,
+                green1 = GreenDark,
+                orange = Orange,
+                orange1 = OrangeDark,
+                red = Red,
+                red1 = RedDark,
+                red1Inverse = RedLight,
+            )
 
-                override val green = Green
-                override val green1 = GreenLight
-
-                override val orange = Orange
-                override val orange1 = OrangeLight
-
-                override val red = Red
-                override val red1 = RedLight
-                override val red1Inverse = RedDark
-
-                override val isLight = true
-            }
-
-            Theme.DARK -> object : IvyColors {
-                override val pure = Black
-                override val pureInverse = White
-                override val gray = Gray
-                override val medium = MediumBlack
-                override val mediumInverse = MediumWhite
-
-                override val primary = Purple
-                override val primary1 = IvyLight
-
-                override val green = Green
-                override val green1 = GreenDark
-
-                override val orange = Orange
-                override val orange1 = OrangeDark
-
-                override val red = Red
-                override val red1 = RedDark
-                override val red1Inverse = RedLight
-
-                override val isLight = false
-            }
-
-            Theme.AMOLED_DARK -> object : IvyColors {
-                override val pure = TrueBlack
-                override val pureInverse = White
-                override val gray = Gray
-                override val medium = MediumBlack
-                override val mediumInverse = MediumWhite
-
-                override val primary = Purple
-                override val primary1 = IvyLight
-
-                override val green = Green
-                override val green1 = GreenDark
-
-                override val orange = Orange
-                override val orange1 = OrangeDark
-
-                override val red = Red
-                override val red1 = RedDark
-                override val red1Inverse = RedLight
-
-                override val isLight = false
-            }
+            Theme.AMOLED_DARK -> ivyColorsOf(
+                look = look,
+                isLight = false,
+                pure = TrueBlack,
+                pureInverse = White,
+                gray = Gray,
+                medium = MediumBlack,
+                mediumInverse = MediumWhite,
+                primary = Purple,
+                primary1 = IvyLight,
+                green = Green,
+                green1 = GreenDark,
+                orange = Orange,
+                orange1 = OrangeDark,
+                red = Red,
+                red1 = RedDark,
+                red1Inverse = RedLight,
+            )
 
             Theme.AUTO -> if (isDarkModeEnabled) {
-                colors(Theme.DARK, true)
+                ivyPalette(Theme.DARK, true, look)
             } else {
-                colors(
-                    Theme.LIGHT,
-                    false
-                )
+                ivyPalette(Theme.LIGHT, false, look)
             }
+        }
+    }
+
+    private fun forestPalette(theme: Theme, isDarkModeEnabled: Boolean): IvyColors {
+        return when (theme) {
+            Theme.LIGHT -> ivyColorsOf(
+                look = Look.FOREST,
+                isLight = true,
+                pure = ForestPaper,
+                pureInverse = ForestInk,
+                gray = ForestSage,
+                medium = ForestCard,
+                mediumInverse = ForestChip,
+                primary = ForestPrimary,
+                primary1 = ForestPrimaryDeep,
+                green = Green,
+                green1 = GreenLight,
+                orange = Orange,
+                orange1 = OrangeLight,
+                red = Red,
+                red1 = RedLight,
+                red1Inverse = RedDark,
+            )
+
+            Theme.DARK -> ivyColorsOf(
+                look = Look.FOREST,
+                isLight = false,
+                pure = ForestNight,
+                pureInverse = ForestNightInk,
+                gray = ForestSage,
+                medium = ForestNightCard,
+                mediumInverse = ForestNightChip,
+                primary = ForestPrimary,
+                primary1 = ForestPrimaryPale,
+                green = Green,
+                green1 = GreenDark,
+                orange = Orange,
+                orange1 = OrangeDark,
+                red = Red,
+                red1 = RedDark,
+                red1Inverse = RedLight,
+            )
+
+            Theme.AMOLED_DARK -> ivyColorsOf(
+                look = Look.FOREST,
+                isLight = false,
+                pure = TrueBlack,
+                pureInverse = ForestNightInk,
+                gray = ForestSage,
+                medium = ForestAmoledCard,
+                mediumInverse = ForestNightChip,
+                primary = ForestPrimary,
+                primary1 = ForestPrimaryPale,
+                green = Green,
+                green1 = GreenDark,
+                orange = Orange,
+                orange1 = OrangeDark,
+                red = Red,
+                red1 = RedDark,
+                red1Inverse = RedLight,
+            )
+
+            Theme.AUTO -> if (isDarkModeEnabled) {
+                forestPalette(Theme.DARK, true)
+            } else {
+                forestPalette(Theme.LIGHT, false)
+            }
+        }
+    }
+
+    private fun graphitePalette(theme: Theme, isDarkModeEnabled: Boolean): IvyColors {
+        return when (theme) {
+            Theme.LIGHT -> ivyColorsOf(
+                look = Look.GRAPHITE,
+                isLight = true,
+                pure = GraphitePaper,
+                pureInverse = GraphiteInk,
+                gray = Gray,
+                medium = GraphiteCard,
+                mediumInverse = GraphiteChip,
+                primary = GraphitePrimary,
+                primary1 = GraphitePrimary1,
+                green = Green,
+                green1 = GreenLight,
+                orange = Orange,
+                orange1 = OrangeLight,
+                red = Red,
+                red1 = RedLight,
+                red1Inverse = RedDark,
+            )
+
+            Theme.DARK -> ivyColorsOf(
+                look = Look.GRAPHITE,
+                isLight = false,
+                pure = GraphiteNight,
+                pureInverse = GraphiteNightInk,
+                gray = Gray,
+                medium = GraphiteNightCard,
+                mediumInverse = GraphiteNightChip,
+                primary = GraphiteNightPrimary,
+                primary1 = GraphiteNightPrimary1,
+                green = Green,
+                green1 = GreenDark,
+                orange = Orange,
+                orange1 = OrangeDark,
+                red = Red,
+                red1 = RedDark,
+                red1Inverse = RedLight,
+            )
+
+            Theme.AMOLED_DARK -> ivyColorsOf(
+                look = Look.GRAPHITE,
+                isLight = false,
+                pure = TrueBlack,
+                pureInverse = GraphiteNightInk,
+                gray = Gray,
+                medium = GraphiteAmoledCard,
+                mediumInverse = GraphiteNightChip,
+                primary = GraphiteNightPrimary,
+                primary1 = GraphiteNightPrimary1,
+                green = Green,
+                green1 = GreenDark,
+                orange = Orange,
+                orange1 = OrangeDark,
+                red = Red,
+                red1 = RedDark,
+                red1Inverse = RedLight,
+            )
+
+            Theme.AUTO -> if (isDarkModeEnabled) {
+                graphitePalette(Theme.DARK, true)
+            } else {
+                graphitePalette(Theme.LIGHT, false)
+            }
+        }
+    }
+
+    @Suppress("LongParameterList")
+    private fun ivyColorsOf(
+        look: Look,
+        isLight: Boolean,
+        pure: Color,
+        pureInverse: Color,
+        gray: Color,
+        medium: Color,
+        mediumInverse: Color,
+        primary: Color,
+        primary1: Color,
+        green: Color,
+        green1: Color,
+        orange: Color,
+        orange1: Color,
+        red: Color,
+        red1: Color,
+        red1Inverse: Color,
+    ): IvyColors {
+        return object : IvyColors {
+            override val pure = pure
+            override val pureInverse = pureInverse
+            override val gray = gray
+            override val medium = medium
+            override val mediumInverse = mediumInverse
+
+            override val primary = primary
+            override val primary1 = primary1
+
+            override val green = green
+            override val green1 = green1
+
+            override val orange = orange
+            override val orange1 = orange1
+
+            override val red = red
+            override val red1 = red1
+            override val red1Inverse = red1Inverse
+
+            override val look = look
+            override val isLight = isLight
         }
     }
 
