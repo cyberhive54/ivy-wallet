@@ -70,6 +70,8 @@ class SettingsViewModel @Inject constructor(
     private val treatTransfersAsIncomeExpense = mutableStateOf(false)
     private val startDateOfMonth = mutableIntStateOf(1)
     private val progressState = mutableStateOf(false)
+    private val mockTheme = mutableStateOf(SettingsAppearance.MOCK_THEME_IVY)
+    private val accentColor = mutableStateOf(SettingsAppearance.ACCENT_IVY)
 
     @Composable
     override fun uiState(): SettingsState {
@@ -88,7 +90,9 @@ class SettingsViewModel @Inject constructor(
             startDateOfMonth = getStartDateOfMonth(),
             progressState = getProgressState(),
             hideIncome = getHideIncome(),
-            languageOptionVisible = isLanguageOptionVisible()
+            languageOptionVisible = isLanguageOptionVisible(),
+            mockTheme = getMockTheme(),
+            accentColor = getAccentColor()
         )
     }
 
@@ -102,6 +106,8 @@ class SettingsViewModel @Inject constructor(
         initializeHideIncome()
         initializeTransfersAsIncomeExpense()
         initializeStartDateOfMonth()
+        initializeMockTheme()
+        initializeAccentColor()
     }
 
     private suspend fun initializeCurrency() {
@@ -151,6 +157,20 @@ class SettingsViewModel @Inject constructor(
 
     private suspend fun initializeStartDateOfMonth() {
         startDateOfMonth.intValue = startDayOfMonthAct(Unit)
+    }
+
+    private fun initializeMockTheme() {
+        mockTheme.value = sharedPrefs.getString(
+            SharedPrefs.SETTINGS_MOCK_THEME,
+            SettingsAppearance.MOCK_THEME_IVY
+        ) ?: SettingsAppearance.MOCK_THEME_IVY
+    }
+
+    private fun initializeAccentColor() {
+        accentColor.value = sharedPrefs.getString(
+            SharedPrefs.SETTINGS_ACCENT_COLOR,
+            SettingsAppearance.ACCENT_IVY
+        ) ?: SettingsAppearance.ACCENT_IVY
     }
 
     @Composable
@@ -203,6 +223,16 @@ class SettingsViewModel @Inject constructor(
         return progressState.value
     }
 
+    @Composable
+    private fun getMockTheme(): String {
+        return mockTheme.value
+    }
+
+    @Composable
+    private fun getAccentColor(): String {
+        return accentColor.value
+    }
+
     private fun isLanguageOptionVisible(): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     }
@@ -229,6 +259,9 @@ class SettingsViewModel @Inject constructor(
             )
 
             is SettingsEvent.SetStartDateOfMonth -> setStartDateOfMonth(event.startDate)
+            is SettingsEvent.SetTheme -> setTheme(event.theme)
+            is SettingsEvent.SetMockTheme -> setMockTheme(event.mockTheme)
+            is SettingsEvent.SetAccentColor -> setAccentColor(event.accentColor)
 
             SettingsEvent.DeleteCloudUserData -> deleteCloudUserData()
             SettingsEvent.DeleteAllUserData -> deleteAllUserData()
@@ -315,6 +348,31 @@ class SettingsViewModel @Inject constructor(
                 ivyContext.switchTheme(this.theme)
                 currentTheme.value = this.theme
             }
+        }
+    }
+
+    private fun setTheme(theme: Theme) {
+        viewModelScope.launch {
+            val settings = settingsAct(Unit)
+            updateSettingsAct(settings.copy(theme = theme))
+            ivyContext.switchTheme(theme)
+            currentTheme.value = theme
+        }
+    }
+
+    private fun setMockTheme(newMockTheme: String) {
+        mockTheme.value = newMockTheme
+
+        viewModelScope.launch {
+            sharedPrefs.putString(SharedPrefs.SETTINGS_MOCK_THEME, newMockTheme)
+        }
+    }
+
+    private fun setAccentColor(newAccentColor: String) {
+        accentColor.value = newAccentColor
+
+        viewModelScope.launch {
+            sharedPrefs.putString(SharedPrefs.SETTINGS_ACCENT_COLOR, newAccentColor)
         }
     }
 

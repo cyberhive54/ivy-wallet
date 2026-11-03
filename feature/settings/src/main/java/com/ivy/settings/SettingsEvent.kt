@@ -1,5 +1,6 @@
 package com.ivy.settings
 
+import com.ivy.base.legacy.Theme
 import com.ivy.domain.RootScreen
 
 sealed interface SettingsEvent {
@@ -16,6 +17,9 @@ sealed interface SettingsEvent {
         SettingsEvent
 
     data class SetStartDateOfMonth(val startDate: Int) : SettingsEvent
+    data class SetTheme(val theme: Theme) : SettingsEvent
+    data class SetMockTheme(val mockTheme: String) : SettingsEvent
+    data class SetAccentColor(val accentColor: String) : SettingsEvent
     data object DeleteCloudUserData : SettingsEvent
     data object DeleteAllUserData : SettingsEvent
     data object SwitchLanguage : SettingsEvent
