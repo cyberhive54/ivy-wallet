@@ -2,7 +2,6 @@ package com.ivy.tags
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
@@ -22,6 +21,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,10 +37,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ivy.data.model.Tag
 import com.ivy.data.model.TagId
 import com.ivy.data.model.primitive.ColorInt
 import com.ivy.data.model.primitive.NotBlankTrimmedString
+import com.ivy.legacy.utils.ContextualDock
+import com.ivy.ui.typography.ivyInter
 import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
 import com.ivy.legacy.ui.SearchInput
@@ -64,6 +67,13 @@ import java.time.Instant
 fun BoxWithConstraintsScope.TagsScreen(screen: TagsScreen) {
     val viewModel: TagsViewModel = screenScopedViewModel()
     val state = viewModel.uiState()
+
+    // The floating dock "+" (contextual add) collects these requests when this page is shown
+    LaunchedEffect(Unit) {
+        ContextualDock.addRequests.collect {
+            viewModel.onEvent(TagsScreenEvent.OnTagModalVisible(TagModalData(tag = null)))
+        }
+    }
 
     TagsUi(
         state = state,
@@ -106,20 +116,8 @@ private fun BoxWithConstraintsScope.TagsUi(
 
                 Text(
                     text = stringResource(R.string.tags),
-                    style = UI.typo.h2.style(
-                        color = UI.colors.pureInverse,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                )
-
-                Spacer(Modifier.weight(1f))
-
-                CircleButtonFilled(
-                    icon = R.drawable.ic_add,
-                    onClick = {
-                        onEvent(TagsScreenEvent.OnTagModalVisible(TagModalData(tag = null)))
-                    },
-                    clickAreaPadding = 10.dp
+                    style = ivyInter(28.sp, FontWeight.ExtraBold, letterSpacing = (-0.5).sp),
+                    color = UI.colors.pureInverse
                 )
             }
 

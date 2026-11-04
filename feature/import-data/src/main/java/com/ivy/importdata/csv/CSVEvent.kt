@@ -30,6 +30,7 @@ sealed interface CSVEvent {
     data class MapCategory(val index: Int, val name: String) : CSVEvent
     data class MapTitle(val index: Int, val name: String) : CSVEvent
     data class MapDescription(val index: Int, val name: String) : CSVEvent
+    data class MapNecessity(val index: Int, val name: String) : CSVEvent
 
     data object Continue : CSVEvent
     data object ResetState : CSVEvent

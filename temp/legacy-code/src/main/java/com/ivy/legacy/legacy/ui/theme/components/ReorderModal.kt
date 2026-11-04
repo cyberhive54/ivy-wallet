@@ -23,15 +23,16 @@ import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ivy.design.l0_system.UI
-import com.ivy.design.l0_system.style
 import com.ivy.legacy.utils.numberBetween
 import com.ivy.legacy.utils.swap
 import com.ivy.ui.R
+import com.ivy.ui.typography.ivyInter
 import com.ivy.wallet.domain.data.Reorderable
-import com.ivy.wallet.ui.theme.GradientGreen
-import com.ivy.wallet.ui.theme.White
+import com.ivy.wallet.ui.theme.Gradient
+import com.ivy.wallet.ui.theme.findContrastTextColor
 import com.ivy.wallet.ui.theme.modal.IvyModal
-import java.util.*
+import androidx.compose.ui.unit.sp
+import java.util.UUID
 
 @Deprecated("Old design system. Use `:ivy-design` and Material3")
 @Suppress("UNCHECKED_CAST", "ParameterNaming")
@@ -43,10 +44,8 @@ fun <T : Reorderable> BoxScope.ReorderModalSingleType(
         Text(
             modifier = Modifier.padding(start = 32.dp),
             text = stringResource(R.string.reorder),
-            style = UI.typo.b1.style(
-                UI.colors.pureInverse,
-                FontWeight.ExtraBold
-            )
+            style = ivyInter(22.sp, FontWeight.ExtraBold, letterSpacing = (-0.3).sp),
+            color = UI.colors.pureInverse
         )
     },
     initialItems: List<T>,
@@ -74,7 +73,6 @@ fun <T : Reorderable> BoxScope.ReorderModalSingleType(
         }
     )
 }
-
 @Deprecated("Old design system. Use `:ivy-design` and Material3")
 @Suppress("ParameterNaming")
 @Composable
@@ -85,10 +83,8 @@ fun <T : Reorderable> BoxScope.ReorderModal(
         Text(
             modifier = Modifier.padding(start = 32.dp),
             text = stringResource(R.string.reorder),
-            style = UI.typo.b1.style(
-                UI.colors.pureInverse,
-                FontWeight.ExtraBold
-            )
+            style = ivyInter(22.sp, FontWeight.ExtraBold, letterSpacing = (-0.3).sp),
+            color = UI.colors.pureInverse
         )
     },
     initialItems: List<Any>,
@@ -121,9 +117,9 @@ fun <T : Reorderable> BoxScope.ReorderModal(
                 modifier = Modifier
                     .size(48.dp)
                     .testTag("reorder_done"),
-                backgroundGradient = GradientGreen,
+                backgroundGradient = Gradient.solid(UI.colors.primary),
                 icon = R.drawable.ic_check,
-                tint = White
+                tint = findContrastTextColor(UI.colors.primary)
             ) {
                 orderNumUpdates.forEach { (item, newOrderNum) ->
                     onUpdateItemOrderNum(items, item, newOrderNum)

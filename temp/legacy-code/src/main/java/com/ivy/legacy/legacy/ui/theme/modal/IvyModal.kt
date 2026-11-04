@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -153,6 +154,11 @@ fun BoxScope.IvyModal(
                 .statusBarsPadding()
                 .padding(top = 24.dp)
                 .background(UI.colors.pure, UI.shapes.r2Top)
+                .border(
+                    1.dp,
+                    UI.colors.pureInverse.copy(alpha = 0.08f),
+                    UI.shapes.r2Top
+                )
                 .consumeClicks(rememberInteractionSource())
                 .thenIf(scrollState != null) {
                     verticalScroll(scrollState!!)

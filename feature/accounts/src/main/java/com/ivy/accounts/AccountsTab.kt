@@ -50,6 +50,7 @@ import com.ivy.navigation.navigation
 import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
 import com.ivy.ui.rememberScrollPositionListState
+import com.ivy.ui.typography.ivyInter
 import com.ivy.wallet.ui.theme.Green
 import com.ivy.wallet.ui.theme.GreenLight
 import com.ivy.wallet.ui.theme.components.BalanceRow
@@ -115,15 +116,11 @@ private fun BoxWithConstraintsScope.UI(
             ) {
                 Spacer(Modifier.width(24.dp))
 
-                Column {
-                    Text(
-                        text = stringResource(R.string.accounts),
-                        style = UI.typo.b1.style(
-                            color = UI.colors.pureInverse,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.accounts),
+                    style = ivyInter(34.sp, FontWeight.Bold, letterSpacing = (-0.5).sp),
+                    color = UI.colors.pureInverse
+                )
 
                 Spacer(Modifier.weight(1f))
 
@@ -194,10 +191,8 @@ private fun BoxWithConstraintsScope.UI(
                 .padding(end = 24.dp)
                 .padding(vertical = 8.dp),
             text = item.account.name.value,
-            style = UI.typo.b1.style(
-                color = item.account.color.value.toComposeColor(),
-                fontWeight = FontWeight.Bold
-            )
+            style = ivyInter(18.sp, FontWeight.SemiBold, letterSpacing = (-0.2).sp),
+            color = item.account.color.value.toComposeColor()
         )
     }
 }

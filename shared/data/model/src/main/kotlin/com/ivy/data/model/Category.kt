@@ -1,5 +1,6 @@
 package com.ivy.data.model
 
+import com.ivy.base.model.TransactionType
 import com.ivy.data.model.primitive.ColorInt
 import com.ivy.data.model.primitive.IconAsset
 import com.ivy.data.model.primitive.NotBlankTrimmedString
@@ -16,4 +17,18 @@ data class Category(
     val color: ColorInt,
     val icon: IconAsset?,
     override val orderNum: Double,
-) : Identifiable<CategoryId>, Reorderable
+    /**
+     * Transaction types this category can be used with.
+     * A category can belong to any combination of Income/Expense/Transfer.
+     * Defaults to all types (legacy behavior).
+     */
+    val transactionTypes: Set<TransactionType> = ALL_TRANSACTION_TYPES,
+) : Identifiable<CategoryId>, Reorderable {
+    companion object {
+        val ALL_TRANSACTION_TYPES = setOf(
+            TransactionType.INCOME,
+            TransactionType.EXPENSE,
+            TransactionType.TRANSFER,
+        )
+    }
+}

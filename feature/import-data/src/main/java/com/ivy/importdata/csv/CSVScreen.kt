@@ -725,6 +725,19 @@ fun LazyListScope.optionalFields(
     )
     mappingRow(
         columns = columns,
+        mapping = optionalFields.necessity,
+        status = optionalFields.necessityStatus,
+        onMapTo = { index, name ->
+            onEvent(
+                CSVEvent.MapNecessity(
+                    index,
+                    name
+                )
+            )
+        },
+    )
+    mappingRow(
+        columns = columns,
         mapping = optionalFields.description,
         status = optionalFields.descriptionStatus,
         onMapTo = { index, name ->

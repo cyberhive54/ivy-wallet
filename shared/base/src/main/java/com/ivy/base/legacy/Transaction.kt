@@ -1,6 +1,7 @@
 package com.ivy.base.legacy
 
 import androidx.compose.runtime.Immutable
+import com.ivy.base.model.Necessity
 import com.ivy.base.model.TransactionType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -45,6 +46,9 @@ data class Transaction(
 
     val isSynced: Boolean = false,
     val isDeleted: Boolean = false,
+
+    // Optional necessity classification (expenses only). Null for income/transfer/unclassified.
+    val necessity: Necessity? = null,
 
     @Suppress("DataClassDefaultValues")
     val tags: ImmutableList<LegacyTag> = persistentListOf(),

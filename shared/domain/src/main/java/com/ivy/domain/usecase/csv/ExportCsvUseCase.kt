@@ -104,6 +104,8 @@ class ExportCsvUseCase @Inject constructor(
         csvAppend(dueData?.csvFormat(timeConverter))
         // ID
         csvAppend(id.value.toString())
+        // Necessity
+        csvAppend(necessity?.name)
     }
 
     @OptIn(ExperimentalTypeInference::class)
@@ -149,7 +151,8 @@ class ExportCsvUseCase @Inject constructor(
         description = description,
         dueData = time.takeIf
         { !settled },
-        id = id
+        id = id,
+        necessity = necessity
     )
 
     private fun Income.incomeCsvRow(): IvyCsvRow = IvyCsvRow(

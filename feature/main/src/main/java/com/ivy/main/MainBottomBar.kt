@@ -121,6 +121,9 @@ fun BoxWithConstraintsScope.BottomBar(
     onAddPlannedPayment: () -> Unit,
 
     showAddAccountModal: () -> Unit,
+    // When set (pushed pages like Categories/Tags), the + runs this action
+    // directly instead of blooming the radial add menu.
+    overrideAddAction: (() -> Unit)? = null,
 ) {
     val ivyContext = ivyWalletCtx()
 
@@ -444,7 +447,7 @@ fun BoxWithConstraintsScope.BottomBar(
             .scale(fabScale)
             .rotate(fabRotation)
             .zIndex(200f)
-            .thenIf(tab != MainTab.ACCOUNTS) {
+            .thenIf(tab != MainTab.ACCOUNTS && overrideAddAction == null) {
                 pointerInput(Unit) {
                     detectDragGestures(
                         onDragCancel = {
@@ -507,13 +510,18 @@ fun BoxWithConstraintsScope.BottomBar(
             else -> if (!expanded) White else Black
         }
     ) {
-        when (tab) {
-            MainTab.ACCOUNTS -> {
-                showAddAccountModal()
-            }
+        val override = overrideAddAction
+        if (override != null) {
+            override()
+        } else {
+            when (tab) {
+                MainTab.ACCOUNTS -> {
+                    showAddAccountModal()
+                }
 
-            else -> {
-                expanded = !expanded
+                else -> {
+                    expanded = !expanded
+                }
             }
         }
     }

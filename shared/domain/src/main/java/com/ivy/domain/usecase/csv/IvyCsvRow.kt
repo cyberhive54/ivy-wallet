@@ -1,5 +1,6 @@
 package com.ivy.domain.usecase.csv
 
+import com.ivy.base.model.Necessity
 import com.ivy.base.model.TransactionType
 import com.ivy.data.model.AccountId
 import com.ivy.data.model.CategoryId
@@ -27,7 +28,9 @@ data class IvyCsvRow(
     val receiveCurrency: AssetCode?,
     val description: NotBlankTrimmedString?,
     val dueData: Instant?,
-    val id: TransactionId
+    val id: TransactionId,
+    // Appended at the end for backwards compatibility with older imports.
+    val necessity: Necessity? = null,
 ) {
     companion object {
         val Columns = listOf(
@@ -46,6 +49,7 @@ data class IvyCsvRow(
             "Description",
             "Due Date",
             "ID",
+            "Necessity",
         )
     }
 }

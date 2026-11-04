@@ -58,6 +58,8 @@ data class OptionalFields(
     val titleStatus: MappingStatus,
     val description: ColumnMapping<Unit>,
     val descriptionStatus: MappingStatus,
+    val necessity: ColumnMapping<Unit>,
+    val necessityStatus: MappingStatus,
 )
 
 data class ColumnMapping<M>(

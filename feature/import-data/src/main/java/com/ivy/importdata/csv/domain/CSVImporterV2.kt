@@ -225,6 +225,14 @@ class CSVImporterV2 @Inject constructor(
             row.extractValue(optionalFields.description),
             optionalFields.description.metadata
         )
+        val necessity = if (type == TransactionType.EXPENSE) {
+            parseNecessity(
+                value = row.extractValue(optionalFields.necessity),
+                metadata = optionalFields.necessity.metadata,
+            )
+        } else {
+            null
+        }
 
         return Transaction(
             id = UUID.randomUUID(),
@@ -237,7 +245,8 @@ class CSVImporterV2 @Inject constructor(
             dueDate = null,
             categoryId = category?.id?.value,
             title = title,
-            description = description
+            description = description,
+            necessity = necessity,
         )
     }
 

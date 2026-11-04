@@ -13,6 +13,7 @@ import com.ivy.base.Toaster
 import com.ivy.base.legacy.SharedPrefs
 import com.ivy.base.legacy.Transaction
 import com.ivy.base.legacy.refreshWidget
+import com.ivy.base.model.Necessity
 import com.ivy.base.model.TransactionType
 import com.ivy.base.time.TimeConverter
 import com.ivy.base.time.TimeProvider
@@ -124,6 +125,7 @@ class EditTransactionViewModel @Inject constructor(
     private var toAccount by mutableStateOf<Account?>(null)
     private var category by mutableStateOf<Category?>(null)
     private var amount by mutableDoubleStateOf(0.0)
+    private var necessity by mutableStateOf<Necessity?>(null)
     private var hasChanges by mutableStateOf(false)
     private var displayLoanHelper by mutableStateOf(EditTransactionDisplayLoan())
 
@@ -207,7 +209,8 @@ class EditTransactionViewModel @Inject constructor(
             backgroundProcessingStarted = getBackgroundProcessingStarted(),
             customExchangeRateState = getCustomExchangeRateState(),
             tags = getTags(),
-            transactionAssociatedTags = getTransactionAssociatedTags()
+            transactionAssociatedTags = getTransactionAssociatedTags(),
+            necessity = getNecessity()
         )
     }
 
@@ -310,6 +313,11 @@ class EditTransactionViewModel @Inject constructor(
         return transactionAssociatedTags
     }
 
+    @Composable
+    private fun getNecessity(): Necessity? {
+        return necessity
+    }
+
     @Suppress("CyclomaticComplexMethod")
     override fun onEvent(event: EditTransactionViewEvent) {
         when (event) {
@@ -330,6 +338,8 @@ class EditTransactionViewModel @Inject constructor(
             is EditTransactionViewEvent.OnChangeTime -> handleChangeTime()
             is EditTransactionViewEvent.OnSetTransactionType ->
                 onSetTransactionType(event.newTransactionType)
+            is EditTransactionViewEvent.OnSetNecessity ->
+                onSetNecessity(event.newNecessity)
 
             is EditTransactionViewEvent.OnTitleChanged -> onTitleChanged(event.newTitle)
             is EditTransactionViewEvent.OnToAccountChanged -> onToAccountChanged(event.newAccount)
@@ -381,6 +391,7 @@ class EditTransactionViewModel @Inject constructor(
 
         transactionType = transaction.type
         initialTitle = transaction.title
+        necessity = transaction.necessity
         dateTime = transaction.dateTime
         description = transaction.description
         dueDate = transaction.dueDate
@@ -582,10 +593,28 @@ class EditTransactionViewModel @Inject constructor(
     }
 
     private fun onSetTransactionType(newTransactionType: TransactionType) {
+        // Necessity is an expenses-only field, reset it when leaving the expense type
+        val resetNecessity = newTransactionType != TransactionType.EXPENSE
         loadedTransaction = loadedTransaction().copy(
-            type = newTransactionType
+            type = newTransactionType,
+            necessity = if (resetNecessity) null else loadedTransaction().necessity
         )
         transactionType = newTransactionType
+        if (resetNecessity) {
+            necessity = null
+        }
+        saveIfEditMode()
+    }
+
+    private fun onSetNecessity(newNecessity: Necessity?) {
+        if (transactionType != TransactionType.EXPENSE) {
+            // Necessity only applies to expenses
+            return
+        }
+        necessity = newNecessity
+        loadedTransaction = loadedTransaction().copy(
+            necessity = newNecessity
+        )
         saveIfEditMode()
     }
 
@@ -728,6 +757,7 @@ class EditTransactionViewModel @Inject constructor(
                         else -> loadedTransaction().dateTime
                     },
                     categoryId = category?.id?.value,
+                    necessity = necessity?.takeIf { transactionType == TransactionType.EXPENSE },
                     isSynced = false
                 )
 
@@ -831,6 +861,7 @@ class EditTransactionViewModel @Inject constructor(
         description = null
         dueDate = null
         category = null
+        necessity = null
         hasChanges = false
     }
 

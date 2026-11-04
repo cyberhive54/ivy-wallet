@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ivy.base.legacy.Theme
 import com.ivy.base.legacy.Transaction
 import com.ivy.base.legacy.TransactionHistoryItem
@@ -70,6 +71,7 @@ import com.ivy.navigation.TransactionsScreen
 import com.ivy.navigation.navigation
 import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
+import com.ivy.ui.typography.ivyInter
 import com.ivy.ui.rememberScrollPositionListState
 import com.ivy.wallet.domain.pure.data.IncomeExpensePair
 import com.ivy.wallet.ui.theme.Gray
@@ -765,10 +767,8 @@ private fun Item(
 
                 Text(
                     text = account.name,
-                    style = UI.typo.b1.style(
-                        color = contrastColor,
-                        fontWeight = FontWeight.ExtraBold
-                    )
+                    style = ivyInter(22.sp, FontWeight.ExtraBold, letterSpacing = (-0.3).sp),
+                    color = contrastColor
                 )
 
                 if (!account.includeInBalance) {
@@ -794,10 +794,8 @@ private fun Item(
 
                 Text(
                     text = category.name.value,
-                    style = UI.typo.b1.style(
-                        color = contrastColor,
-                        fontWeight = FontWeight.ExtraBold
-                    )
+                    style = ivyInter(22.sp, FontWeight.ExtraBold, letterSpacing = (-0.3).sp),
+                    color = contrastColor
                 )
             }
 

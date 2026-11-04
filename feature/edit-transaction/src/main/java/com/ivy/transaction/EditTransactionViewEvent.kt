@@ -1,6 +1,7 @@
 package com.ivy.transaction
 
 import androidx.compose.runtime.Immutable
+import com.ivy.base.model.Necessity
 import com.ivy.base.model.TransactionType
 import com.ivy.data.model.Category
 import com.ivy.data.model.Tag
@@ -35,7 +36,9 @@ data class EditTransactionViewState(
     val backgroundProcessingStarted: Boolean,
     val customExchangeRateState: CustomExchangeRateState,
     val tags: ImmutableList<Tag>,
-    val transactionAssociatedTags: ImmutableList<TagId>
+    val transactionAssociatedTags: ImmutableList<TagId>,
+    /** Optional necessity classification (expenses only). Null = unspecified. */
+    val necessity: Necessity? = null,
 )
 
 sealed interface EditTransactionViewEvent {
@@ -50,6 +53,8 @@ sealed interface EditTransactionViewEvent {
     data object OnChangeTime : EditTransactionViewEvent
     data class OnSetTransactionType(val newTransactionType: TransactionType) :
         EditTransactionViewEvent
+
+    data class OnSetNecessity(val newNecessity: Necessity?) : EditTransactionViewEvent
 
     data object OnPayPlannedPayment : EditTransactionViewEvent
     data object Delete : EditTransactionViewEvent

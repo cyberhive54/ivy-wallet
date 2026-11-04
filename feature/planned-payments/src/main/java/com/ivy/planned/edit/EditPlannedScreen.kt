@@ -289,10 +289,11 @@ private fun BoxWithConstraintsScope.UI(
         visible = state.categoryModalVisible,
         initialCategory = state.category,
         categories = state.categories,
-        showCategoryModal = {
+        type = state.transactionType,
+        showCategoryModal = { data ->
             onEvent(
                 EditPlannedScreenEvent.OnCategoryModalDataChanged(
-                    CategoryModalData(it)
+                    data
                 )
             )
         },

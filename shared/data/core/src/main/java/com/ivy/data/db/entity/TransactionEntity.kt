@@ -57,6 +57,10 @@ data class TransactionEntity(
     @SerialName("loanRecordId")
     @Serializable(with = KSerializerUUID::class)
     val loanRecordId: UUID? = null,
+    // Optional necessity classification (expenses only): UNKNOWN, MUST, NEED or WANT.
+    // Null for income/transfer transactions or unclassified legacy rows.
+    @SerialName("necessity")
+    val necessity: String? = null,
     @Deprecated("Obsolete field used for cloud sync. Can't be deleted because of backwards compatibility")
     @SerialName("isSynced")
     val isSynced: Boolean = false,

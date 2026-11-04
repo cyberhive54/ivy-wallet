@@ -3,7 +3,9 @@ package com.ivy.wallet.ui.theme.modal.edit
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,14 +30,21 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import arrow.core.raise.either
+import com.ivy.design.l0_system.UI
+import com.ivy.ui.typography.ivyInter
+import com.ivy.wallet.ui.theme.findContrastTextColor
+import com.ivy.base.model.TransactionType
 import com.ivy.data.model.Category
+import com.ivy.data.model.Category.Companion.ALL_TRANSACTION_TYPES
 import com.ivy.data.model.primitive.ColorInt
 import com.ivy.data.model.primitive.IconAsset
 import com.ivy.data.model.primitive.NotBlankTrimmedString
@@ -61,6 +71,8 @@ data class CategoryModalData(
     val category: Category?,
     val id: UUID = UUID.randomUUID(),
     val autoFocusKeyboard: Boolean = true,
+    /** Prefilled name for the create flow (e.g. from "Add {search}" in the picker). */
+    val initialName: String? = null,
 )
 
 @Deprecated("Old design system. Use `:ivy-design` and Material3")
@@ -73,13 +85,20 @@ fun BoxWithConstraintsScope.CategoryModal(
 ) {
     val initialCategory = modal?.category
     var nameTextFieldValue by remember(modal) {
-        mutableStateOf(selectEndTextFieldValue(initialCategory?.name?.value))
+        mutableStateOf(selectEndTextFieldValue(initialCategory?.name?.value ?: modal?.initialName))
     }
     var color by remember(modal) {
         mutableStateOf(initialCategory?.color?.let { Color(it.value) } ?: Ivy)
     }
     var icon by remember(modal) {
         mutableStateOf(initialCategory?.icon)
+    }
+    var types by remember(modal) {
+        mutableStateOf(
+            initialCategory?.transactionTypes
+                ?.takeIf { it.isNotEmpty() }
+                ?: ALL_TRANSACTION_TYPES
+        )
     }
 
     var chooseIconModalVisible by remember(modal) {
@@ -100,7 +119,8 @@ fun BoxWithConstraintsScope.CategoryModal(
                         initialCategory.copy(
                             name = NotBlankTrimmedString.from(nameTextFieldValue.text.trim()).bind(),
                             color = ColorInt(color.toArgb()),
-                            icon = icon
+                            icon = icon,
+                            transactionTypes = types
                         )
                     }.getOrNull()
 
@@ -112,7 +132,8 @@ fun BoxWithConstraintsScope.CategoryModal(
                         CreateCategoryData(
                             name = nameTextFieldValue.text.trim(),
                             color = color,
-                            icon = icon?.id
+                            icon = icon?.id,
+                            transactionTypes = types
                         )
                     )
                 }
@@ -148,6 +169,13 @@ fun BoxWithConstraintsScope.CategoryModal(
             showChooseIconModal = {
                 chooseIconModalVisible = true
             }
+        )
+
+        Spacer(Modifier.height(32.dp))
+
+        TransactionTypesSection(
+            selected = types,
+            onSelected = { types = it }
         )
 
         Spacer(Modifier.height(40.dp))
@@ -231,6 +259,72 @@ fun IconNameRow(
             ),
         ) { newValue ->
             setNameTextFieldValue(newValue)
+        }
+    }
+}
+
+@Composable
+private fun TransactionTypesSection(
+    selected: Set<TransactionType>,
+    onSelected: (Set<TransactionType>) -> Unit,
+) {
+    val options = listOf(
+        TransactionType.INCOME to stringResource(R.string.income),
+        TransactionType.EXPENSE to stringResource(R.string.expense),
+        TransactionType.TRANSFER to stringResource(R.string.transfer),
+    )
+
+    Column {
+        Text(
+            modifier = Modifier.padding(horizontal = 24.dp),
+            text = stringResource(R.string.transaction_types).uppercase(),
+            style = ivyInter(13.sp, FontWeight.SemiBold, letterSpacing = 0.6.sp),
+            color = UI.colors.gray
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.padding(horizontal = 24.dp),
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+        ) {
+            options.forEach { (option, label) ->
+                val isSelected = option in selected
+                val background = if (isSelected) UI.colors.primary else UI.colors.medium
+                val textColor = if (isSelected) {
+                    findContrastTextColor(UI.colors.primary)
+                } else {
+                    UI.colors.gray
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                        .clip(CircleShape)
+                        .background(background, CircleShape)
+                        .clickable {
+                            // Keep at least one type selected - a category with
+                            // no types would be hidden from every picker.
+                            val next = if (isSelected) {
+                                selected - option
+                            } else {
+                                selected + option
+                            }
+                            if (next.isNotEmpty()) {
+                                onSelected(next)
+                            }
+                        }
+                        .testTag("category_type_${option.name.lowercase()}"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        style = ivyInter(14.sp, FontWeight.SemiBold),
+                        color = textColor
+                    )
+                }
+            }
         }
     }
 }

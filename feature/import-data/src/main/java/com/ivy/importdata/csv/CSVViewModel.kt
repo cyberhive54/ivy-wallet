@@ -17,6 +17,7 @@ import com.ivy.importdata.csv.domain.parseAmount
 import com.ivy.importdata.csv.domain.parseCategory
 import com.ivy.importdata.csv.domain.parseDate
 import com.ivy.importdata.csv.domain.parseDescription
+import com.ivy.importdata.csv.domain.parseNecessity
 import com.ivy.importdata.csv.domain.parseStatus
 import com.ivy.importdata.csv.domain.parseTitle
 import com.ivy.importdata.csv.domain.parseToAccount
@@ -187,6 +188,20 @@ class CSVViewModel @Inject constructor(
             metadata = Unit,
         )
     )
+    private var necessity by mutableStateOf(
+        ColumnMapping(
+            ivyColumn = "Necessity",
+            helpInfo = """
+                The necessity classification of the expense.
+                One of: Unknown, Must, Need, Want.
+                Optional and applies to expenses only.
+            """.trimIndent(),
+            name = "",
+            index = -1,
+            required = false,
+            metadata = Unit,
+        )
+    )
     private var description by mutableStateOf(
         ColumnMapping(
             ivyColumn = "Description",
@@ -304,6 +319,7 @@ class CSVViewModel @Inject constructor(
             category,
             title,
             description,
+            necessity,
         ) {
             val result = withContext(Dispatchers.Default) {
                 if (sampleCSV != null) {
@@ -314,6 +330,8 @@ class CSVViewModel @Inject constructor(
                         titleStatus = sampleCSV.parseStatus(title, ::parseTitle),
                         description = description,
                         descriptionStatus = sampleCSV.parseStatus(description, ::parseDescription),
+                        necessity = necessity,
+                        necessityStatus = sampleCSV.parseStatus(necessity, ::parseNecessity),
                     )
                 } else {
                     null
@@ -388,6 +406,13 @@ class CSVViewModel @Inject constructor(
 
             is CSVEvent.MapDescription -> {
                 description = description.copy(
+                    index = event.index,
+                    name = event.name
+                )
+            }
+
+            is CSVEvent.MapNecessity -> {
+                necessity = necessity.copy(
                     index = event.index,
                     name = event.name
                 )
@@ -537,9 +562,11 @@ class CSVViewModel @Inject constructor(
                     category = category,
                     title = title,
                     description = description,
+                    necessity = necessity,
                     categoryStatus = emptyStatus,
                     titleStatus = emptyStatus,
                     descriptionStatus = emptyStatus,
+                    necessityStatus = emptyStatus,
                 ),
                 onProgress = { progressPercent ->
                     com.ivy.legacy.utils.uiThread {

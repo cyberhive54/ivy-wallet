@@ -1,5 +1,6 @@
 package com.ivy.data.model
 
+import com.ivy.base.model.Necessity
 import com.ivy.data.model.primitive.NotBlankTrimmedString
 import com.ivy.data.model.sync.Identifiable
 import com.ivy.data.model.sync.UniqueId
@@ -46,6 +47,8 @@ data class Expense(
     override val tags: List<TagId>,
     val value: PositiveValue,
     val account: AccountId,
+    /** Optional necessity classification (expenses only). Null = not classified. */
+    val necessity: Necessity? = null,
 ) : Transaction
 
 data class Transfer(

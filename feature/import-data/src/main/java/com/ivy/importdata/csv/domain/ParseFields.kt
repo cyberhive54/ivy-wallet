@@ -1,5 +1,6 @@
 package com.ivy.importdata.csv.domain
 
+import com.ivy.base.model.Necessity
 import com.ivy.base.model.TransactionType
 import com.ivy.importdata.csv.CSVRow
 import com.ivy.importdata.csv.ColumnMapping
@@ -220,6 +221,11 @@ fun parseDescription(
     value: String,
     metadata: Unit
 ): String? = notBlankTrimmedString(value)
+
+fun parseNecessity(
+    value: String,
+    metadata: Unit
+): Necessity? = Necessity.from(value)
 
 fun <M> CSVRow.extractValue(
     mapping: ColumnMapping<M>

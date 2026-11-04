@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
+import com.ivy.base.model.Necessity
 import com.ivy.base.model.TransactionType
 import com.ivy.data.db.entity.TransactionEntity
 import com.ivy.data.model.AccountId
@@ -84,6 +85,7 @@ class TransactionMapper @Inject constructor(
                     settled = settled,
                     metadata = metadata,
                     tags = tags,
+                    necessity = Necessity.from(necessity),
                 )
             }
 
@@ -155,6 +157,10 @@ class TransactionMapper @Inject constructor(
             description = description?.value,
             dateTime = time.takeIf { settled },
             categoryId = category?.value,
+            necessity = when (this) {
+                is Expense -> necessity?.name
+                else -> null
+            },
             dueDate = time.takeIf { !settled },
             paidForDateTime = metadata.paidForDateTime,
             recurringRuleId = metadata.recurringRuleId,

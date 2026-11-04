@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,7 +41,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.ivy.base.model.TransactionType
 import com.ivy.legacy.IvyWalletPreview
+import com.ivy.legacy.utils.ContextualDock
+import com.ivy.legacy.cupertino.CupertinoCategoryTypeFilterBar
+import com.ivy.legacy.cupertino.CupertinoCategorySearchAddRow
+import com.ivy.legacy.cupertino.CupertinoCategoryAddRow
+import com.ivy.legacy.cupertino.CupertinoNoCategoryFoundState
+import com.ivy.legacy.cupertino.CupertinoEmptyCategoriesState
+import com.ivy.ui.typography.ivyInter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,11 +61,9 @@ import com.ivy.data.model.primitive.IconAsset
 import com.ivy.data.model.primitive.NotBlankTrimmedString
 import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
-import com.ivy.legacy.ui.SearchInput
 import com.ivy.legacy.utils.balancePrefix
 import com.ivy.legacy.utils.compactBalancePrefix
 import com.ivy.legacy.utils.format
-import com.ivy.legacy.utils.selectEndTextFieldValue
 import com.ivy.navigation.CategoriesScreen
 import com.ivy.navigation.TransactionsScreen
 import com.ivy.navigation.navigation
@@ -64,14 +71,11 @@ import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
 import com.ivy.ui.rememberScrollPositionListState
 import com.ivy.wallet.domain.data.SortOrder
-import com.ivy.wallet.ui.theme.Gradient
-import com.ivy.wallet.ui.theme.GradientGreen
 import com.ivy.wallet.ui.theme.Green
 import com.ivy.wallet.ui.theme.GreenDark
 import com.ivy.wallet.ui.theme.GreenLight
 import com.ivy.wallet.ui.theme.IvyDark
 import com.ivy.wallet.ui.theme.Orange
-import com.ivy.wallet.ui.theme.White
 import com.ivy.wallet.ui.theme.components.BalanceRow
 import com.ivy.wallet.ui.theme.components.CircleButtonFilled
 import com.ivy.wallet.ui.theme.components.ItemIconSDefaultIcon
@@ -88,6 +92,7 @@ import com.ivy.wallet.ui.theme.toComposeColor
 import com.ivy.wallet.ui.theme.wallet.AmountCurrencyB1
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import java.util.UUID
 
 @Composable
@@ -95,12 +100,24 @@ fun BoxWithConstraintsScope.CategoriesScreen(screen: CategoriesScreen) {
     val viewModel: CategoriesViewModel = screenScopedViewModel()
     val state = viewModel.uiState()
 
+    // The floating dock "+" (contextual add) collects these requests when this page is shown
+    LaunchedEffect(Unit) {
+        ContextualDock.addRequests.collect {
+            viewModel.onEvent(
+                CategoriesScreenEvent.OnCategoryModalVisible(
+                    CategoryModalData(category = null)
+                )
+            )
+        }
+    }
+
     UI(
         state = state,
         onEvent = viewModel::onEvent
     )
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun BoxWithConstraintsScope.UI(
     state: CategoriesScreenState = CategoriesScreenState(
@@ -111,6 +128,19 @@ private fun BoxWithConstraintsScope.UI(
 ) {
     val nav = navigation()
     val ivyContext = com.ivy.legacy.ivyWalletCtx()
+    var typeFilter by remember { mutableStateOf<TransactionType?>(null) }
+    var query by remember { mutableStateOf("") }
+
+    val visibleCategories = remember(state.categories, typeFilter) {
+        if (typeFilter == null) {
+            state.categories
+        } else {
+            state.categories
+                .filter { typeFilter in it.category.transactionTypes }
+                .toImmutableList()
+        }
+    }
+
     var listState = rememberLazyListState()
     if (!state.categories.isEmpty()) {
         listState = rememberScrollPositionListState(
@@ -121,90 +151,141 @@ private fun BoxWithConstraintsScope.UI(
                 ?: 0
         )
     }
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(UI.colors.pure)
             .statusBarsPadding()
-            .navigationBarsPadding(),
-        state = listState
+            .navigationBarsPadding()
     ) {
-        item {
-            Spacer(Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Spacer(Modifier.width(24.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Spacer(Modifier.width(16.dp))
 
-                Text(
-                    text = stringResource(R.string.categories),
-                    style = UI.typo.h2.style(
-                        color = UI.colors.pureInverse,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                )
+            CircleButtonFilled(
+                icon = R.drawable.ic_back,
+                tint = UI.colors.pureInverse,
+                backgroundColor = UI.colors.medium,
+                clickAreaPadding = 10.dp,
+                onClick = {
+                    nav.back()
+                },
+            )
 
-                Spacer(Modifier.weight(1f))
+            Spacer(Modifier.weight(1f))
 
-                CircleButtonFilled(
-                    icon = R.drawable.ic_sort_by_alpha_24,
-                    onClick = {
-                        onEvent(CategoriesScreenEvent.OnSortOrderModalVisible(visible = true))
-                    },
-                    clickAreaPadding = 12.dp
-                )
+            CircleButtonFilled(
+                icon = R.drawable.ic_sort_by_alpha_24,
+                onClick = {
+                    onEvent(CategoriesScreenEvent.OnSortOrderModalVisible(visible = true))
+                },
+                clickAreaPadding = 12.dp
+            )
 
-                Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-                ReorderButton {
-                    onEvent(CategoriesScreenEvent.OnReorderModalVisible(true))
-                }
-
-                Spacer(Modifier.width(24.dp))
+            ReorderButton {
+                onEvent(CategoriesScreenEvent.OnReorderModalVisible(true))
             }
 
-            if (state.showCategorySearchBar) {
-                Spacer(Modifier.height(16.dp))
-                SearchField(onSearch = { onEvent(CategoriesScreenEvent.OnSearchQueryUpdate(it)) })
-            }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.width(16.dp))
         }
 
-        items(state.categories, key = { it.category.id.value }) { categoryData ->
-            CategoryCard(
-                currency = state.baseCurrency,
-                categoryData = categoryData,
-                compactModeEnabled = state.compactCategoriesModeEnabled,
-                onLongClick = {
-                    onEvent(CategoriesScreenEvent.OnReorderModalVisible(true))
-                }
-            ) {
-                nav.navigateTo(
-                    TransactionsScreen(
-                        accountId = null,
-                        categoryId = categoryData.category.id.value
+        Spacer(Modifier.height(16.dp))
+
+        Text(
+            modifier = Modifier.padding(horizontal = 24.dp),
+            text = stringResource(R.string.categories),
+            style = ivyInter(34.sp, FontWeight.Bold, letterSpacing = (-0.5).sp),
+            color = UI.colors.pureInverse
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        CupertinoCategoryTypeFilterBar(
+            selected = typeFilter,
+            onSelected = { typeFilter = it },
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        CupertinoCategorySearchAddRow(
+            query = query,
+            onQueryChange = {
+                query = it
+                onEvent(CategoriesScreenEvent.OnSearchQueryUpdate(it))
+            },
+            onAddClick = {
+                onEvent(
+                    CategoriesScreenEvent.OnCategoryModalVisible(
+                        CategoryModalData(category = null)
                     )
                 )
-            }
-        }
+            },
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
 
-        item {
-            Spacer(Modifier.height(150.dp)) // scroll hack
+        Spacer(Modifier.height(8.dp))
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            state = listState
+        ) {
+            if (visibleCategories.isEmpty()) {
+                item {
+                    if (query.isNotBlank()) {
+                        CupertinoNoCategoryFoundState(query = query)
+                        Spacer(Modifier.height(4.dp))
+                        CupertinoCategoryAddRow(
+                            text = stringResource(
+                                R.string.add_named_category,
+                                query.trim()
+                            ),
+                            onClick = {
+                                onEvent(
+                                    CategoriesScreenEvent.OnCategoryModalVisible(
+                                        CategoryModalData(
+                                            category = null,
+                                            initialName = query.trim()
+                                        )
+                                    )
+                                )
+                            }
+                        )
+                    } else {
+                        CupertinoEmptyCategoriesState()
+                    }
+                }
+            } else {
+                items(visibleCategories, key = { it.category.id.value }) { categoryData ->
+                    CategoryCard(
+                        currency = state.baseCurrency,
+                        categoryData = categoryData,
+                        compactModeEnabled = state.compactCategoriesModeEnabled,
+                        onLongClick = {
+                            onEvent(CategoriesScreenEvent.OnReorderModalVisible(true))
+                        }
+                    ) {
+                        nav.navigateTo(
+                            TransactionsScreen(
+                                accountId = null,
+                                categoryId = categoryData.category.id.value
+                            )
+                        )
+                    }
+                }
+            }
+
+            item {
+                Spacer(Modifier.height(150.dp)) // dock clearance
+            }
         }
     }
-    CategoriesBottomBar(
-        onAddCategory = {
-            onEvent(
-                CategoriesScreenEvent.OnCategoryModalVisible(
-                    CategoryModalData(category = null)
-                )
-            )
-        },
-        onClose = {
-            nav.back()
-        },
-    )
 
     ReorderModalSingleType(
         visible = state.reorderModalVisible,
@@ -222,10 +303,8 @@ private fun BoxWithConstraintsScope.UI(
                 .padding(end = 24.dp)
                 .padding(vertical = 8.dp),
             text = item.category.name.value,
-            style = UI.typo.b1.style(
-                color = item.category.color.value.toComposeColor(),
-                fontWeight = FontWeight.Bold
-            )
+            style = ivyInter(18.sp, FontWeight.SemiBold, letterSpacing = (-0.2).sp),
+            color = item.category.color.value.toComposeColor()
         )
     }
 
@@ -619,10 +698,11 @@ private fun SelectTypeButton(
     text: String,
     @DrawableRes icon: Int,
     selected: Boolean,
-    selectedGradient: Gradient = GradientGreen,
-    textSelectedColor: Color = White,
     onClick: () -> Unit
 ) {
+    val selectedBg = UI.colors.primary
+    val selectedContent = findContrastTextColor(selectedBg)
+
     Row(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -630,7 +710,11 @@ private fun SelectTypeButton(
             .height(64.dp)
             .clip(UI.shapes.r4)
             .background(
-                brush = if (selected) selectedGradient.asHorizontalBrush() else SolidColor(UI.colors.medium),
+                brush = if (selected) {
+                    SolidColor(selectedBg)
+                } else {
+                    SolidColor(UI.colors.medium)
+                },
                 shape = UI.shapes.r4
             )
             .clickable {
@@ -641,7 +725,7 @@ private fun SelectTypeButton(
     ) {
         Spacer(Modifier.width(16.dp))
 
-        val textColor = if (selected) textSelectedColor else UI.colors.pureInverse
+        val textColor = if (selected) selectedContent else UI.colors.pureInverse
 
         IvyIcon(
             icon = icon,
@@ -654,10 +738,9 @@ private fun SelectTypeButton(
         Text(
             modifier = Modifier.wrapContentHeight(),
             text = text,
-            style = UI.typo.b1.style(
-                color = textColor
-            ),
+            style = ivyInter(17.sp, FontWeight.SemiBold, letterSpacing = (-0.2).sp),
             textAlign = TextAlign.Center,
+            color = textColor
         )
 
         if (selected) {
@@ -665,15 +748,7 @@ private fun SelectTypeButton(
 
             IvyIcon(
                 icon = R.drawable.ic_check,
-                tint = textSelectedColor
-            )
-
-            Text(
-                text = stringResource(R.string.selected_text),
-                style = UI.typo.b2.style(
-                    fontWeight = FontWeight.SemiBold,
-                    color = textSelectedColor
-                )
+                tint = selectedContent
             )
 
             Spacer(Modifier.width(24.dp))
@@ -851,26 +926,6 @@ private fun PreviewWithSearchBarEnabled(
         )
         UI(state = state)
     }
-}
-
-@Composable
-private fun SearchField(
-    onSearch: (String) -> Unit,
-) {
-    var searchQueryTextFieldValue by remember {
-        mutableStateOf(selectEndTextFieldValue(""))
-    }
-
-    SearchInput(
-        searchQueryTextFieldValue = searchQueryTextFieldValue,
-        hint = "Search categories",
-        focus = false,
-        showClearIcon = searchQueryTextFieldValue.text.isNotEmpty(),
-        onSetSearchQueryTextField = {
-            searchQueryTextFieldValue = it
-            onSearch(it.text)
-        }
-    )
 }
 
 /** For screenshot testing */

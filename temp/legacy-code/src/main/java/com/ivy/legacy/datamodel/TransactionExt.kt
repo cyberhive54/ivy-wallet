@@ -13,6 +13,7 @@ fun Transaction.toEntity(): TransactionEntity = TransactionEntity(
     description = description,
     dateTime = dateTime,
     categoryId = categoryId,
+    necessity = necessity?.name,
     dueDate = dueDate,
     recurringRuleId = recurringRuleId,
     paidForDateTime = paidFor,

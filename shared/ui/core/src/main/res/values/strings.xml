@@ -543,4 +543,16 @@
     <string name="settings_dock_translucent">Translucent dock</string>
     <string name="settings_dock_translucent_description">Glass-style floating dock regardless of the selected material. Follows your accent color and mode.</string>
     <string name="settings_account">Account</string>
+    <string name="necessity">Necessity</string>
+    <string name="necessity_unknown">Unknown</string>
+    <string name="necessity_must">Must</string>
+    <string name="necessity_need">Need</string>
+    <string name="necessity_want">Want</string>
+    <string name="no_such_category">No such category</string>
+    <string name="add_named_category">Add %1$s</string>
+    <string name="transaction_types">Transaction types</string>
+    <string name="all">All</string>
+    <string name="transfers">Transfers</string>
+    <string name="no_categories_yet">No categories yet. Tap + to add one.</string>
+    <string name="search_category">Search category</string>
 </resources>

@@ -21,6 +21,10 @@ data class CategoryEntity(
     val icon: String? = null,
     @SerialName("orderNum")
     val orderNum: Double = 0.0,
+    // Comma-separated TransactionType names this category can be used with.
+    // Null/blank = all types (legacy behavior).
+    @SerialName("transactionTypes")
+    val transactionTypes: String? = null,
 
     @Deprecated("Obsolete field used for cloud sync. Can't be deleted because of backwards compatibility")
     @SerialName("isSynced")

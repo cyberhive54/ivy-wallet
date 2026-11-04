@@ -38,6 +38,9 @@ import com.ivy.importdata.csvimport.ImportCSVScreen
 import com.ivy.loans.loan.LoansScreen
 import com.ivy.loans.loandetails.LoanDetailsScreen
 import com.ivy.main.MainScreen
+import com.ivy.main.BottomBar
+import com.ivy.legacy.ivyWalletCtx
+import com.ivy.legacy.utils.ContextualDock
 import com.ivy.navigation.AttributionsScreen
 import com.ivy.navigation.BalanceScreen
 import com.ivy.navigation.BudgetScreen
@@ -54,6 +57,7 @@ import com.ivy.navigation.ImportScreen
 import com.ivy.navigation.LoanDetailsScreen
 import com.ivy.navigation.LoansScreen
 import com.ivy.navigation.MainScreen
+import com.ivy.navigation.navigation
 import com.ivy.navigation.OnboardingScreen
 import com.ivy.navigation.PieChartStatisticScreen
 import com.ivy.navigation.PlannedPaymentsScreen
@@ -86,9 +90,15 @@ private val Screen?.isFluidAddScreen: Boolean
 @ExperimentalFoundationApi
 @ExperimentalAnimationApi
 @Composable
-@Suppress("CyclomaticComplexMethod", "FunctionNaming")
+@Suppress("CyclomaticComplexMethod", "FunctionNaming", "LongMethod")
 fun BoxWithConstraintsScope.IvyNavGraph(screen: Screen?) {
-    AnimatedContent(
+    // Pushed "list" screens (Categories, Tags) show the floating dock with a
+    // contextual "+" (add category / add tag) instead of the radial add menu.
+    val showContextualDock = screen is CategoriesScreen || screen is TagsScreen
+    val ivyContext = ivyWalletCtx()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        AnimatedContent(
         targetState = screen,
         transitionSpec = { navTransition() },
         contentKey = { it?.javaClass },
@@ -139,6 +149,65 @@ fun BoxWithConstraintsScope.IvyNavGraph(screen: Screen?) {
                     ReleasesScreen -> ReleasesScreenImpl()
                     DisclaimerScreen -> DisclaimerScreenImpl()
                     PollScreen -> PollScreen()
+                }
+            }
+        }
+        }
+
+        if (showContextualDock) {
+            val nav = navigation()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(100f)
+            ) {
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    BottomBar(
+                        tab = ivyContext.mainTab,
+                        selectTab = { tab ->
+                            ivyContext.selectMainTab(tab)
+                            nav.resetBackStack()
+                            nav.navigateTo(MainScreen)
+                        },
+                        onAddIncome = {
+                            nav.navigateTo(
+                                EditTransactionScreen(
+                                    initialTransactionId = null,
+                                    type = com.ivy.base.model.TransactionType.INCOME
+                                )
+                            )
+                        },
+                        onAddExpense = {
+                            nav.navigateTo(
+                                EditTransactionScreen(
+                                    initialTransactionId = null,
+                                    type = com.ivy.base.model.TransactionType.EXPENSE
+                                )
+                            )
+                        },
+                        onAddTransfer = {
+                            nav.navigateTo(
+                                EditTransactionScreen(
+                                    initialTransactionId = null,
+                                    type = com.ivy.base.model.TransactionType.TRANSFER
+                                )
+                            )
+                        },
+                        onAddPlannedPayment = {
+                            nav.navigateTo(
+                                EditPlannedScreen(
+                                    type = com.ivy.base.model.TransactionType.EXPENSE,
+                                    plannedPaymentRuleId = null
+                                )
+                            )
+                        },
+                        // Disabled here - the contextual "+" is used instead
+                        showAddAccountModal = {},
+                        overrideAddAction = {
+                            // Categories/Tags screens collect this and open their add modal
+                            ContextualDock.requestAdd()
+                        },
+                    )
                 }
             }
         }
