@@ -95,7 +95,7 @@
 
 | ID | Milestone | Gate | Status | Done on | Notes |
 |---|---|---|---|---|---|
-| P2.S2.M1 | Customer split view | OD | ☐ | | |
+| P2.S2.M1 | Customer book split view (Taken / Given) | OD | ~ | 2026-11-14 | Ledger workspace landing rebuilt as the book: search by name, Youll get / You owe split with per-side totals, filters All / Due / Overdue, per-person outstanding + overdue badge; contacts tab keeps the full list. No add-customer sheet yet (comes with M3), entry still via the fork modal |
 | P2.S2.M2 | Customer detail + actions row | OD | ☐ | | |
 | P2.S2.M3 | Add/edit sheet | OD | ☐ | | |
 | P2.S2.M4 | Settle-all | OD | ☐ | | |

@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,7 +52,9 @@ fun BoxWithConstraintsScope.LedgerLanding() {
     val ivyContext = ivyWalletCtx()
     val viewModel: LedgerWorkspaceViewModel = screenScopedViewModel()
     val state by viewModel.state.collectAsState()
-    var overdueOnly by remember { mutableStateOf(false) }
+    var segment by remember { mutableStateOf(LedgerSegment.GET) }
+    var filter by remember { mutableStateOf(LedgerFilter.ALL) }
+    var query by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -91,9 +94,38 @@ fun BoxWithConstraintsScope.LedgerLanding() {
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(14.dp))
 
-        // Filter: everyone with an outstanding balance, or only the overdue ones
+        // Search by name
+        LedgerSearchField(
+            query = query,
+            onQueryChange = { query = it }
+        )
+        Spacer(Modifier.height(12.dp))
+
+        // Taken / Given split
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+        ) {
+            LedgerSegmentButton(
+                label = stringResource(R.string.ledger_get),
+                amount = state.totalLent,
+                selected = segment == LedgerSegment.GET,
+                onClick = { segment = LedgerSegment.GET }
+            )
+            LedgerSegmentButton(
+                label = stringResource(R.string.ledger_owe),
+                amount = state.totalBorrowed,
+                selected = segment == LedgerSegment.OWE,
+                onClick = { segment = LedgerSegment.OWE }
+            )
+        }
+        Spacer(Modifier.height(12.dp))
+
+        // Filters: everyone / due soon / overdue
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -102,32 +134,40 @@ fun BoxWithConstraintsScope.LedgerLanding() {
         ) {
             LedgerFilterChip(
                 label = stringResource(R.string.ledger_filter_all),
-                selected = !overdueOnly,
-                onClick = { overdueOnly = false }
+                selected = filter == LedgerFilter.ALL,
+                onClick = { filter = LedgerFilter.ALL }
             )
-            val overdueCount = state.people.count { it.overdue }
             LedgerFilterChip(
-                label = stringResource(R.string.ledger_filter_overdue, overdueCount),
-                selected = overdueOnly,
-                onClick = { overdueOnly = true },
+                label = stringResource(R.string.ledger_filter_due),
+                selected = filter == LedgerFilter.DUE,
+                onClick = { filter = LedgerFilter.DUE }
+            )
+            LedgerFilterChip(
+                label = stringResource(R.string.ledger_filter_overdue_only, state.people.count { it.overdue }),
+                selected = filter == LedgerFilter.OVERDUE,
+                onClick = { filter = LedgerFilter.OVERDUE },
                 accent = Color(0xFFFF6B5B)
             )
         }
         Spacer(Modifier.height(12.dp))
 
-        Text(
-            modifier = Modifier.padding(horizontal = 24.dp),
-            text = stringResource(R.string.ledger_outstanding, state.people.size),
-            style = ivyInter(13.sp, FontWeight.SemiBold, letterSpacing = 0.6.sp),
-            color = UI.colors.gray
-        )
-        Spacer(Modifier.height(8.dp))
-
-        val visiblePeople = if (overdueOnly) {
-            state.people.filter { it.overdue }
-        } else {
-            state.people
-        }
+        val visiblePeople = state.people
+            .filter { person ->
+                when (segment) {
+                    LedgerSegment.GET -> !person.youOwe
+                    LedgerSegment.OWE -> person.youOwe
+                }
+            }
+            .filter { person ->
+                when (filter) {
+                    LedgerFilter.ALL -> true
+                    LedgerFilter.DUE -> person.overdue || person.dueSoonCount > 0
+                    LedgerFilter.OVERDUE -> person.overdue
+                }
+            }
+            .filter { person ->
+                query.isBlank() || person.name.contains(query, ignoreCase = true)
+            }
 
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -151,10 +191,10 @@ fun BoxWithConstraintsScope.LedgerLanding() {
                         onClick = { nav.navigateTo(LoanDetailsScreen(loanId = person.id)) }
                     )
                 }
-                if (state.people.size > 8) {
+                if (visiblePeople.size > 8) {
                     item {
                         Text(
-                            text = stringResource(R.string.ledger_show_all, state.people.size),
+                            text = stringResource(R.string.ledger_show_all, visiblePeople.size),
                             style = ivyInter(15.sp, FontWeight.SemiBold),
                             color = Color(0xFF5E5CE6),
                             modifier = Modifier
@@ -259,6 +299,85 @@ fun BoxWithConstraintsScope.LedgerContacts() {
                 }
             }
         }
+    }
+}
+
+/** Which side of the book is shown: money they owe you, or money you owe them. */
+enum class LedgerSegment { GET, OWE }
+
+/** Book filters. */
+enum class LedgerFilter { ALL, DUE, OVERDUE }
+
+@Composable
+private fun LedgerSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(44.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(UI.colors.pureInverse.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            if (query.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.ledger_search_hint),
+                    style = ivyInter(16.sp),
+                    color = UI.colors.gray
+                )
+            }
+            androidx.compose.foundation.text.BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                singleLine = true,
+                textStyle = ivyInter(16.sp).copy(color = UI.colors.pureInverse),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun RowScope.LedgerSegmentButton(
+    label: String,
+    amount: Double,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                if (selected) {
+                    UI.colors.pureInverse.copy(alpha = 0.08f)
+                } else {
+                    androidx.compose.ui.graphics.Color.Transparent
+                },
+                RoundedCornerShape(18.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = label,
+            style = ivyInter(13.sp, FontWeight.SemiBold),
+            color = if (selected) UI.colors.pureInverse else UI.colors.gray
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "₹%,.0f".format(amount),
+            style = ivyInter(22.sp, FontWeight.ExtraBold, letterSpacing = (-0.5).sp),
+            color = if (selected) UI.colors.pureInverse else UI.colors.gray
+        )
     }
 }
 

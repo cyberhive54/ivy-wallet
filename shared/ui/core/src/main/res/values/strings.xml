@@ -627,7 +627,11 @@
     <string name="groups">Groups</string>
     <string name="ledger_no_overdue">Nothing overdue. Enjoy it while it lasts.</string>
     <string name="ledger_filter_all">All</string>
-    <string name="ledger_filter_overdue">Overdue (%1$d)</string>
+    <string name="ledger_filter_due">Due</string>
+    <string name="ledger_filter_overdue_only">Overdue (%1$d)</string>
+    <string name="ledger_get">You\'ll get</string>
+    <string name="ledger_owe">You owe</string>
+    <string name="ledger_search_hint">Search people…</string>
     <string name="ledger_overdue_days">Overdue by %1$d days</string>
     <string name="ledger_you_due">You get</string>
     <string name="ledger_you_owe">You owe</string>
@@ -637,7 +641,6 @@
     <string name="ledger_add_customer">Add your first entry</string>
     <string name="ledger_outstanding">OUTSTANDING Â· %1$d</string>
     <string name="ledger_show_all">Show all %1$d contacts</string>
-    <string name="ledger_search_hint">Search peopleâ€¦</string>
     <string name="ledger_settled">Settled</string>
     <string name="ledger_no_match">No people match that name.</string>
     <string name="splitly_groups">GROUPS</string>

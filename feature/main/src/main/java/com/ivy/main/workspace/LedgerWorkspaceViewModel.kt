@@ -28,6 +28,8 @@ data class LedgerPerson(
     val overdueCount: Int = 0,
     /** Days since the oldest overdue entry. */
     val overdueDays: Int = 0,
+    /** Entries due within the next week. */
+    val dueSoonCount: Int = 0,
 ) {
     val settled: Boolean get() = outstanding <= 0.0
     val overdue: Boolean get() = overdueCount > 0
@@ -55,6 +57,11 @@ class LedgerWorkspaceViewModel @Inject constructor(
     private val loanDao: LoanDao,
     private val loanRecordDao: LoanRecordDao,
 ) : ViewModel() {
+
+    companion object {
+        /** Entries due within this many days count as "due soon". */
+        const val DUE_SOON_DAYS = 7L
+    }
 
     private val _state = MutableStateFlow(LedgerSummary())
     val state: StateFlow<LedgerSummary> = _state.asStateFlow()
@@ -99,6 +106,13 @@ class LedgerWorkspaceViewModel @Inject constructor(
                         }
                     }.maxOrNull() ?: 0
 
+                    // Due soon = due within the next 7 days (not yet overdue)
+                    val dueSoonCount = records.count { record ->
+                        val due = record.recordDueDate ?: return@count false
+                        !due.isBefore(now) &&
+                            ChronoUnit.DAYS.between(now, due) <= DUE_SOON_DAYS
+                    }
+
                     LedgerPerson(
                         id = loan.id,
                         name = loan.counterpartyName?.takeIf { it.isNotBlank() }
@@ -107,6 +121,7 @@ class LedgerWorkspaceViewModel @Inject constructor(
                         outstanding = net,
                         overdueCount = overdueRecords.size,
                         overdueDays = oldestOverdueDays,
+                        dueSoonCount = dueSoonCount,
                     )
                 }
                 val sorted = everyone.sortedWith(
