@@ -10,6 +10,7 @@
     <string name="loan_record_receipt_camera">Camera</string>
     <string name="loan_record_receipt_gallery">Gallery</string>
     <string name="loan_record_receipt_remove">Remove receipt</string>
+    <string name="loan_record_remind_on">Remind me on this date</string>
     <string name="pill_utilities">UTILITIES</string>
     <string name="pill_look">Look &amp; feel</string>
     <string name="pill_workspaces">Workspaces</string>
@@ -656,6 +657,11 @@
     <string name="ledger_entry">Entry</string>
     <string name="ledger_receipt_attached">Receipt attached</string>
     <string name="ledger_delete_customer_title">Delete %1$s and all entries?</string>
+    <string name="ledger_action_settle">Settle</string>
+    <string name="ledger_settle_title">Settle with %1$s?</string>
+    <string name="ledger_settle_you_pay">You will pay %1$s and the ledger is cleared.</string>
+    <string name="ledger_settle_you_receive">You will receive %1$s and the ledger is cleared.</string>
+    <string name="ledger_settle_confirm">Settle</string>
     <string name="ledger_settled">Settled</string>
     <string name="ledger_no_match">No people match that name.</string>
     <string name="splitly_groups">GROUPS</string>

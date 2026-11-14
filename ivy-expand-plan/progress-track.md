@@ -97,8 +97,8 @@
 |---|---|---|---|---|---|
 | P2.S2.M1 | Customer book split view (Taken / Given) | OD | ~ | 2026-11-14 | Ledger workspace landing rebuilt as the book: search by name, Youll get / You owe split with per-side totals, filters All / Due / Overdue, per-person outstanding + overdue badge; contacts tab keeps the full list. No add-customer sheet yet (comes with M3), entry still via the fork modal |
 | P2.S2.M2 | Customer detail + actions row | OD | ~ | 2026-11-14 | New ledger customer detail screen (route + VM): avatar/name, outstanding, GIVEN/RECEIVED/ENTRIES totals, statement preview (last 20 entries), receipt thumbnails (Coil, app-private file), action row WhatsApp (wa.me prefilled) / Call (ACTION_DIAL) / Statement (PDF lands in P2.S3) / Delete all (removes entries + receipts). Compiles; device pass pending |
-| P2.S2.M3 | Add/edit sheet | OD | ☐ | | |
-| P2.S2.M4 | Settle-all | OD | ☐ | | |
+| P2.S2.M3 | Add/Edit entry sheet | OD | ~ | 2026-11-14 | Entry modal: AmountModal keypad + contact picker + receipt (camera/gallery) + "Remind me on this date" switch gating the due date; category tags on entries still open (fork tags are transaction-scoped) - noted as follow-up |
+| P2.S2.M4 | Settle-all action | OD | ~ | 2026-11-14 | Settle chip on customer detail -> settle sheet (amount + direction) -> writes a real Transaction (INCOME when they owe you, EXPENSE when you owe) titled "Settle - <name>" linked to the loan, then clears entries + receipts; settle account = loan account or first account |
 
 ### S3 — PDF statement
 

@@ -62,8 +62,10 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
     val context = LocalContext.current
     val viewModel: LedgerCustomerDetailViewModel = screenScopedViewModel()
     val customer by viewModel.customer.collectAsState()
+    val fallbackAccountId by viewModel.fallbackAccountId.collectAsState()
     val current = customer
     var confirmDelete by remember { mutableStateOf(false) }
+    var showSettle by remember { mutableStateOf(false) }
 
     LaunchedEffect(screen.loanId) {
         viewModel.load(screen.loanId)
@@ -236,6 +238,11 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                         }
                     )
                     ActionChip(
+                        icon = R.drawable.ic_check,
+                        label = stringResource(R.string.ledger_action_settle),
+                        onClick = { showSettle = true }
+                    )
+                    ActionChip(
                         icon = R.drawable.ic_vue_main_trash,
                         label = stringResource(R.string.ledger_action_delete),
                         danger = true,
@@ -322,6 +329,20 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
         }
     }
 
+    if (showSettle && current != null) {
+        SettleDialog(
+            name = current.name,
+            amount = current.outstanding,
+            youOwe = current.youOwe,
+            onConfirm = {
+                showSettle = false
+                viewModel.settleAll(fallbackAccountId = fallbackAccountId)
+                nav.back()
+            },
+            onDismiss = { showSettle = false }
+        )
+    }
+
     if (confirmDelete && current != null) {
         DeleteConfirmDialog(
             title = stringResource(R.string.ledger_delete_customer_title, current.name),
@@ -390,6 +411,69 @@ private fun ActionChip(
             color = if (danger) Color(0xFFFF6B5B) else UI.colors.pureInverse,
             maxLines = 1
         )
+    }
+}
+
+@Composable
+private fun SettleDialog(
+    name: String,
+    amount: Double,
+    youOwe: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.45f))
+            .clickable(enabled = false) {},
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 40.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(UI.colors.pureInverse, RoundedCornerShape(24.dp))
+                .padding(24.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.ledger_settle_title, name),
+                style = ivyInter(17.sp, FontWeight.ExtraBold),
+                color = UI.colors.pure
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = stringResource(
+                    if (youOwe) R.string.ledger_settle_you_pay else R.string.ledger_settle_you_receive,
+                    "₹%,.0f".format(amount)
+                ),
+                style = ivyInter(14.sp),
+                color = UI.colors.pure.copy(alpha = 0.85f)
+            )
+            Spacer(Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.cancel),
+                    style = ivyInter(14.sp, FontWeight.SemiBold),
+                    color = UI.colors.pure,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(UI.colors.pure.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
+                        .clickable(onClick = onDismiss)
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+                Text(
+                    text = stringResource(R.string.ledger_settle_confirm),
+                    style = ivyInter(14.sp, FontWeight.Bold),
+                    color = Color(0xFF5E5CE6),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF5E5CE6).copy(alpha = 0.20f), RoundedCornerShape(12.dp))
+                        .clickable(onClick = onConfirm)
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+            }
+        }
     }
 }
 

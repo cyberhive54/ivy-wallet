@@ -146,6 +146,9 @@ fun BoxWithConstraintsScope.LoanRecordModal(
     // Optional receipt photo (app-private storage)
     var attachmentUrl by remember(modal) { mutableStateOf(initialRecord?.attachmentUrl) }
 
+    // "Remind me on" toggle - enables the due date row
+    var remindOn by remember(modal) { mutableStateOf(initialRecord?.recordDueDate != null) }
+
     IvyModal(
         id = modal?.id,
         visible = modal != null,
@@ -239,13 +242,31 @@ fun BoxWithConstraintsScope.LoanRecordModal(
         Spacer(Modifier.height(16.dp))
 
         // Optional due date for this entry (overdue filter + reminders)
-        DueDateRow(
-            dueDate = dueDate,
-            onPickDate = { picked ->
-                dueDate = picked
-            },
-            onClear = { dueDate = null }
-        )
+        if (remindOn) {
+            DueDateRow(
+                dueDate = dueDate,
+                onPickDate = { picked ->
+                    dueDate = picked
+                },
+                onClear = { dueDate = null }
+            )
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.loan_record_remind_on),
+                    style = UI.typo.c.style(color = UI.colors.gray),
+                    modifier = Modifier.weight(1f)
+                )
+                com.ivy.wallet.ui.theme.components.IvySwitch(enabled = remindOn) {
+                    remindOn = it
+                }
+            }
+        }
 
         Spacer(Modifier.height(16.dp))
 
