@@ -124,10 +124,10 @@
 
 | ID | Milestone | Gate | Status | Done on | Notes |
 |---|---|---|---|---|---|
-| P3.S1.M1 | Equal/exact/%/shares/adjustment | CI | ☐ | | |
-| P3.S1.M2 | Multi-payer + invariants | CI | ☐ | | |
-| P3.S1.M3 | FX at settle (static table) | CI | ☐ | | |
-| P3.S1.M4 | Simplify greedy + settle dual-write | CI | ☐ | | |
+| P3.S1.M1 | Equal/exact/%/shares/adjustment | CI | ~ | 2026-11-15 | SplitEngine (shared/domain, pure Kotlin): EQUAL / EXACT / PERCENT / SHARES / ADJUSTMENT + subset support; exact-to-the-cent guarantee via leftover-cent distribution; 16 unit tests green (kotest property + round-trip) |
+| P3.S1.M2 | Multi-payer + invariants | CI | ~ | 2026-11-15 | multiPayerBalances(): paid-minus-owed per member, group net always zero; property test over random payer sets |
+| P3.S1.M3 | FX at settle (static table) | CI | ~ | 2026-11-15 | FxTable: bundled static rates for 25 currencies (USD base), offline-only; unknown currency falls back 1:1; settle-time conversion used by GroupLedger |
+| P3.S1.M4 | Simplify greedy + settle dual-write | CI | ~ | 2026-11-15 | SplitEngine.simplify() greedy min-cash-flow; SplitSettlementUseCase writes split_settlements row + a real Transaction per pair (only pairs involving the local user), with rollback if the ledger write fails |
 
 ### S2 — Groups & members
 
