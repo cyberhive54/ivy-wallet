@@ -51,6 +51,7 @@ import com.ivy.wallet.domain.deprecated.logic.model.CreateAccountData
 import com.ivy.wallet.domain.deprecated.logic.model.CreateLoanRecordData
 import com.ivy.wallet.domain.deprecated.logic.model.EditLoanRecordData
 import com.ivy.wallet.ui.theme.components.ItemIconSDefaultIcon
+import com.ivy.legacy.ui.theme.contact.ContactPickButton
 import com.ivy.wallet.ui.theme.components.IvyCheckboxWithText
 import com.ivy.wallet.ui.theme.components.IvyIcon
 import com.ivy.wallet.ui.theme.findContrastTextColor
@@ -125,6 +126,9 @@ fun BoxWithConstraintsScope.LoanRecordModal(
     var accountModalData: AccountModalData? by remember { mutableStateOf(null) }
     var accountChangeConformationModal by remember { mutableStateOf(false) }
 
+    // Phone of the person for this entry — filled by the system contact picker
+    var pickedPhone by remember(modal) { mutableStateOf<String?>(null) }
+
     IvyModal(
         id = modal?.id,
         visible = modal != null,
@@ -151,6 +155,7 @@ fun BoxWithConstraintsScope.LoanRecordModal(
                         createLoanRecordTransaction = createLoanRecordTrans,
                         reCalculateAmount = reCalculate,
                         loanRecordType = loanRecordType,
+                        pickedPhone = pickedPhone,
 
                         onCreate = onCreate,
                         onEdit = onEdit,
@@ -200,6 +205,15 @@ fun BoxWithConstraintsScope.LoanRecordModal(
             textFieldValue = noteTextFieldValue,
             setTextFieldValue = {
                 noteTextFieldValue = it
+            }
+        )
+
+        Spacer(Modifier.height(10.dp))
+
+        // Optional: pick the person from the system contacts (manual typing still works)
+        ContactPickButton(
+            onPicked = { picked ->
+                pickedPhone = picked?.phone
             }
         )
 
@@ -371,6 +385,7 @@ fun BoxWithConstraintsScope.LoanRecordModal(
             createLoanRecordTransaction = createLoanRecordTrans,
             reCalculateAmount = reCalculate,
             loanRecordType = loanRecordType,
+            pickedPhone = pickedPhone,
 
             onCreate = onCreate,
             onEdit = onEdit,
@@ -391,6 +406,7 @@ private fun save(
     selectedAccount: Account? = null,
     reCalculateAmount: Boolean = false,
     loanRecordType: LoanRecordType,
+    pickedPhone: String? = null,
 
     onCreate: (CreateLoanRecordData) -> Unit,
     onEdit: (EditLoanRecordData) -> Unit,
@@ -403,7 +419,8 @@ private fun save(
             dateTime = dateTime,
             interest = loanRecordInterest,
             accountId = selectedAccount?.id,
-            loanRecordType = loanRecordType
+            loanRecordType = loanRecordType,
+            recordPhone = pickedPhone?.trim()?.takeIf { it.isNotBlank() } ?: loanRecord.recordPhone
         )
         onEdit(
             EditLoanRecordData(
@@ -422,7 +439,8 @@ private fun save(
                 interest = loanRecordInterest,
                 account = selectedAccount,
                 createLoanRecordTransaction = createLoanRecordTransaction,
-                loanRecordType = loanRecordType
+                loanRecordType = loanRecordType,
+                phone = pickedPhone?.trim()?.takeIf { it.isNotBlank() }
             )
         )
     }

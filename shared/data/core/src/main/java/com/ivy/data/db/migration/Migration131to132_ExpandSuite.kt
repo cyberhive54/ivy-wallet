@@ -28,6 +28,9 @@ class Migration131to132_ExpandSuite : Migration(131, 132) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE loans ADD COLUMN customerPhone TEXT")
         db.execSQL("ALTER TABLE loans ADD COLUMN counterpartyName TEXT")
+        // Pre-fill the person alias for existing loans so legacy rows (free text
+        // names, LENT/BORROW) show the person in the new ledger UI.
+        db.execSQL("UPDATE loans SET counterpartyName = name WHERE counterpartyName IS NULL AND name IS NOT NULL")
 
         db.execSQL("ALTER TABLE loan_records ADD COLUMN recordDueDate INTEGER")
         db.execSQL("ALTER TABLE loan_records ADD COLUMN recordPhone TEXT")

@@ -60,6 +60,7 @@ import com.ivy.wallet.ui.theme.Gray
 import com.ivy.wallet.ui.theme.Ivy
 import com.ivy.wallet.ui.theme.White
 import com.ivy.wallet.ui.theme.components.ItemIconSDefaultIcon
+import com.ivy.legacy.ui.theme.contact.ContactPickButton
 import com.ivy.wallet.ui.theme.components.IvyCheckboxWithText
 import com.ivy.wallet.ui.theme.components.IvyIcon
 import com.ivy.wallet.ui.theme.findContrastTextColor
@@ -144,6 +145,9 @@ fun BoxWithConstraintsScope.LoanModal(
 
     var accountModalData: AccountModalData? by remember { mutableStateOf(null) }
 
+    // Phone of the person — filled by the system contact picker (no READ_CONTACTS)
+    var pickedPhone by remember(modal) { mutableStateOf<String?>(null) }
+
     IvyModal(
         id = modal?.id,
         visible = modal != null,
@@ -173,6 +177,7 @@ fun BoxWithConstraintsScope.LoanModal(
                         amount = amount,
                         selectedAccount = selectedAcc,
                         createLoanTransaction = createLoanTrans,
+                        pickedPhone = pickedPhone,
 
                         onCreateLoan = onCreateLoan,
                         onEditLoan = onEditLoan,
@@ -208,6 +213,18 @@ fun BoxWithConstraintsScope.LoanModal(
             setNameTextFieldValue = { nameTextFieldValue = it },
             showChooseIconModal = {
                 chooseIconModalVisible = true
+            }
+        )
+
+        Spacer(Modifier.height(10.dp))
+
+        // Optional: pick the person from the system contacts (manual typing still works)
+        ContactPickButton(
+            onPicked = { picked ->
+                picked?.name?.takeIf { it.isNotBlank() }?.let { name ->
+                    nameTextFieldValue = selectEndTextFieldValue(name)
+                }
+                pickedPhone = picked?.phone
             }
         )
 
@@ -373,6 +390,7 @@ fun BoxWithConstraintsScope.LoanModal(
             amount = amount,
             selectedAccount = selectedAcc,
             createLoanTransaction = createLoanTrans,
+            pickedPhone = pickedPhone,
 
             onCreateLoan = onCreateLoan,
             onEditLoan = onEditLoan,
@@ -612,6 +630,7 @@ private fun save(
     amount: Double,
     selectedAccount: Account? = null,
     createLoanTransaction: Boolean = false,
+    pickedPhone: String? = null,
 
     onCreateLoan: (CreateLoanData) -> Unit,
     onEditLoan: (Loan, Boolean) -> Unit,
@@ -627,7 +646,11 @@ private fun save(
                 amount = amount,
                 color = color.toArgb(),
                 icon = icon,
-                accountId = selectedAccount?.id
+                accountId = selectedAccount?.id,
+                // The edited person name is kept as an alias; the legacy name stays valid
+                counterpartyName = nameTextFieldValue.text.trim(),
+                customerPhone = pickedPhone?.trim()?.takeIf { it.isNotBlank() }
+                    ?: loan.customerPhone
             ),
             createLoanTransaction
         )
@@ -642,7 +665,8 @@ private fun save(
                 account = selectedAccount,
                 createLoanTransaction = createLoanTransaction,
                 dateTime = dateTime,
-                note = NotBlankTrimmedString.from(noteTextFieldValue.text).getOrNull()?.value
+                note = NotBlankTrimmedString.from(noteTextFieldValue.text).getOrNull()?.value,
+                phone = pickedPhone?.trim()?.takeIf { it.isNotBlank() }
             )
         )
     }

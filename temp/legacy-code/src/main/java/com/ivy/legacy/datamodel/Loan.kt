@@ -19,6 +19,11 @@ data class Loan(
     val accountId: UUID? = null,
     val note: String? = null,
 
+    // Person behind the loan (ledger, phase 2). "name" stays the legacy mirror so
+    // old rows/backups keep working; counterpartyName is the editable alias.
+    val counterpartyName: String? = null,
+    val customerPhone: String? = null,
+
     val isSynced: Boolean = false,
     val isDeleted: Boolean = false,
     val dateTime: LocalDateTime? = null,
@@ -34,6 +39,8 @@ data class Loan(
         orderNum = orderNum,
         accountId = accountId,
         note = note,
+        customerPhone = customerPhone,
+        counterpartyName = counterpartyName,
         isSynced = isSynced,
         isDeleted = isDeleted,
         id = id,

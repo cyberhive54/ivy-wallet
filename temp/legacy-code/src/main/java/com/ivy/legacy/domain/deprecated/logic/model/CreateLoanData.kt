@@ -14,5 +14,7 @@ data class CreateLoanData(
     val account: Account? = null,
     val note: String?,
     val createLoanTransaction: Boolean = false,
-    val dateTime: LocalDateTime
+    val dateTime: LocalDateTime,
+    // Phone of the person (ledger, phase 2) — free text or picked from contacts
+    val phone: String? = null
 )

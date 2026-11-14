@@ -86,8 +86,8 @@
 
 | ID | Milestone | Gate | Status | Done on | Notes |
 |---|---|---|---|---|---|
-| P2.S1.M1 | Columns + rows preserved | CI | ☐ | | |
-| P2.S1.M2 | Contact picker integration | OD | ☐ | | |
+| P2.S1.M1 | Columns + rows preserved | CI | ~ | 2026-11-14 | Loan.customerPhone/LoanRecord.recordPhone carried through legacy datamodels (lossless toEntity); person name kept as alias (counterpartyName) with legacy name preserved; migration pre-fills counterpartyName from name; compiles (legacy-code + feature:loans) |
+| P2.S1.M2 | Contact picker integration | OD | ~ | 2026-11-14 | System picker (ACTION_PICK, no READ_CONTACTS) in legacy-code ContactPicker: reusable rememberContactPicker + ContactPickButton; wired into create-customer (name+phone) and add-entry (record phone) modals; manual entry always works. Device verification pending |
 | P2.S1.M3 | Per-record due + overdue filter | OD+CI | ☐ | | |
 | P2.S1.M4 | Receipt attach | OD | ☐ | | |
 

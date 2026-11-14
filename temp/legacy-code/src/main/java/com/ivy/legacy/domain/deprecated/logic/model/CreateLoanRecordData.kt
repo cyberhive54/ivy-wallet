@@ -12,5 +12,7 @@ data class CreateLoanRecordData(
     val account: Account? = null,
     val createLoanRecordTransaction: Boolean = false,
     val convertedAmount: Double? = null,
-    val loanRecordType: LoanRecordType
+    val loanRecordType: LoanRecordType,
+    // Phone of the person this entry belongs to (ledger, phase 2)
+    val phone: String? = null
 )

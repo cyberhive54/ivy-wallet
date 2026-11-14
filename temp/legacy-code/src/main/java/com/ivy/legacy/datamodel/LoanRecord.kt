@@ -18,6 +18,8 @@ data class LoanRecord(
     // This is used store the converted amount for currencies which are different from the loan account currency
     val convertedAmount: Double? = null,
     val loanRecordType: LoanRecordType,
+    // Phone of the person this record belongs to (ledger, phase 2)
+    val recordPhone: String? = null,
 
     val isSynced: Boolean = false,
     val isDeleted: Boolean = false,
@@ -33,6 +35,7 @@ data class LoanRecord(
         accountId = accountId,
         convertedAmount = convertedAmount,
         loanRecordType = loanRecordType,
+        recordPhone = recordPhone,
         isSynced = isSynced,
         isDeleted = isDeleted,
         id = id

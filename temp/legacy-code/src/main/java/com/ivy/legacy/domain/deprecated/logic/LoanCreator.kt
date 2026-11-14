@@ -36,7 +36,11 @@ class LoanCreator @Inject constructor(
                     orderNum = dao.findMaxOrderNum().nextOrderNum(),
                     isSynced = false,
                     accountId = data.account?.id,
-                    dateTime = data.dateTime
+                    dateTime = data.dateTime,
+                    // The person's name is also kept as the editable alias so the
+                    // ledger can show a renamed person without losing the legacy name.
+                    counterpartyName = name.trim(),
+                    customerPhone = data.phone?.trim()?.takeIf { it.isNotBlank() }
                 )
                 loanId = item.id
                 loanWriter.save(item.toEntity())
@@ -53,15 +57,23 @@ class LoanCreator @Inject constructor(
 
     suspend fun edit(
         updatedItem: Loan,
-        onRefreshUI: suspend (Loan) -> Unit
+        personEditName: String? = null,
+        personEditPhone: String? = null,
+        onRefreshUI: suspend (Loan) -> Unit,
     ) {
         if (updatedItem.name.isBlank()) return
         if (updatedItem.amount <= 0.0) return
 
         try {
             ioThread {
+                val alias = personEditName?.trim()?.takeIf { it.isNotBlank() }
                 loanWriter.save(
                     updatedItem.toEntity().copy(
+                        // The legacy name is preserved; the edited person name is kept
+                        // as an alias, so free-text legacy rows stay valid.
+                        counterpartyName = alias ?: updatedItem.counterpartyName,
+                        customerPhone = personEditPhone?.trim()?.takeIf { it.isNotBlank() }
+                            ?: updatedItem.customerPhone,
                         isSynced = false
                     )
                 )
