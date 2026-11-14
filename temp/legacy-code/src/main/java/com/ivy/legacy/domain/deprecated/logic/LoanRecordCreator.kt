@@ -31,7 +31,8 @@ class LoanRecordCreator @Inject constructor(
                     accountId = data.account?.id,
                     convertedAmount = data.convertedAmount,
                     loanRecordType = data.loanRecordType,
-                    recordPhone = data.phone?.trim()?.takeIf { it.isNotBlank() }
+                    recordPhone = data.phone?.trim()?.takeIf { it.isNotBlank() },
+                    recordDueDate = data.dueDate
                 )
 
                 loanRecordWriter.save(item.toEntity())

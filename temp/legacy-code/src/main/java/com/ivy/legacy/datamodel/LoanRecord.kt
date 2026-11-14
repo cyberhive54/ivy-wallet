@@ -20,6 +20,8 @@ data class LoanRecord(
     val loanRecordType: LoanRecordType,
     // Phone of the person this record belongs to (ledger, phase 2)
     val recordPhone: String? = null,
+    // Optional due date of this individual entry (ledger, phase 2)
+    val recordDueDate: Instant? = null,
 
     val isSynced: Boolean = false,
     val isDeleted: Boolean = false,
@@ -36,6 +38,7 @@ data class LoanRecord(
         convertedAmount = convertedAmount,
         loanRecordType = loanRecordType,
         recordPhone = recordPhone,
+        recordDueDate = recordDueDate,
         isSynced = isSynced,
         isDeleted = isDeleted,
         id = id

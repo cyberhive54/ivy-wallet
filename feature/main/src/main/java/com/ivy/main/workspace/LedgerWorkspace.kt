@@ -51,6 +51,7 @@ fun BoxWithConstraintsScope.LedgerLanding() {
     val ivyContext = ivyWalletCtx()
     val viewModel: LedgerWorkspaceViewModel = screenScopedViewModel()
     val state by viewModel.state.collectAsState()
+    var overdueOnly by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -92,6 +93,28 @@ fun BoxWithConstraintsScope.LedgerLanding() {
 
         Spacer(Modifier.height(16.dp))
 
+        // Filter: everyone with an outstanding balance, or only the overdue ones
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+        ) {
+            LedgerFilterChip(
+                label = stringResource(R.string.ledger_filter_all),
+                selected = !overdueOnly,
+                onClick = { overdueOnly = false }
+            )
+            val overdueCount = state.people.count { it.overdue }
+            LedgerFilterChip(
+                label = stringResource(R.string.ledger_filter_overdue, overdueCount),
+                selected = overdueOnly,
+                onClick = { overdueOnly = true },
+                accent = Color(0xFFFF6B5B)
+            )
+        }
+        Spacer(Modifier.height(12.dp))
+
         Text(
             modifier = Modifier.padding(horizontal = 24.dp),
             text = stringResource(R.string.ledger_outstanding, state.people.size),
@@ -100,14 +123,29 @@ fun BoxWithConstraintsScope.LedgerLanding() {
         )
         Spacer(Modifier.height(8.dp))
 
+        val visiblePeople = if (overdueOnly) {
+            state.people.filter { it.overdue }
+        } else {
+            state.people
+        }
+
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 120.dp)
         ) {
             if (state.isEmpty) {
                 item { EmptyLedgerState(onCreateClick = { nav.navigateTo(LoansScreen) }) }
+            } else if (visiblePeople.isEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.ledger_no_overdue),
+                        style = ivyInter(15.sp),
+                        color = UI.colors.gray,
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp)
+                    )
+                }
             } else {
-                items(state.people.take(8)) { person ->
+                items(visiblePeople.take(8)) { person ->
                     LedgerPersonRow(
                         person = person,
                         onClick = { nav.navigateTo(LoanDetailsScreen(loanId = person.id)) }
@@ -225,6 +263,28 @@ fun BoxWithConstraintsScope.LedgerContacts() {
 }
 
 @Composable
+private fun LedgerFilterChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    accent: Color = Color(0xFF5E5CE6),
+) {
+    Text(
+        text = label,
+        style = ivyInter(13.sp, FontWeight.SemiBold),
+        color = if (selected) Color.White else UI.colors.pureInverse,
+        modifier = Modifier
+            .clip(RoundedCornerShape(percent = 50))
+            .background(
+                if (selected) accent else UI.colors.pureInverse.copy(alpha = 0.06f),
+                RoundedCornerShape(percent = 50)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    )
+}
+
+@Composable
 private fun TotalCell(
     label: String,
     amount: Double,
@@ -310,13 +370,21 @@ private fun LedgerPersonRow(
             )
         }
         Spacer(Modifier.width(12.dp))
-        Text(
-            text = person.name,
-            style = ivyInter(16.sp, FontWeight.SemiBold),
-            color = if (person.settled) UI.colors.gray else UI.colors.pureInverse,
-            maxLines = 1,
-            modifier = Modifier.weight(1f)
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = person.name,
+                style = ivyInter(16.sp, FontWeight.SemiBold),
+                color = if (person.settled) UI.colors.gray else UI.colors.pureInverse,
+                maxLines = 1
+            )
+            if (person.overdue) {
+                Text(
+                    text = stringResource(R.string.ledger_overdue_days, person.overdueDays),
+                    style = ivyInter(12.sp, FontWeight.Bold),
+                    color = Color(0xFFFF6B5B)
+                )
+            }
+        }
         Text(
             text = if (person.settled) {
                 stringResource(R.string.ledger_settled)

@@ -1,4 +1,4 @@
-package com.ivy.wallet.ui.theme.modal
+﻿package com.ivy.wallet.ui.theme.modal
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -46,6 +49,8 @@ import com.ivy.legacy.legacy.ui.theme.modal.ModalNameInput
 import com.ivy.legacy.utils.getDefaultFIATCurrency
 import com.ivy.legacy.utils.onScreenStart
 import com.ivy.legacy.utils.selectEndTextFieldValue
+import com.ivy.legacy.ivyWalletCtx
+import com.ivy.wallet.ui.theme.components.IvyOutlinedButton
 import com.ivy.ui.R
 import com.ivy.wallet.domain.deprecated.logic.model.CreateAccountData
 import com.ivy.wallet.domain.deprecated.logic.model.CreateLoanRecordData
@@ -126,8 +131,11 @@ fun BoxWithConstraintsScope.LoanRecordModal(
     var accountModalData: AccountModalData? by remember { mutableStateOf(null) }
     var accountChangeConformationModal by remember { mutableStateOf(false) }
 
-    // Phone of the person for this entry — filled by the system contact picker
+    // Phone of the person for this entry â€” filled by the system contact picker
     var pickedPhone by remember(modal) { mutableStateOf<String?>(null) }
+
+    // Optional due date of this entry (drives the overdue filter + reminders)
+    var dueDate by remember(modal) { mutableStateOf(initialRecord?.recordDueDate) }
 
     IvyModal(
         id = modal?.id,
@@ -156,6 +164,7 @@ fun BoxWithConstraintsScope.LoanRecordModal(
                         reCalculateAmount = reCalculate,
                         loanRecordType = loanRecordType,
                         pickedPhone = pickedPhone,
+                        dueDate = dueDate,
 
                         onCreate = onCreate,
                         onEdit = onEdit,
@@ -215,6 +224,17 @@ fun BoxWithConstraintsScope.LoanRecordModal(
             onPicked = { picked ->
                 pickedPhone = picked?.phone
             }
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        // Optional due date for this entry (overdue filter + reminders)
+        DueDateRow(
+            dueDate = dueDate,
+            onPickDate = { picked ->
+                dueDate = picked
+            },
+            onClear = { dueDate = null }
         )
 
         Spacer(Modifier.height(24.dp))
@@ -386,6 +406,7 @@ fun BoxWithConstraintsScope.LoanRecordModal(
             reCalculateAmount = reCalculate,
             loanRecordType = loanRecordType,
             pickedPhone = pickedPhone,
+            dueDate = dueDate,
 
             onCreate = onCreate,
             onEdit = onEdit,
@@ -407,6 +428,7 @@ private fun save(
     reCalculateAmount: Boolean = false,
     loanRecordType: LoanRecordType,
     pickedPhone: String? = null,
+    dueDate: Instant? = null,
 
     onCreate: (CreateLoanRecordData) -> Unit,
     onEdit: (EditLoanRecordData) -> Unit,
@@ -420,7 +442,8 @@ private fun save(
             interest = loanRecordInterest,
             accountId = selectedAccount?.id,
             loanRecordType = loanRecordType,
-            recordPhone = pickedPhone?.trim()?.takeIf { it.isNotBlank() } ?: loanRecord.recordPhone
+            recordPhone = pickedPhone?.trim()?.takeIf { it.isNotBlank() } ?: loanRecord.recordPhone,
+            recordDueDate = dueDate
         )
         onEdit(
             EditLoanRecordData(
@@ -440,7 +463,8 @@ private fun save(
                 account = selectedAccount,
                 createLoanRecordTransaction = createLoanRecordTransaction,
                 loanRecordType = loanRecordType,
-                phone = pickedPhone?.trim()?.takeIf { it.isNotBlank() }
+                phone = pickedPhone?.trim()?.takeIf { it.isNotBlank() },
+                dueDate = dueDate
             )
         )
     }
@@ -679,6 +703,61 @@ private fun AddAccount(
 }
 
 @Preview
+@Composable
+private fun DueDateRow(
+    dueDate: Instant?,
+    onPickDate: (Instant) -> Unit,
+    onClear: () -> Unit,
+) {
+    val ivyContext = ivyWalletCtx()
+    val timeConverter = LocalTimeConverter.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.loan_record_due_date),
+            style = UI.typo.c.style(color = UI.colors.gray),
+            modifier = Modifier.weight(1f)
+        )
+
+        IvyOutlinedButton(
+            text = dueDate?.let {
+                with(timeConverter) { it.toLocalDateTime() }.toLocalDate().toString()
+            } ?: stringResource(R.string.loan_record_no_due_date),
+            iconStart = R.drawable.ic_date,
+            onClick = {
+                ivyContext.datePicker(
+                    initialDate = dueDate?.let {
+                        with(timeConverter) { it.toLocalDateTime() }.toLocalDate()
+                    }
+                ) { picked ->
+                    onPickDate(
+                        with(timeConverter) {
+                            picked.atTime(12, 0).toUTC()
+                        }
+                    )
+                }
+            }
+        )
+
+        if (dueDate != null) {
+            Spacer(Modifier.width(8.dp))
+            Icon(
+                painter = painterResource(R.drawable.ic_dismiss_close),
+                contentDescription = stringResource(R.string.loan_record_no_due_date),
+                tint = UI.colors.gray,
+                modifier = Modifier
+                    .size(22.dp)
+                    .clickable { onClear() }
+            )
+        }
+    }
+}
+
 @Composable
 private fun Preview() {
     IvyWalletPreview {

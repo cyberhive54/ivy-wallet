@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.Inject
 
@@ -22,8 +24,13 @@ data class LedgerPerson(
     val name: String,
     val youOwe: Boolean,
     val outstanding: Double,
+    /** Entries with a due date in the past. */
+    val overdueCount: Int = 0,
+    /** Days since the oldest overdue entry. */
+    val overdueDays: Int = 0,
 ) {
     val settled: Boolean get() = outstanding <= 0.0
+    val overdue: Boolean get() = overdueCount > 0
 }
 
 data class LedgerSummary(
@@ -65,6 +72,7 @@ class LedgerWorkspaceViewModel @Inject constructor(
                     return@withContext LedgerSummary(loading = false)
                 }
                 val allRecords = loanRecordDao.findAll()
+                val now = Instant.now()
                 var lent = 0.0
                 var borrowed = 0.0
 
@@ -79,12 +87,26 @@ class LedgerWorkspaceViewModel @Inject constructor(
                     if (net > 0.0) {
                         if (loan.type == LoanType.LEND) lent += net else borrowed += net
                     }
+
+                    // Overdue = entries with a due date in the past
+                    val overdueRecords = records.filter { record ->
+                        val due = record.recordDueDate ?: return@filter false
+                        due.isBefore(now)
+                    }
+                    val oldestOverdueDays = overdueRecords.mapNotNull { record ->
+                        record.recordDueDate?.let { due ->
+                            ChronoUnit.DAYS.between(due, now).toInt().coerceAtLeast(0)
+                        }
+                    }.maxOrNull() ?: 0
+
                     LedgerPerson(
                         id = loan.id,
                         name = loan.counterpartyName?.takeIf { it.isNotBlank() }
                             ?: loan.name,
                         youOwe = loan.type != LoanType.LEND,
                         outstanding = net,
+                        overdueCount = overdueRecords.size,
+                        overdueDays = oldestOverdueDays,
                     )
                 }
                 val sorted = everyone.sortedWith(

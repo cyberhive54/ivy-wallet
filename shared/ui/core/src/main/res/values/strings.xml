@@ -4,6 +4,8 @@
     <string name="planned_payments_short">Planned payments</string>
     <string name="pill_quick_links">QUICK LINKS</string>
     <string name="pick_contact">Pick contact</string>
+    <string name="loan_record_due_date">Due date</string>
+    <string name="loan_record_no_due_date">No due date</string>
     <string name="pill_utilities">UTILITIES</string>
     <string name="pill_look">Look &amp; feel</string>
     <string name="pill_workspaces">Workspaces</string>
@@ -619,6 +621,10 @@
     <string name="contacts">Contacts</string>
     <string name="activity">Activity</string>
     <string name="groups">Groups</string>
+    <string name="ledger_no_overdue">Nothing overdue. Enjoy it while it lasts.</string>
+    <string name="ledger_filter_all">All</string>
+    <string name="ledger_filter_overdue">Overdue (%1$d)</string>
+    <string name="ledger_overdue_days">Overdue by %1$d days</string>
     <string name="ledger_you_due">You get</string>
     <string name="ledger_you_owe">You owe</string>
     <string name="ledger_recent_people">RECENT PEOPLE</string>

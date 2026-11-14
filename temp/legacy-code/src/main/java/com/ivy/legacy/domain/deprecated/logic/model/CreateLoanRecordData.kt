@@ -14,5 +14,7 @@ data class CreateLoanRecordData(
     val convertedAmount: Double? = null,
     val loanRecordType: LoanRecordType,
     // Phone of the person this entry belongs to (ledger, phase 2)
-    val phone: String? = null
+    val phone: String? = null,
+    // Optional due date of this individual entry (ledger, phase 2)
+    val dueDate: Instant? = null
 )
