@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.ivy.design.IvyContext
 import com.ivy.base.legacy.SharedPrefs
+import com.ivy.base.model.Workspace
 import com.ivy.data.model.Category
 import com.ivy.legacy.datamodel.Account
 import java.time.LocalDate
@@ -19,6 +20,94 @@ import javax.inject.Singleton
 @Singleton
 class IvyWalletCtx @Inject constructor() : IvyContext() {
     // ------------------------------------------ State ---------------------------------------------
+    /**
+     * The currently visible workspace. Observing a mutableStateOf directly; switching
+     * resets the rail selection on every screen that consumes it.
+     */
+    @Deprecated("Legacy code. Don't use it, please.")
+    var activeWorkspace by mutableStateOf(Workspace.FINANCE)
+        private set
+
+    @Deprecated("Legacy code. Don't use it, please.")
+    var ledgerWorkspaceEnabled by mutableStateOf(true)
+        private set
+
+    @Deprecated("Legacy code. Don't use it, please.")
+    var splitlyWorkspaceEnabled by mutableStateOf(false)
+        private set
+
+    @Deprecated("Legacy code. Don't use it, please.")
+    fun switchWorkspace(
+        workspace: Workspace,
+        sharedPrefs: SharedPrefs,
+    ) {
+        if (workspace == Workspace.LEDGER && !ledgerWorkspaceEnabled) return
+        if (workspace == Workspace.SPLITLY && !splitlyWorkspaceEnabled) return
+        activeWorkspace = workspace
+        mainTab = coerceMainTab(workspace, mainTab)
+        sharedPrefs.putString(SharedPrefs.WORKSPACE, workspace.code)
+    }
+
+    @Deprecated("Legacy code. Don't use it, please.")
+    fun setLedgerWorkspaceEnabled(enabled: Boolean, sharedPrefs: SharedPrefs) {
+        ledgerWorkspaceEnabled = enabled
+        sharedPrefs.putBoolean(SharedPrefs.LEDGER_WORKSPACE_ENABLED, enabled)
+        if (!enabled && activeWorkspace == Workspace.LEDGER) {
+            activeWorkspace = Workspace.FINANCE
+            mainTab = coerceMainTab(Workspace.FINANCE, mainTab)
+            sharedPrefs.putString(SharedPrefs.WORKSPACE, Workspace.FINANCE.code)
+        }
+    }
+
+    @Deprecated("Legacy code. Don't use it, please.")
+    fun setSplitlyWorkspaceEnabled(enabled: Boolean, sharedPrefs: SharedPrefs) {
+        splitlyWorkspaceEnabled = enabled
+        sharedPrefs.putBoolean(SharedPrefs.SPLITLY_WORKSPACE_ENABLED, enabled)
+        if (!enabled && activeWorkspace == Workspace.SPLITLY) {
+            activeWorkspace = Workspace.FINANCE
+            mainTab = coerceMainTab(Workspace.FINANCE, mainTab)
+            sharedPrefs.putString(SharedPrefs.WORKSPACE, Workspace.FINANCE.code)
+        }
+    }
+
+    @Deprecated("Legacy code. Don't use it, please.")
+    fun initWorkspaceInMemory(sharedPrefs: SharedPrefs) {
+        ledgerWorkspaceEnabled = sharedPrefs.getBoolean(SharedPrefs.LEDGER_WORKSPACE_ENABLED, true)
+        splitlyWorkspaceEnabled = sharedPrefs.getBoolean(SharedPrefs.SPLITLY_WORKSPACE_ENABLED, false)
+        activeWorkspace = Workspace.parse(
+            sharedPrefs.getString(SharedPrefs.WORKSPACE, Workspace.FINANCE.code)
+        )
+        mainTab = coerceMainTab(activeWorkspace, mainTab)
+    }
+
+    private fun coerceMainTab(
+        workspace: Workspace,
+        tab: com.ivy.legacy.data.model.MainTab,
+    ): com.ivy.legacy.data.model.MainTab {
+        return when (workspace) {
+            Workspace.FINANCE -> when (tab) {
+                com.ivy.legacy.data.model.MainTab.LEDGER_CONTACTS,
+                com.ivy.legacy.data.model.MainTab.SPLITLY_GROUPS,
+                com.ivy.legacy.data.model.MainTab.SPLITLY_ACTIVITY ->
+                    com.ivy.legacy.data.model.MainTab.HOME
+                else -> tab
+            }
+            Workspace.LEDGER -> when (tab) {
+                com.ivy.legacy.data.model.MainTab.ACCOUNTS,
+                com.ivy.legacy.data.model.MainTab.SPLITLY_GROUPS,
+                com.ivy.legacy.data.model.MainTab.SPLITLY_ACTIVITY ->
+                    com.ivy.legacy.data.model.MainTab.HOME
+                else -> tab
+            }
+            Workspace.SPLITLY -> when (tab) {
+                com.ivy.legacy.data.model.MainTab.ACCOUNTS,
+                com.ivy.legacy.data.model.MainTab.LEDGER_CONTACTS ->
+                    com.ivy.legacy.data.model.MainTab.HOME
+                else -> tab
+            }
+        }
+    }
+
     @Deprecated("Legacy code. Don't use it, please.")
     var startDayOfMonth = 1
         private set
@@ -171,5 +260,8 @@ class IvyWalletCtx @Inject constructor() : IvyContext() {
         transactionsListState = null
         categoriesListState = null
         accountsListState = null
+        activeWorkspace = Workspace.FINANCE
+        ledgerWorkspaceEnabled = true
+        splitlyWorkspaceEnabled = false
     }
 }

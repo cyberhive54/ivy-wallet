@@ -18,6 +18,8 @@ import com.ivy.base.legacy.SharedPrefs
 import com.ivy.base.legacy.Theme
 import com.ivy.base.legacy.refreshWidget
 import com.ivy.data.backup.BackupDataUseCase
+import com.ivy.data.db.dao.read.GroupDao
+import com.ivy.data.db.dao.read.LoanDao
 import com.ivy.data.db.dao.read.SettingsDao
 import com.ivy.data.db.dao.write.WriteSettingsDao
 import com.ivy.data.model.primitive.AssetCode
@@ -48,6 +50,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsDao: SettingsDao,
+    private val loanDao: LoanDao,
+    private val groupDao: GroupDao,
     private val ivyContext: IvyWalletCtx,
     private val logoutLogic: LogoutLogic,
     private val sharedPrefs: SharedPrefs,
@@ -75,6 +79,13 @@ class SettingsViewModel @Inject constructor(
     private val look = mutableStateOf(SettingsAppearance.LOOK_IVY)
     private val accentColor = mutableStateOf(SettingsAppearance.ACCENT_DEFAULT)
     private val dockTranslucent = mutableStateOf(false)
+    // Workspaces — Ledger on by default, Splitly hidden until opted in.
+    // Both can only be disabled at zero records (guarded in the setters).
+    private val ledgerWorkspace = mutableStateOf(true)
+    private val splitlyWorkspace = mutableStateOf(false)
+    // Non-null while a "keep your data first" block is being shown to the user.
+    private val workspaceBlockedKind = mutableStateOf<String?>(null)
+    private val workspaceBlockedCount = mutableIntStateOf(0)
 
     // Root Settings list scroll position, synced from the UI. Backed by the
     // (Activity-scoped) ViewModel so the position survives child-page push/pop
@@ -107,7 +118,11 @@ class SettingsViewModel @Inject constructor(
             languageOptionVisible = isLanguageOptionVisible(),
             look = getLook(),
             accentColor = getAccentColor(),
-            dockTranslucent = getDockTranslucent()
+            dockTranslucent = getDockTranslucent(),
+            ledgerWorkspaceEnabled = getLedgerWorkspace(),
+            splitlyWorkspaceEnabled = getSplitlyWorkspace(),
+            workspaceBlockedKind = getWorkspaceBlockedKind(),
+            workspaceBlockedCount = getWorkspaceBlockedCount()
         )
     }
 
@@ -124,6 +139,7 @@ class SettingsViewModel @Inject constructor(
         initializeLook()
         initializeAccentColor()
         initializeDockTranslucent()
+        initializeWorkspaces()
     }
 
     private suspend fun initializeCurrency() {
@@ -198,6 +214,11 @@ class SettingsViewModel @Inject constructor(
         )
     }
 
+    private fun initializeWorkspaces() {
+        ledgerWorkspace.value = ivyContext.ledgerWorkspaceEnabled
+        splitlyWorkspace.value = ivyContext.splitlyWorkspaceEnabled
+    }
+
     @Composable
     private fun getCurrencyCode(): String {
         return currencyCode.value
@@ -263,6 +284,22 @@ class SettingsViewModel @Inject constructor(
         return dockTranslucent.value
     }
 
+    private fun getLedgerWorkspace(): Boolean {
+        return ledgerWorkspace.value
+    }
+
+    private fun getSplitlyWorkspace(): Boolean {
+        return splitlyWorkspace.value
+    }
+
+    private fun getWorkspaceBlockedKind(): String? {
+        return workspaceBlockedKind.value
+    }
+
+    private fun getWorkspaceBlockedCount(): Int {
+        return workspaceBlockedCount.intValue
+    }
+
     private fun isLanguageOptionVisible(): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     }
@@ -293,6 +330,9 @@ class SettingsViewModel @Inject constructor(
             is SettingsEvent.SetLook -> setLook(event.look)
             is SettingsEvent.SetAccentColor -> setAccentColor(event.accentColor)
             is SettingsEvent.SetDockTranslucent -> setDockTranslucent(event.translucent)
+            is SettingsEvent.SetLedgerWorkspace -> setLedgerWorkspace(event.enabled)
+            is SettingsEvent.SetSplitlyWorkspace -> setSplitlyWorkspace(event.enabled)
+            SettingsEvent.DismissWorkspaceBlocked -> dismissWorkspaceBlocked()
 
             SettingsEvent.DeleteCloudUserData -> deleteCloudUserData()
             SettingsEvent.DeleteAllUserData -> deleteAllUserData()
@@ -506,5 +546,51 @@ class SettingsViewModel @Inject constructor(
             intent.data = Uri.fromParts("package", context.packageName, null)
             context.applicationContext.startActivity(intent)
         }
+    }
+
+    // --------------------------------------------------------------------------------------
+    // Workspaces (Ledger / Splitly)
+    // --------------------------------------------------------------------------------------
+    // Hiding a workspace is only allowed at ZERO records — the user must explicitly
+    // export or delete their data first. Enabling is always allowed.
+
+    private fun setLedgerWorkspace(enabled: Boolean) {
+        viewModelScope.launch {
+            if (!enabled) {
+                val count = ioThread { loanDao.findAll().size }
+                if (count > 0) {
+                    workspaceBlockedKind.value = LEDGER
+                    workspaceBlockedCount.intValue = count
+                    return@launch
+                }
+            }
+            ledgerWorkspace.value = enabled
+            ivyContext.setLedgerWorkspaceEnabled(enabled, sharedPrefs)
+        }
+    }
+
+    private fun setSplitlyWorkspace(enabled: Boolean) {
+        viewModelScope.launch {
+            if (!enabled) {
+                val count = ioThread { groupDao.findActive().size }
+                if (count > 0) {
+                    workspaceBlockedKind.value = SPLITLY
+                    workspaceBlockedCount.intValue = count
+                    return@launch
+                }
+            }
+            splitlyWorkspace.value = enabled
+            ivyContext.setSplitlyWorkspaceEnabled(enabled, sharedPrefs)
+        }
+    }
+
+    private fun dismissWorkspaceBlocked() {
+        workspaceBlockedKind.value = null
+        workspaceBlockedCount.intValue = 0
+    }
+
+    private companion object {
+        const val LEDGER = "ledger"
+        const val SPLITLY = "splitly"
     }
 }

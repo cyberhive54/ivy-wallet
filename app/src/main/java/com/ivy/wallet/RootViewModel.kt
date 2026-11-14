@@ -20,8 +20,11 @@ import com.ivy.navigation.DisclaimerScreen
 import com.ivy.navigation.EditTransactionScreen
 import com.ivy.navigation.MainScreen
 import com.ivy.navigation.Navigation
+import com.ivy.navigation.SubscriptionEditScreen
 import com.ivy.navigation.OnboardingScreen
 import com.ivy.ui.R
+import com.ivy.wallet.domain.deprecated.logic.notification.SubscriptionsReminderWorker
+import com.ivy.wallet.domain.deprecated.logic.notification.SubscriptionsReminderLogic
 import com.ivy.wallet.domain.deprecated.logic.notification.TransactionReminderLogic
 import com.ivy.wallet.migrations.MigrationsManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,6 +48,7 @@ class RootViewModel @Inject constructor(
     private val transactionReminderLogic: TransactionReminderLogic,
     private val migrationsManager: MigrationsManager,
     private val legalRepo: LegalRepository,
+    private val subscriptionsReminderLogic: SubscriptionsReminderLogic,
 ) : ViewModel() {
 
     companion object {
@@ -86,6 +90,7 @@ class RootViewModel @Inject constructor(
                 )
 
                 ivyContext.initStartDayOfMonthInMemory(sharedPrefs = sharedPrefs)
+                ivyContext.initWorkspaceInMemory(sharedPrefs)
             }
 
             TestIdlingResource.decrement()
@@ -121,11 +126,21 @@ class RootViewModel @Inject constructor(
         if (!handleSpecialStart(intent)) {
             nav.navigateTo(MainScreen)
             transactionReminderLogic.scheduleReminder()
+            subscriptionsReminderLogic.scheduleReminder()
         }
     }
 
     @Suppress("SwallowedException")
     private fun handleSpecialStart(intent: Intent): Boolean {
+        // Tapped a subscription reminder — main screen first, editor on top
+        val subRuleId = intent.getStringExtra(SubscriptionsReminderWorker.EXTRA_OPEN_SUBSCRIPTION_RULE)
+            ?.let { runCatching { java.util.UUID.fromString(it) }.getOrNull() }
+        if (subRuleId != null) {
+            nav.navigateTo(MainScreen)
+            nav.navigateTo(SubscriptionEditScreen(plannedPaymentRuleId = subRuleId))
+            return true
+        }
+
         val addTrnType: TransactionType? = try {
             intent.getSerializableExtra(EXTRA_ADD_TRANSACTION_TYPE) as? TransactionType
                 ?: TransactionType.valueOf(intent.getStringExtra(EXTRA_ADD_TRANSACTION_TYPE) ?: "")

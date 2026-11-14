@@ -43,6 +43,13 @@ class PlannedPaymentsGenerator @Inject constructor(
         val startDate = rule.startDate!!
         val endDate = startDate.plusSeconds(94_608_000)
 
+        // Optional cap: "ends after N cycles" — N cycles left after the ones already happened
+        val remainingCap = rule.remainingOccurrences ?: Int.MAX_VALUE
+        if (remainingCap <= 0) {
+            // Exhausted — no future cycles will be generated
+            return
+        }
+
         val trns = transactionRepository.findAllByRecurringRuleId(recurringRuleId = rule.id)
         var trnsToSkip = trns.size
 
@@ -51,6 +58,9 @@ class PlannedPaymentsGenerator @Inject constructor(
         var date = startDate
         while (date.isBefore(endDate)) {
             if (generatedTransactions >= GENERATED_INSTANCES_LIMIT) {
+                break
+            }
+            if (generatedTransactions >= remainingCap) {
                 break
             }
 

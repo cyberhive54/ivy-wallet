@@ -100,6 +100,8 @@ data object SettingsScreen : Screen {
         get() = true
 }
 
+
+
 data class ImportScreen(
     val launchedFromOnboarding: Boolean,
     /**
@@ -110,6 +112,19 @@ data class ImportScreen(
 ) : Screen {
     override val isLegacy: Boolean
         get() = true
+}
+
+data object SubscriptionsScreen : Screen
+
+data class SubscriptionEditScreen(
+    val plannedPaymentRuleId: UUID? = null,
+    val accountId: UUID? = null,
+    val categoryId: UUID? = null,
+    val title: String? = null,
+    val description: String? = null,
+    val amount: Double? = null,
+) : Screen {
+    fun mandatoryFilled(): Boolean = amount != null && amount > 0.0 && accountId != null
 }
 
 data object ReportScreen : Screen {

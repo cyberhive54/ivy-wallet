@@ -48,12 +48,15 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.ivy.base.legacy.Look
 import com.ivy.design.api.systems.AccentFamilies
@@ -63,6 +66,9 @@ import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
 import com.ivy.design.utils.thenIf
 import com.ivy.legacy.data.model.MainTab
+import com.ivy.base.model.Workspace
+import com.ivy.main.workspace.FloatingMenuDockTab
+import com.ivy.main.workspace.FloatingMenuOverlay
 import com.ivy.legacy.ivyWalletCtx
 import com.ivy.legacy.utils.clickableNoIndication
 import com.ivy.legacy.utils.densityScope
@@ -124,10 +130,20 @@ fun BoxWithConstraintsScope.BottomBar(
     // When set (pushed pages like Categories/Tags), the + runs this action
     // directly instead of blooming the radial add menu.
     overrideAddAction: (() -> Unit)? = null,
+    // Launches the full Transactions history screen (slot between Home and Accounts in Finance/Ledger).
+    onTransactionsTab: () -> Unit = {},
+    // Workspace-specific "+" action (Ledger -> Loans, Splitly -> Groups tab).
+    // Unused in Personal Finance, where the FAB blooms the radial add menu.
+    onWorkspacePlus: () -> Unit = {},
 ) {
     val ivyContext = ivyWalletCtx()
+    val workspace = ivyContext.activeWorkspace
+    val effective = effectiveTab(workspace, tab)
 
     var expanded by remember { mutableStateOf(false) }
+    var menuExpanded by remember { mutableStateOf(false) }
+    // Center of the reserved FAB slot in the dock row (root coordinates)
+    var fabSlotCenter by remember { mutableStateOf(Offset.Zero) }
 
     val modalId = remember { UUID.randomUUID() }
 
@@ -197,12 +213,8 @@ fun BoxWithConstraintsScope.BottomBar(
         else -> Color.White.copy(alpha = 0.55f)
     }
 
-    val targetSlot = when (tab) {
-        MainTab.HOME -> 0f
-        MainTab.ACCOUNTS -> 1f
-        MainTab.MENU -> 3f
-        MainTab.SETTINGS -> 4f
-    }
+    // Dock pill target slot for the given (coerced) tab within the active workspace
+    val targetSlot = targetSlotFor(workspace, tab)
 
     val animatedSlot by animateFloatAsState(
         targetValue = targetSlot,
@@ -312,7 +324,7 @@ fun BoxWithConstraintsScope.BottomBar(
                     activeIcon = R.drawable.ic_home_filled,
                     inactiveIcon = R.drawable.ic_home,
                     name = stringResource(R.string.home),
-                    selected = tab == MainTab.HOME,
+                    selected = effective == MainTab.HOME,
                     selectedColor = activeTabColor,
                     unselectedColor = unselectedTabColor
                 ) {
@@ -320,58 +332,134 @@ fun BoxWithConstraintsScope.BottomBar(
                     selectTab(MainTab.HOME)
                 }
 
-                DockTab(
-                    activeIcon = R.drawable.ic_accounts_filled,
-                    inactiveIcon = R.drawable.ic_accounts,
-                    name = stringResource(R.string.accounts),
-                    selected = tab == MainTab.ACCOUNTS,
-                    selectedColor = activeTabColor,
-                    unselectedColor = unselectedTabColor
-                ) {
-                    expanded = false
-                    selectTab(MainTab.ACCOUNTS)
+                if (workspace == Workspace.SPLITLY) {
+                    DockTab(
+                        activeIcon = R.drawable.ic_groups_filled,
+                        inactiveIcon = R.drawable.ic_groups,
+                        name = stringResource(R.string.groups),
+                        selected = effective == MainTab.SPLITLY_GROUPS,
+                        selectedColor = activeTabColor,
+                        unselectedColor = unselectedTabColor
+                    ) {
+                        expanded = false
+                        selectTab(MainTab.SPLITLY_GROUPS)
+                    }
+                } else {
+                    DockTab(
+                        activeIcon = R.drawable.ic_transactions_filled,
+                        inactiveIcon = R.drawable.ic_transactions,
+                        name = stringResource(R.string.transactions),
+                        selected = false,
+                        selectedColor = activeTabColor,
+                        unselectedColor = unselectedTabColor
+                    ) {
+                        expanded = false
+                        onTransactionsTab()
+                    }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                // Center "+" button lives IN the row as a reserved slot, so it can
+                // never overlap a tab label. Its measured center drives the radial
+                // add-menu origin.
+                Box(
+                    modifier = Modifier
+                        .width(CENTER_FAB_SIZE)
+                        .fillMaxHeight()
+                        .onGloballyPositioned { coords ->
+                            val pos = coords.positionInRoot()
+                            fabSlotCenter = Offset(
+                                x = pos.x + coords.size.width / 2f,
+                                y = pos.y + coords.size.height / 2f
+                            )
+                        }
+                )
 
-                DockTab(
-                    activeIcon = R.drawable.ic_menu_filled,
-                    inactiveIcon = R.drawable.ic_menu,
-                    name = stringResource(R.string.menu),
-                    selected = tab == MainTab.MENU,
-                    selectedColor = activeTabColor,
-                    unselectedColor = unselectedTabColor
-                ) {
-                    expanded = false
-                    selectTab(MainTab.MENU)
+                when (workspace) {
+                    Workspace.FINANCE -> DockTab(
+                        activeIcon = R.drawable.ic_accounts_filled,
+                        inactiveIcon = R.drawable.ic_accounts,
+                        name = stringResource(R.string.accounts),
+                        selected = effective == MainTab.ACCOUNTS,
+                        selectedColor = activeTabColor,
+                        unselectedColor = unselectedTabColor
+                    ) {
+                        expanded = false
+                        selectTab(MainTab.ACCOUNTS)
+                    }
+                    Workspace.LEDGER -> DockTab(
+                        activeIcon = R.drawable.ic_contacts_filled,
+                        inactiveIcon = R.drawable.ic_contacts,
+                        name = stringResource(R.string.contacts),
+                        selected = effective == MainTab.LEDGER_CONTACTS,
+                        selectedColor = activeTabColor,
+                        unselectedColor = unselectedTabColor
+                    ) {
+                        expanded = false
+                        selectTab(MainTab.LEDGER_CONTACTS)
+                    }
+                    Workspace.SPLITLY -> DockTab(
+                        activeIcon = R.drawable.ic_activity_filled,
+                        inactiveIcon = R.drawable.ic_activity,
+                        name = stringResource(R.string.activity),
+                        selected = effective == MainTab.SPLITLY_ACTIVITY,
+                        selectedColor = activeTabColor,
+                        unselectedColor = unselectedTabColor
+                    ) {
+                        expanded = false
+                        selectTab(MainTab.SPLITLY_ACTIVITY)
+                    }
                 }
 
+                // Settings lives here as a normal tab; the pill (right end) carries the
+                // quick-links + utilities.
                 DockTab(
                     activeIcon = R.drawable.ic_settings_filled,
                     inactiveIcon = R.drawable.ic_settings,
                     name = stringResource(R.string.settings),
-                    selected = tab == MainTab.SETTINGS,
+                    selected = effective == MainTab.SETTINGS || effective == MainTab.MENU,
                     selectedColor = activeTabColor,
                     unselectedColor = unselectedTabColor
                 ) {
                     expanded = false
                     selectTab(MainTab.SETTINGS)
                 }
+
+                FloatingMenuDockTab(
+                    expanded = menuExpanded,
+                    selected = false,
+                    onClick = { menuExpanded = !menuExpanded }
+                )
             }
         }
     }
+
+    // Quick-links panel overlay — anchored bottom-right, above tab content, below modal sheets
+    FloatingMenuOverlay(
+        expanded = menuExpanded,
+        onDismiss = { menuExpanded = false },
+        bottomInset = DOCK_HEIGHT + DOCK_BOTTOM_MARGIN + navigationBarInset().toDensityDp() + 8.dp
+    )
 
     // ------------------------------------ Radial add menu ----------------------------------------
     val dockBottomMarginPx = densityScope { DOCK_BOTTOM_MARGIN.toDensityPx() }
     val dockHeightPx = densityScope { DOCK_HEIGHT.toDensityPx() }
     val centerFabSizePx = densityScope { CENTER_FAB_SIZE.toDensityPx() }
 
-    val fabStartX = ivyContext.screenWidth / 2f - centerFabSizePx / 2f
-    val fabStartY = ivyContext.screenHeight - navigationBarInset() -
-            dockBottomMarginPx - (dockHeightPx / 2f) - (centerFabSizePx / 2f)
-
-    val fabCenterXPx = fabStartX + centerFabSizePx / 2f
-    val fabCenterYPx = fabStartY + centerFabSizePx / 2f
+    // The FAB is anchored to the reserved slot in the dock row (measured after
+    // layout) — never to the raw screen center, so it can't sit on a tab label.
+    val fabMeasured = fabSlotCenter != Offset.Zero
+    val fabCenterXPx = if (fabMeasured) {
+        fabSlotCenter.x
+    } else {
+        ivyContext.screenWidth / 2f
+    }
+    val fabCenterYPx = if (fabMeasured) {
+        fabSlotCenter.y
+    } else {
+        ivyContext.screenHeight - navigationBarInset() - dockBottomMarginPx - (dockHeightPx / 2f)
+    }
+    val fabStartX = fabCenterXPx - centerFabSizePx / 2f
+    val fabStartY = fabCenterYPx - centerFabSizePx / 2f
 
     RadialAddMenu(
         expanded = expanded,
@@ -447,7 +535,7 @@ fun BoxWithConstraintsScope.BottomBar(
             .scale(fabScale)
             .rotate(fabRotation)
             .zIndex(200f)
-            .thenIf(tab != MainTab.ACCOUNTS && overrideAddAction == null) {
+            .thenIf(workspace == Workspace.FINANCE && effective != MainTab.ACCOUNTS && overrideAddAction == null) {
                 pointerInput(Unit) {
                     detectDragGestures(
                         onDragCancel = {
@@ -494,7 +582,7 @@ fun BoxWithConstraintsScope.BottomBar(
             .testTag("fab_add"),
         backgroundPadding = 6.dp,
         icon = R.drawable.ic_add,
-        backgroundGradient = when (tab) {
+        backgroundGradient = when (effective) {
             MainTab.ACCOUNTS -> GradientGreen
             else -> if (!expanded) {
                 // Accent-driven: the + follows the user's accent pick.
@@ -505,7 +593,7 @@ fun BoxWithConstraintsScope.BottomBar(
             }
         },
         hasShadow = !expanded,
-        tint = when (tab) {
+        tint = when (effective) {
             MainTab.ACCOUNTS -> White
             else -> if (!expanded) White else Black
         }
@@ -513,16 +601,20 @@ fun BoxWithConstraintsScope.BottomBar(
         val override = overrideAddAction
         if (override != null) {
             override()
-        } else {
-            when (tab) {
-                MainTab.ACCOUNTS -> {
-                    showAddAccountModal()
-                }
+        } else when (workspace) {
+            Workspace.FINANCE -> {
+                when (effective) {
+                    MainTab.ACCOUNTS -> {
+                        showAddAccountModal()
+                    }
 
-                else -> {
-                    expanded = !expanded
+                    else -> {
+                        expanded = !expanded
+                    }
                 }
             }
+
+            else -> onWorkspacePlus()
         }
     }
 }
@@ -905,7 +997,9 @@ private fun RowScope.DockTab(
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                 color = if (selected) selectedColor else unselectedColor,
                 textAlign = TextAlign.Center
-            )
+            ).copy(fontSize = 10.sp),
+            maxLines = 1,
+            softWrap = false
         )
     }
 }

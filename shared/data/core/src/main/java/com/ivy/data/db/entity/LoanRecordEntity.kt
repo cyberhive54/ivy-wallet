@@ -34,6 +34,16 @@ data class LoanRecordEntity(
     // This is used store the converted amount for currencies which are different from the loan account currency
     @SerialName("convertedAmount")
     val convertedAmount: Double? = null,
+    // Optional due date for this individual ledger entry
+    @SerialName("recordDueDate")
+    @Serializable(with = KSerializerInstant::class)
+    val recordDueDate: Instant? = null,
+    // Optional phone number belonging to the person behind this record
+    @SerialName("recordPhone")
+    val recordPhone: String? = null,
+    // Optional receipt/proof attached to this record (private storage path)
+    @SerialName("attachmentUrl")
+    val attachmentUrl: String? = null,
     // In order to keep backups valid, loanRecordType is by default DECREASE.
     // This is because before issue 2740 all records were of this type implicitly.
     @SerialName("loanRecordType")

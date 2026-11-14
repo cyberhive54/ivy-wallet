@@ -142,7 +142,20 @@ internal fun BoxWithConstraintsScope.SettingsRootContent(
             viewModel.onEvent(SettingsEvent.SwitchLanguage)
         },
         onOpenPage = onOpenPage,
-        listState = listState
+        listState = listState,
+        ledgerWorkspaceEnabled = uiState.ledgerWorkspaceEnabled,
+        splitlyWorkspaceEnabled = uiState.splitlyWorkspaceEnabled,
+        workspaceBlockedKind = uiState.workspaceBlockedKind,
+        workspaceBlockedCount = uiState.workspaceBlockedCount,
+        onSetLedgerWorkspace = {
+            viewModel.onEvent(SettingsEvent.SetLedgerWorkspace(it))
+        },
+        onSetSplitlyWorkspace = {
+            viewModel.onEvent(SettingsEvent.SetSplitlyWorkspace(it))
+        },
+        onDismissWorkspaceBlocked = {
+            viewModel.onEvent(SettingsEvent.DismissWorkspaceBlocked)
+        }
     )
 }
 
@@ -180,7 +193,14 @@ private fun BoxWithConstraintsScope.UI(
     onDeleteAllUserData: () -> Unit = {},
     onSwitchLanguage: () -> Unit = {},
     onOpenPage: (SettingsChildPage) -> Unit = {},
-    listState: LazyListState = rememberLazyListState()
+    listState: LazyListState = rememberLazyListState(),
+    ledgerWorkspaceEnabled: Boolean = true,
+    splitlyWorkspaceEnabled: Boolean = false,
+    workspaceBlockedKind: String? = null,
+    workspaceBlockedCount: Int = 0,
+    onSetLedgerWorkspace: (Boolean) -> Unit = {},
+    onSetSplitlyWorkspace: (Boolean) -> Unit = {},
+    onDismissWorkspaceBlocked: () -> Unit = {}
 ) {
     var currencyModalVisible by remember { mutableStateOf(false) }
     var nameModalVisible by remember { mutableStateOf(false) }
@@ -228,6 +248,16 @@ private fun BoxWithConstraintsScope.UI(
                 onOpenCurrencyModal = { currencyModalVisible = true },
                 onOpenStartDateModal = { chooseStartDateOfMonthVisible = true },
                 onSwitchLanguage = onSwitchLanguage
+            )
+        }
+
+        item {
+            WorkspacesSection(
+                query = searchQuery,
+                ledgerEnabled = ledgerWorkspaceEnabled,
+                splitlyEnabled = splitlyWorkspaceEnabled,
+                onSetLedgerEnabled = onSetLedgerWorkspace,
+                onSetSplitlyEnabled = onSetSplitlyWorkspace
             )
         }
 
@@ -358,6 +388,17 @@ private fun BoxWithConstraintsScope.UI(
             onDeleteAllUserData()
         },
         onDismiss = { deleteAllDataModalFinalVisible = false }
+    )
+
+    CupertinoAlert(
+        visible = workspaceBlockedKind != null,
+        title = stringResource(R.string.workspace_blocked_title),
+        message = stringResource(R.string.workspace_blocked_message, workspaceBlockedCount),
+        confirmLabel = stringResource(R.string.ok),
+        dismissLabel = stringResource(R.string.ok),
+        destructive = false,
+        onConfirm = onDismissWorkspaceBlocked,
+        onDismiss = onDismissWorkspaceBlocked
     )
 
     CupertinoProgressCard(
@@ -871,6 +912,54 @@ private fun PrivacySection(
     RowsCard(
         header = stringResource(R.string.settings_section_privacy),
         rows = listOf(lockRow, hideBalanceRow, hideIncomeRow)
+    )
+}
+
+@Composable
+private fun WorkspacesSection(
+    query: String,
+    ledgerEnabled: Boolean,
+    splitlyEnabled: Boolean,
+    onSetLedgerEnabled: (Boolean) -> Unit,
+    onSetSplitlyEnabled: (Boolean) -> Unit,
+) {
+    val ledgerRow: (@Composable () -> Unit)? = if (matches(
+            query, "workspace", "workspaces", "ledger", "splitly", "split expenses", "khata", "notebook"
+        )
+    ) {
+        {
+            SettingSwitchRow(
+                icon = R.drawable.home_more_menu_loans,
+                title = stringResource(R.string.workspaces_ledger_title),
+                description = stringResource(R.string.workspaces_ledger_desc),
+                checked = ledgerEnabled,
+                onToggle = onSetLedgerEnabled
+            )
+        }
+    } else {
+        null
+    }
+
+    val splitlyRow: (@Composable () -> Unit)? = if (matches(
+            query, "workspace", "workspaces", "splitly", "split", "expense", "friends", "splitwise", "group"
+        )
+    ) {
+        {
+            SettingSwitchRow(
+                icon = R.drawable.ic_checklist_add,
+                title = stringResource(R.string.workspaces_splitly_title),
+                description = stringResource(R.string.workspaces_splitly_desc),
+                checked = splitlyEnabled,
+                onToggle = onSetSplitlyEnabled
+            )
+        }
+    } else {
+        null
+    }
+
+    RowsCard(
+        header = stringResource(R.string.settings_section_workspaces),
+        rows = listOf(ledgerRow, splitlyRow)
     )
 }
 

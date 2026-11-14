@@ -21,6 +21,9 @@ sealed interface SettingsEvent {
     data class SetLook(val look: String) : SettingsEvent
     data class SetAccentColor(val accentColor: String) : SettingsEvent
     data class SetDockTranslucent(val translucent: Boolean) : SettingsEvent
+    data class SetLedgerWorkspace(val enabled: Boolean) : SettingsEvent
+    data class SetSplitlyWorkspace(val enabled: Boolean) : SettingsEvent
+    data object DismissWorkspaceBlocked : SettingsEvent
     data object DeleteCloudUserData : SettingsEvent
     data object DeleteAllUserData : SettingsEvent
     data object SwitchLanguage : SettingsEvent

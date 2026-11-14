@@ -12,19 +12,33 @@ import com.ivy.data.DataWriteEvent
 import com.ivy.data.db.dao.read.AccountDao
 import com.ivy.data.db.dao.read.BudgetDao
 import com.ivy.data.db.dao.read.CategoryDao
+import com.ivy.data.db.dao.read.GroupDao
+import com.ivy.data.db.dao.read.GroupMemberDao
 import com.ivy.data.db.dao.read.LoanDao
 import com.ivy.data.db.dao.read.LoanRecordDao
+import com.ivy.data.db.dao.read.PlannedPaymentPriceHistoryDao
 import com.ivy.data.db.dao.read.PlannedPaymentRuleDao
 import com.ivy.data.db.dao.read.SettingsDao
+import com.ivy.data.db.dao.read.SplitCommentDao
+import com.ivy.data.db.dao.read.SplitExpenseDao
+import com.ivy.data.db.dao.read.SplitExpenseParticipantDao
+import com.ivy.data.db.dao.read.SplitSettlementDao
 import com.ivy.data.db.dao.read.TagAssociationDao
 import com.ivy.data.db.dao.read.TagDao
 import com.ivy.data.db.dao.read.TransactionDao
 import com.ivy.data.db.dao.write.WriteBudgetDao
 import com.ivy.data.db.dao.write.WriteCategoryDao
+import com.ivy.data.db.dao.write.WriteGroupDao
+import com.ivy.data.db.dao.write.WriteGroupMemberDao
 import com.ivy.data.db.dao.write.WriteLoanDao
 import com.ivy.data.db.dao.write.WriteLoanRecordDao
+import com.ivy.data.db.dao.write.WritePlannedPaymentPriceHistoryDao
 import com.ivy.data.db.dao.write.WritePlannedPaymentRuleDao
 import com.ivy.data.db.dao.write.WriteSettingsDao
+import com.ivy.data.db.dao.write.WriteSplitCommentDao
+import com.ivy.data.db.dao.write.WriteSplitExpenseDao
+import com.ivy.data.db.dao.write.WriteSplitExpenseParticipantDao
+import com.ivy.data.db.dao.write.WriteSplitSettlementDao
 import com.ivy.data.db.dao.write.WriteTagAssociationDao
 import com.ivy.data.db.dao.write.WriteTagDao
 import com.ivy.data.db.dao.write.WriteTransactionDao
@@ -51,6 +65,13 @@ class BackupDataUseCase @Inject constructor(
     private val loanRecordDao: LoanRecordDao,
     private val loanDao: LoanDao,
     private val plannedPaymentRuleDao: PlannedPaymentRuleDao,
+    private val plannedPaymentPriceHistoryDao: PlannedPaymentPriceHistoryDao,
+    private val groupDao: GroupDao,
+    private val groupMemberDao: GroupMemberDao,
+    private val splitExpenseDao: SplitExpenseDao,
+    private val splitExpenseParticipantDao: SplitExpenseParticipantDao,
+    private val splitSettlementDao: SplitSettlementDao,
+    private val splitCommentDao: SplitCommentDao,
     private val settingsDao: SettingsDao,
     private val transactionDao: TransactionDao,
     private val transactionWriter: WriteTransactionDao,
@@ -63,6 +84,13 @@ class BackupDataUseCase @Inject constructor(
     private val loanWriter: WriteLoanDao,
     private val loanRecordWriter: WriteLoanRecordDao,
     private val plannedPaymentRuleWriter: WritePlannedPaymentRuleDao,
+    private val plannedPaymentPriceHistoryWriter: WritePlannedPaymentPriceHistoryDao,
+    private val groupWriter: WriteGroupDao,
+    private val groupMemberWriter: WriteGroupMemberDao,
+    private val splitExpenseWriter: WriteSplitExpenseDao,
+    private val splitExpenseParticipantWriter: WriteSplitExpenseParticipantDao,
+    private val splitSettlementWriter: WriteSplitSettlementDao,
+    private val splitCommentWriter: WriteSplitCommentDao,
     @ApplicationContext
     private val context: Context,
     private val json: Json,
@@ -101,6 +129,13 @@ class BackupDataUseCase @Inject constructor(
             val categories = async { categoryDao.findAll() }
             val loanRecords = async { loanRecordDao.findAll() }
             val loans = async { loanDao.findAll() }
+            val plannedPaymentPriceHistory = async { plannedPaymentPriceHistoryDao.findAll() }
+            val groups = async { groupDao.findAll() }
+            val groupMembers = async { groupMemberDao.findAll() }
+            val splitExpenses = async { splitExpenseDao.findAll() }
+            val splitExpenseParticipants = async { splitExpenseParticipantDao.findAll() }
+            val splitSettlements = async { splitSettlementDao.findAll() }
+            val splitComments = async { splitCommentDao.findAll() }
             val plannedPaymentRules =
                 async { plannedPaymentRuleDao.findAll() }
             val settings = async { settingsDao.findAll() }
@@ -116,6 +151,13 @@ class BackupDataUseCase @Inject constructor(
                 loanRecords = loanRecords.await(),
                 loans = loans.await(),
                 plannedPaymentRules = plannedPaymentRules.await(),
+                plannedPaymentPriceHistory = plannedPaymentPriceHistory.await(),
+                groups = groups.await(),
+                groupMembers = groupMembers.await(),
+                splitExpenses = splitExpenses.await(),
+                splitExpenseParticipants = splitExpenseParticipants.await(),
+                splitSettlements = splitSettlements.await(),
+                splitComments = splitComments.await(),
                 settings = settings.await(),
                 transactions = transactions.await(),
                 sharedPrefs = sharedPrefs.await(),
@@ -140,6 +182,16 @@ class BackupDataUseCase @Inject constructor(
 
         hashmap[SharedPrefs.TRANSFERS_AS_INCOME_EXPENSE] =
             sharedPrefs.getBoolean(SharedPrefs.TRANSFERS_AS_INCOME_EXPENSE, false).toString()
+
+        hashmap[SharedPrefs.WORKSPACE] =
+            sharedPrefs.getString(SharedPrefs.WORKSPACE, com.ivy.base.model.Workspace.FINANCE.code)
+                ?: com.ivy.base.model.Workspace.FINANCE.code
+
+        hashmap[SharedPrefs.LEDGER_WORKSPACE_ENABLED] =
+            sharedPrefs.getBoolean(SharedPrefs.LEDGER_WORKSPACE_ENABLED, true).toString()
+
+        hashmap[SharedPrefs.SPLITLY_WORKSPACE_ENABLED] =
+            sharedPrefs.getBoolean(SharedPrefs.SPLITLY_WORKSPACE_ENABLED, false).toString()
 
         return hashmap
     }
@@ -273,6 +325,26 @@ class BackupDataUseCase @Inject constructor(
             loans.await()
             loanRecords.await()
 
+            val plannedPaymentPriceHistory = async {
+                plannedPaymentPriceHistoryWriter.saveMany(completeData.plannedPaymentPriceHistory)
+            }
+            val groups = async { groupWriter.saveMany(completeData.groups) }
+            val groupMembers = async { groupMemberWriter.saveMany(completeData.groupMembers) }
+            val splitExpenses = async { splitExpenseWriter.saveMany(completeData.splitExpenses) }
+            val splitExpenseParticipants =
+                async { splitExpenseParticipantWriter.saveMany(completeData.splitExpenseParticipants) }
+            val splitSettlements =
+                async { splitSettlementWriter.saveMany(completeData.splitSettlements) }
+            val splitComments = async { splitCommentWriter.saveMany(completeData.splitComments) }
+
+            plannedPaymentPriceHistory.await()
+            groups.await()
+            groupMembers.await()
+            splitExpenses.await()
+            splitExpenseParticipants.await()
+            splitSettlements.await()
+            splitComments.await()
+
             onProgress(0.8)
 
             val tags = async { tagsWriter.save(completeData.tags) }
@@ -306,6 +378,24 @@ class BackupDataUseCase @Inject constructor(
                         completeData.sharedPrefs[SharedPrefs.TRANSFERS_AS_INCOME_EXPENSE]
                             ?: "false"
                         ).toBoolean()
+            )
+
+            sharedPrefs.putString(
+                SharedPrefs.WORKSPACE,
+                completeData.sharedPrefs[SharedPrefs.WORKSPACE]
+                    ?: com.ivy.base.model.Workspace.FINANCE.code
+            )
+
+            sharedPrefs.putBoolean(
+                SharedPrefs.LEDGER_WORKSPACE_ENABLED,
+                (completeData.sharedPrefs[SharedPrefs.LEDGER_WORKSPACE_ENABLED]
+                    ?: "true").toBoolean()
+            )
+
+            sharedPrefs.putBoolean(
+                SharedPrefs.SPLITLY_WORKSPACE_ENABLED,
+                (completeData.sharedPrefs[SharedPrefs.SPLITLY_WORKSPACE_ENABLED]
+                    ?: "false").toBoolean()
             )
 
             plannedPayments.await()

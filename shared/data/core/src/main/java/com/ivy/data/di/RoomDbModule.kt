@@ -6,10 +6,17 @@ import com.ivy.data.db.dao.read.AccountDao
 import com.ivy.data.db.dao.read.BudgetDao
 import com.ivy.data.db.dao.read.CategoryDao
 import com.ivy.data.db.dao.read.ExchangeRatesDao
+import com.ivy.data.db.dao.read.GroupDao
+import com.ivy.data.db.dao.read.GroupMemberDao
 import com.ivy.data.db.dao.read.LoanDao
 import com.ivy.data.db.dao.read.LoanRecordDao
+import com.ivy.data.db.dao.read.PlannedPaymentPriceHistoryDao
 import com.ivy.data.db.dao.read.PlannedPaymentRuleDao
 import com.ivy.data.db.dao.read.SettingsDao
+import com.ivy.data.db.dao.read.SplitCommentDao
+import com.ivy.data.db.dao.read.SplitExpenseDao
+import com.ivy.data.db.dao.read.SplitExpenseParticipantDao
+import com.ivy.data.db.dao.read.SplitSettlementDao
 import com.ivy.data.db.dao.read.TagAssociationDao
 import com.ivy.data.db.dao.read.TagDao
 import com.ivy.data.db.dao.read.TransactionDao
@@ -18,10 +25,17 @@ import com.ivy.data.db.dao.write.WriteAccountDao
 import com.ivy.data.db.dao.write.WriteBudgetDao
 import com.ivy.data.db.dao.write.WriteCategoryDao
 import com.ivy.data.db.dao.write.WriteExchangeRatesDao
+import com.ivy.data.db.dao.write.WriteGroupDao
+import com.ivy.data.db.dao.write.WriteGroupMemberDao
 import com.ivy.data.db.dao.write.WriteLoanDao
 import com.ivy.data.db.dao.write.WriteLoanRecordDao
+import com.ivy.data.db.dao.write.WritePlannedPaymentPriceHistoryDao
 import com.ivy.data.db.dao.write.WritePlannedPaymentRuleDao
 import com.ivy.data.db.dao.write.WriteSettingsDao
+import com.ivy.data.db.dao.write.WriteSplitCommentDao
+import com.ivy.data.db.dao.write.WriteSplitExpenseDao
+import com.ivy.data.db.dao.write.WriteSplitExpenseParticipantDao
+import com.ivy.data.db.dao.write.WriteSplitSettlementDao
 import com.ivy.data.db.dao.write.WriteTagAssociationDao
 import com.ivy.data.db.dao.write.WriteTagDao
 import com.ivy.data.db.dao.write.WriteTransactionDao
@@ -161,5 +175,74 @@ object RoomDbModule {
     @Provides
     fun provideWriteTagAssociationDao(db: IvyRoomDatabase): WriteTagAssociationDao {
         return db.writeTagAssociationDao
+    }
+    @Provides
+    fun provideGroupDao(db: IvyRoomDatabase): GroupDao {
+        return db.groupDao
+    }
+
+    @Provides
+    fun provideGroupMemberDao(db: IvyRoomDatabase): GroupMemberDao {
+        return db.groupMemberDao
+    }
+
+    @Provides
+    fun provideSplitExpenseDao(db: IvyRoomDatabase): SplitExpenseDao {
+        return db.splitExpenseDao
+    }
+
+    @Provides
+    fun provideSplitExpenseParticipantDao(db: IvyRoomDatabase): SplitExpenseParticipantDao {
+        return db.splitExpenseParticipantDao
+    }
+
+    @Provides
+    fun provideSplitSettlementDao(db: IvyRoomDatabase): SplitSettlementDao {
+        return db.splitSettlementDao
+    }
+
+    @Provides
+    fun provideSplitCommentDao(db: IvyRoomDatabase): SplitCommentDao {
+        return db.splitCommentDao
+    }
+
+    @Provides
+    fun providePlannedPaymentPriceHistoryDao(db: IvyRoomDatabase): PlannedPaymentPriceHistoryDao {
+        return db.plannedPaymentPriceHistoryDao
+    }
+
+    @Provides
+    fun provideWriteGroupDao(db: IvyRoomDatabase): WriteGroupDao {
+        return db.writeGroupDao
+    }
+
+    @Provides
+    fun provideWriteGroupMemberDao(db: IvyRoomDatabase): WriteGroupMemberDao {
+        return db.writeGroupMemberDao
+    }
+
+    @Provides
+    fun provideWriteSplitExpenseDao(db: IvyRoomDatabase): WriteSplitExpenseDao {
+        return db.writeSplitExpenseDao
+    }
+
+    @Provides
+    fun provideWriteSplitExpenseParticipantDao(db: IvyRoomDatabase): WriteSplitExpenseParticipantDao {
+        return db.writeSplitExpenseParticipantDao
+    }
+
+    @Provides
+    fun provideWriteSplitSettlementDao(db: IvyRoomDatabase): WriteSplitSettlementDao {
+        return db.writeSplitSettlementDao
+    }
+
+    @Provides
+    fun provideWriteSplitCommentDao(db: IvyRoomDatabase): WriteSplitCommentDao {
+        return db.writeSplitCommentDao
+    }
+
+    @Provides
+    fun provideWritePlannedPaymentPriceHistoryDao(db: IvyRoomDatabase): WritePlannedPaymentPriceHistoryDao {
+        return db.writePlannedPaymentPriceHistoryDao
     }
 }

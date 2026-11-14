@@ -34,6 +34,13 @@ data class LoanEntity(
     @SerialName("note")
     val note: String? = null,
 
+    // Phone number of the person behind this loan (customer / friend / family)
+    @SerialName("customerPhone")
+    val customerPhone: String? = null,
+    // Explicit display name for guests typed in manually; overrides name when set
+    @SerialName("counterpartyName")
+    val counterpartyName: String? = null,
+
     @Deprecated("Obsolete field used for cloud sync. Can't be deleted because of backwards compatibility")
     @SerialName("isSynced")
     val isSynced: Boolean = false,

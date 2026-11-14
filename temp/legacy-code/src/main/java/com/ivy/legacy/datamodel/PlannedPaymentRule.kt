@@ -25,6 +25,17 @@ data class PlannedPaymentRule(
     val isSynced: Boolean = false,
     val isDeleted: Boolean = false,
 
+    // Expand-suite (v132) — subscriptions. Must round-trip entity <-> legacy losslessly.
+    val remainingOccurrences: Int? = null,
+    val icon: String? = null,
+    val paymentMethodNote: String? = null,
+    val cardOrMethod: String? = null,
+    val isTrial: Boolean = false,
+    val trialEndsAt: Instant? = null,
+    val reminderLeadDays: Int = 7,
+    val paused: Boolean = false,
+    val archived: Boolean = false,
+
     val id: UUID = UUID.randomUUID()
 ) {
     fun toEntity(): PlannedPaymentRuleEntity = PlannedPaymentRuleEntity(
@@ -40,6 +51,15 @@ data class PlannedPaymentRule(
         description = description,
         isSynced = isSynced,
         isDeleted = isDeleted,
+        remainingOccurrences = remainingOccurrences,
+        icon = icon,
+        paymentMethodNote = paymentMethodNote,
+        cardOrMethod = cardOrMethod,
+        isTrial = isTrial,
+        trialEndsAt = trialEndsAt,
+        reminderLeadDays = reminderLeadDays,
+        paused = paused,
+        archived = archived,
         id = id
     )
 }

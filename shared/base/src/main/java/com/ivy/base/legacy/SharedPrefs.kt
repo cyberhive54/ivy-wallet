@@ -29,6 +29,9 @@ class SharedPrefs @Inject constructor(
         const val SETTINGS_MOCK_THEME = "settings_mock_theme"
         const val SETTINGS_ACCENT_COLOR = "settings_accent_color"
         const val SETTINGS_DOCK_TRANSLUCENT = "settings_dock_translucent"
+        const val WORKSPACE = "workspace"
+        const val LEDGER_WORKSPACE_ENABLED = "ledger_workspace_enabled"
+        const val SPLITLY_WORKSPACE_ENABLED = "splitly_workspace_enabled"
         // ----------------------------- App Settings -----------------------------------------------
 
         // -------------------------------- Customer Journey ----------------------------------------

@@ -10,6 +10,13 @@ import com.ivy.data.db.entity.PlannedPaymentRuleEntity
 import com.ivy.data.db.entity.SettingsEntity
 import com.ivy.data.db.entity.TagAssociationEntity
 import com.ivy.data.db.entity.TagEntity
+import com.ivy.data.db.entity.GroupEntity
+import com.ivy.data.db.entity.GroupMemberEntity
+import com.ivy.data.db.entity.PlannedPaymentPriceHistoryEntity
+import com.ivy.data.db.entity.SplitCommentEntity
+import com.ivy.data.db.entity.SplitExpenseEntity
+import com.ivy.data.db.entity.SplitExpenseParticipantEntity
+import com.ivy.data.db.entity.SplitSettlementEntity
 import com.ivy.data.db.entity.TransactionEntity
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -39,5 +46,19 @@ data class IvyWalletCompleteData(
     @SerialName("tags")
     val tags: List<TagEntity> = emptyList(),
     @SerialName("tagAssociations")
-    val tagAssociations: List<TagAssociationEntity> = emptyList()
+    val tagAssociations: List<TagAssociationEntity> = emptyList(),
+    @SerialName("plannedPaymentPriceHistory")
+    val plannedPaymentPriceHistory: List<PlannedPaymentPriceHistoryEntity> = emptyList(),
+    @SerialName("groups")
+    val groups: List<GroupEntity> = emptyList(),
+    @SerialName("groupMembers")
+    val groupMembers: List<GroupMemberEntity> = emptyList(),
+    @SerialName("splitExpenses")
+    val splitExpenses: List<SplitExpenseEntity> = emptyList(),
+    @SerialName("splitExpenseParticipants")
+    val splitExpenseParticipants: List<SplitExpenseParticipantEntity> = emptyList(),
+    @SerialName("splitSettlements")
+    val splitSettlements: List<SplitSettlementEntity> = emptyList(),
+    @SerialName("splitComments")
+    val splitComments: List<SplitCommentEntity> = emptyList()
 )

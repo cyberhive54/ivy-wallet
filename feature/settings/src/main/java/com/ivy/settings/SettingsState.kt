@@ -16,5 +16,11 @@ data class SettingsState(
     val languageOptionVisible: Boolean,
     val look: String,
     val accentColor: String,
-    val dockTranslucent: Boolean
+    val dockTranslucent: Boolean,
+    val ledgerWorkspaceEnabled: Boolean,
+    val splitlyWorkspaceEnabled: Boolean,
+    /** "ledger" | "splitly" while a zero-records block dialog should be shown; null otherwise. */
+    val workspaceBlockedKind: String?,
+    /** Number of records in the blocked workspace, for the dialog message. */
+    val workspaceBlockedCount: Int
 )

@@ -1,4 +1,4 @@
-package com.ivy.data.db
+﻿package com.ivy.data.db
 
 import android.content.Context
 import androidx.room.*
@@ -9,6 +9,13 @@ import com.ivy.data.db.dao.read.CategoryDao
 import com.ivy.data.db.dao.read.ExchangeRatesDao
 import com.ivy.data.db.dao.read.LoanDao
 import com.ivy.data.db.dao.read.LoanRecordDao
+import com.ivy.data.db.dao.read.GroupDao
+import com.ivy.data.db.dao.read.GroupMemberDao
+import com.ivy.data.db.dao.read.PlannedPaymentPriceHistoryDao
+import com.ivy.data.db.dao.read.SplitCommentDao
+import com.ivy.data.db.dao.read.SplitExpenseDao
+import com.ivy.data.db.dao.read.SplitExpenseParticipantDao
+import com.ivy.data.db.dao.read.SplitSettlementDao
 import com.ivy.data.db.dao.read.PlannedPaymentRuleDao
 import com.ivy.data.db.dao.read.SettingsDao
 import com.ivy.data.db.dao.read.TagDao
@@ -21,6 +28,13 @@ import com.ivy.data.db.dao.write.WriteCategoryDao
 import com.ivy.data.db.dao.write.WriteExchangeRatesDao
 import com.ivy.data.db.dao.write.WriteLoanDao
 import com.ivy.data.db.dao.write.WriteLoanRecordDao
+import com.ivy.data.db.dao.write.WriteGroupDao
+import com.ivy.data.db.dao.write.WriteGroupMemberDao
+import com.ivy.data.db.dao.write.WritePlannedPaymentPriceHistoryDao
+import com.ivy.data.db.dao.write.WriteSplitCommentDao
+import com.ivy.data.db.dao.write.WriteSplitExpenseDao
+import com.ivy.data.db.dao.write.WriteSplitExpenseParticipantDao
+import com.ivy.data.db.dao.write.WriteSplitSettlementDao
 import com.ivy.data.db.dao.write.WritePlannedPaymentRuleDao
 import com.ivy.data.db.dao.write.WriteSettingsDao
 import com.ivy.data.db.dao.write.WriteTagDao
@@ -46,6 +60,14 @@ import com.ivy.data.db.migration.Migration128to129_DeleteIsDeleted
 import com.ivy.data.db.migration.Migration129to130_LoanIncludeNote
 import com.ivy.data.db.migration.Migration130to131_NecessityAndCategoryTypes
 import com.ivy.domain.db.RoomTypeConverters
+import com.ivy.data.db.entity.GroupEntity
+import com.ivy.data.db.entity.GroupMemberEntity
+import com.ivy.data.db.entity.PlannedPaymentPriceHistoryEntity
+import com.ivy.data.db.entity.SplitCommentEntity
+import com.ivy.data.db.entity.SplitExpenseEntity
+import com.ivy.data.db.entity.SplitExpenseParticipantEntity
+import com.ivy.data.db.entity.SplitSettlementEntity
+import com.ivy.data.db.migration.Migration131to132_ExpandSuite
 import com.ivy.domain.db.migration.Migration105to106_TrnRecurringRules
 import com.ivy.domain.db.migration.Migration106to107_Wishlist
 import com.ivy.domain.db.migration.Migration107to108_Sync
@@ -70,7 +92,11 @@ import com.ivy.domain.db.migration.Migration125to126_Tags
         AccountEntity::class, TransactionEntity::class, CategoryEntity::class,
         SettingsEntity::class, PlannedPaymentRuleEntity::class,
         UserEntity::class, ExchangeRateEntity::class, BudgetEntity::class,
-        LoanEntity::class, LoanRecordEntity::class, TagEntity::class, TagAssociationEntity::class
+        LoanEntity::class, LoanRecordEntity::class, TagEntity::class, TagAssociationEntity::class,
+        GroupEntity::class, GroupMemberEntity::class,
+        SplitExpenseEntity::class, SplitExpenseParticipantEntity::class,
+        SplitSettlementEntity::class, SplitCommentEntity::class,
+        PlannedPaymentPriceHistoryEntity::class
     ],
     autoMigrations = [
         AutoMigration(
@@ -79,7 +105,7 @@ import com.ivy.domain.db.migration.Migration125to126_Tags
             spec = IvyRoomDatabase.DeleteSEMigration::class
         )
     ],
-    version = 131,
+    version = 132,
     exportSchema = true
 )
 @TypeConverters(RoomTypeConverters::class)
@@ -88,6 +114,13 @@ abstract class IvyRoomDatabase : RoomDatabase() {
     abstract val transactionDao: TransactionDao
     abstract val categoryDao: CategoryDao
     abstract val budgetDao: BudgetDao
+    abstract val plannedPaymentPriceHistoryDao: PlannedPaymentPriceHistoryDao
+    abstract val groupDao: GroupDao
+    abstract val groupMemberDao: GroupMemberDao
+    abstract val splitExpenseDao: SplitExpenseDao
+    abstract val splitExpenseParticipantDao: SplitExpenseParticipantDao
+    abstract val splitSettlementDao: SplitSettlementDao
+    abstract val splitCommentDao: SplitCommentDao
     abstract val plannedPaymentRuleDao: PlannedPaymentRuleDao
     abstract val settingsDao: SettingsDao
     abstract val userDao: UserDao
@@ -101,6 +134,13 @@ abstract class IvyRoomDatabase : RoomDatabase() {
     abstract val writeTransactionDao: WriteTransactionDao
     abstract val writeCategoryDao: WriteCategoryDao
     abstract val writeBudgetDao: WriteBudgetDao
+    abstract val writePlannedPaymentPriceHistoryDao: WritePlannedPaymentPriceHistoryDao
+    abstract val writeGroupDao: WriteGroupDao
+    abstract val writeGroupMemberDao: WriteGroupMemberDao
+    abstract val writeSplitExpenseDao: WriteSplitExpenseDao
+    abstract val writeSplitExpenseParticipantDao: WriteSplitExpenseParticipantDao
+    abstract val writeSplitSettlementDao: WriteSplitSettlementDao
+    abstract val writeSplitCommentDao: WriteSplitCommentDao
     abstract val writePlannedPaymentRuleDao: WritePlannedPaymentRuleDao
     abstract val writeSettingsDao: WriteSettingsDao
     abstract val writeExchangeRatesDao: WriteExchangeRatesDao
@@ -137,7 +177,8 @@ abstract class IvyRoomDatabase : RoomDatabase() {
             Migration127to128_PaidForDateRecord(),
             Migration128to129_DeleteIsDeleted(),
             Migration129to130_LoanIncludeNote(),
-            Migration130to131_NecessityAndCategoryTypes()
+            Migration130to131_NecessityAndCategoryTypes(),
+            Migration131to132_ExpandSuite()
         )
 
         @Suppress("SpreadOperator")

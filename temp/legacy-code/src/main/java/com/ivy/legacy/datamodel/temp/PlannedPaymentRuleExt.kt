@@ -16,5 +16,14 @@ fun PlannedPaymentRuleEntity.toLegacyDomain(): PlannedPaymentRule = PlannedPayme
     description = description,
     isSynced = isSynced,
     isDeleted = isDeleted,
+    remainingOccurrences = remainingOccurrences,
+    icon = icon,
+    paymentMethodNote = paymentMethodNote,
+    cardOrMethod = cardOrMethod,
+    isTrial = isTrial,
+    trialEndsAt = trialEndsAt,
+    reminderLeadDays = reminderLeadDays,
+    paused = paused,
+    archived = archived,
     id = id
 )
