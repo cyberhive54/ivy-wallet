@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy — Ivy Expand (Ivy Wallet fork)</title>
+  <meta name="description" content="Ivy Expand is an offline-first personal finance app. No data leaves your device. No accounts. No tracking. No analytics.">
+  <style>
+    :root {
+      --bg: #fafafa;
+      --fg: #1c1c1e;
+      --muted: #6e6e73;
+      --accent: #5e5ce6;
+      --card: #ffffff;
+      --border: #e5e5ea;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f0f11;
+        --fg: #f2f2f7;
+        --muted: #98989f;
+        --accent: #7d7aff;
+        --card: #1c1c1e;
+        --border: #2c2c2e;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font: 17px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      padding: 2rem 1.25rem 4rem;
+    }
+    main { max-width: 46rem; margin: 0 auto; }
+    header { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; }
+    .brand { font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+    h1 { font-size: 1.75rem; margin: .35rem 0 .4rem; line-height: 1.25; }
+    .updated { color: var(--muted); font-size: .85rem; }
+    h2 { font-size: 1.1rem; margin-top: 1.75rem; }
+    p { margin-top: .6rem; }
+    ul, ol { margin: .6rem 0 0 1.4rem; }
+    li { margin-bottom: .35rem; }
+    code { font-size: .9em; background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: .08em .35em; }
+    footer { border-top: 1px solid var(--border); margin-top: 2.5rem; padding-top: 1rem; color: var(--muted); font-size: .85rem; }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">Ivy Expand — Ivy Wallet fork</div>
+      <h1>Privacy Policy</h1>
+      <div class="updated">Effective: 2026-11-05 · Version 1.0</div>
+    </header>
+
+    <h2>About this app</h2>
+    <p>
+      This app is an offline-first personal finance workspace (budgets, a lending ledger, group expense splits).
+      Everything you enter is stored only on your device. The app is open-source under GNU GPLv3 — the fork lives at
+      <a href="https://github.com/cyberhive54/ivy-wallet">github.com/cyberhive54/ivy-wallet</a>.
+    </p>
+
+    <h2>What data we collect</h2>
+    <p>
+      <strong>None.</strong> The app contains no analytics SDKs, no ad networks, no crash-reporting service run by us,
+      and no account registration of any kind. Nothing leaves your device unless you explicitly share it
+      (e.g., sending a statement via the system share sheet).
+    </p>
+
+    <h2>How data is stored</h2>
+    <ul>
+      <li>Transactions, accounts, categories, loans, groups — local SQLite database (<code>Room</code>).</li>
+      <li>Backup files — written to whatever folder you pick (cloud drive / photos / local storage). Your file, not ours.</li>
+      <li>Receipts — stored in app-private storage; never uploaded.</li>
+    </ul>
+
+    <h2>Sharing</h2>
+    <p>The only outbound actions the app initiates are the ones you tap:</p>
+    <ul>
+      <li><strong>Contact picker</strong> — system contact list; the app never reads your address book; nothing is transmitted back, nothing stored beyond what you choose to type.</li>
+      <li><strong>ACTION_SEND</strong> (WhatsApp / SMS / any share sheet) — message opens pre-filled; you hit Send yourself.</li>
+      <li><strong>tel:</strong> — dialler intent for calling a customer; standard Android behaviour.</li>
+    </ul>
+
+    <h2>Third parties</h2>
+    <p>
+      None. No Firebase. No advertising SDKs. No tracking pixels. No cookies — this is a native app. No syncing servers operated by us.
+    </p>
+
+    <h2>Your rights</h2>
+    <ul>
+      <li>Your data sits on your device. Uninstalling the app deletes what you did not export/back up.</li>
+      <li>Source code is public on GitHub — every behaviour claimed above can be independently verified.</li>
+    </ul>
+
+    <h2>Changes to this policy</h2>
+    <p>
+      Any change to this statement ships with the source code in the same repository,
+      as commits visible in git history — no silent updates, no shadow policies.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Privacy questions or concerns: open an issue at
+      <a href="https://github.com/cyberhive54/ivy-wallet/issues">github.com/cyberhive54/ivy-wallet/issues</a>.
+    </p>
+
+    <footer>
+      Ivy Expand is an independent fork of Ivy Wallet (archived by Ivy Apps Ltd, Nov 2024).
+      This page is the project's public privacy commitment — published from the public repository itself.
+    </footer>
+  </main>
+</body>
+</html>

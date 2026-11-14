@@ -1,5 +1,8 @@
 # Development Guidelines & Critical Project Rules
 
+> **Project Rulebook — [`ivy-expand-plan/AGENTS.md`](ivy-expand-plan/AGENTS.md)**
+> Mandatory reading before any work in this repo (safety, licensing, UX/accessibility, build, testing, security, release). Rules there override generic agent habits; they are the project's contract. Read it **before** making changes.
+
 ## 1. CRITICAL SAFETY: Protect Official Play Store App & User Data
 - **Official App Installed**: The user's physical Android phone has the official Ivy Wallet installed from the Google Play Store (`com.ivy.wallet`) containing critical, sensitive, and irreplaceable personal financial data.
 - **NEVER Overwrite or Collide**:
@@ -14,10 +17,13 @@
   - DO NOT run Gradle build/assemble commands (`./gradlew assemble`, `./gradlew build`, etc.) automatically or speculatively.
   - ONLY compile or build if the user explicitly asks to build an APK.
 - **Strict Resource Caps When Building (Only When Explicitly Requested)**:
-  - Keep heap capped: `-Xmx1536m -XX:MaxMetaspaceSize=512m`.
+  - Keep heap capped: `-Xmx3072m -XX:MaxMetaspaceSize=512m` (measured 2026-11-07: the old
+    `-Xmx1536m` OOM-crashes the KSP/Room compiler on this host — 1536m is NOT enough).
   - Restrict workers: `--max-workers=2` and `org.gradle.parallel=false`.
   - Avoid launching long-running daemon processes or stop them after completion (`./gradlew --stop`).
   - Prefer checking syntax, lint, or single-file/single-module tasks instead of full multi-module compilation whenever possible.
+  - Device access: the phone also exposes **wireless debugging** on the hotspot (`adb connect <ip>:<port>`),
+    which survives the USB cable dropping. Always target `com.cyberhive.wallet.debug` only.
 
 ## 3. ENVIRONMENT & TOOLING
 - **IDE**: Android Studio is NOT installed. Work is done via code edits and CLI tools.
