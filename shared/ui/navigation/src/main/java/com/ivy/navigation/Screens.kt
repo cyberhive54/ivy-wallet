@@ -116,6 +116,10 @@ data class ImportScreen(
 
 data object SubscriptionsScreen : Screen
 
+data class LedgerCustomerDetailScreen(
+    val loanId: UUID,
+) : Screen
+
 data class SubscriptionEditScreen(
     val plannedPaymentRuleId: UUID? = null,
     val accountId: UUID? = null,

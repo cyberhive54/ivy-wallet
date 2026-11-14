@@ -66,6 +66,7 @@ import com.ivy.navigation.ReleasesScreen
 import com.ivy.navigation.ReportScreen
 import com.ivy.navigation.Screen
 import com.ivy.navigation.SearchScreen
+import com.ivy.navigation.LedgerCustomerDetailScreen
 import com.ivy.navigation.SubscriptionsScreen
 import com.ivy.navigation.SubscriptionEditScreen
 import com.ivy.navigation.SettingsScreen
@@ -73,6 +74,7 @@ import com.ivy.navigation.TransactionsScreen
 import com.ivy.onboarding.OnboardingScreen
 import com.ivy.piechart.PieChartStatisticScreen
 import com.ivy.planned.subscriptions.SubscriptionEditScreen as SubscriptionEditScreenImpl
+import com.ivy.main.workspace.LedgerCustomerDetail as LedgerCustomerDetailImpl
 import com.ivy.planned.subscriptions.SubscriptionsScreen as SubscriptionsScreenImpl
 import com.ivy.planned.edit.EditPlannedScreen
 import com.ivy.planned.list.PlannedPaymentsScreen
@@ -139,6 +141,7 @@ fun BoxWithConstraintsScope.IvyNavGraph(screen: Screen?) {
                     is SettingsScreen -> SettingsScreen()
                     is PlannedPaymentsScreen -> PlannedPaymentsScreen(screen = currentScreen)
                     is SubscriptionsScreen -> SubscriptionsScreenImpl(screen = currentScreen)
+                    is LedgerCustomerDetailScreen -> LedgerCustomerDetailImpl(screen = currentScreen)
                     is SubscriptionEditScreen -> SubscriptionEditScreenImpl(screen = currentScreen)
                     is EditPlannedScreen -> EditPlannedScreen(screen = currentScreen)
                     is BalanceScreen -> BalanceScreen(screen = currentScreen)

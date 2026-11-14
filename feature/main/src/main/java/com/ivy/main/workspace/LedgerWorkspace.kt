@@ -35,7 +35,7 @@ import androidx.compose.runtime.collectAsState
 import com.ivy.design.l0_system.UI
 import com.ivy.legacy.ivyWalletCtx
 import com.ivy.legacy.data.model.MainTab
-import com.ivy.navigation.LoanDetailsScreen
+import com.ivy.navigation.LedgerCustomerDetailScreen
 import com.ivy.navigation.LoansScreen
 import com.ivy.navigation.navigation
 import com.ivy.navigation.screenScopedViewModel
@@ -188,7 +188,7 @@ fun BoxWithConstraintsScope.LedgerLanding() {
                 items(visiblePeople.take(8)) { person ->
                     LedgerPersonRow(
                         person = person,
-                        onClick = { nav.navigateTo(LoanDetailsScreen(loanId = person.id)) }
+                        onClick = { nav.navigateTo(LedgerCustomerDetailScreen(loanId = person.id)) }
                     )
                 }
                 if (visiblePeople.size > 8) {
@@ -294,7 +294,7 @@ fun BoxWithConstraintsScope.LedgerContacts() {
                 items(filtered) { person ->
                     LedgerPersonRow(
                         person = person,
-                        onClick = { nav.navigateTo(LoanDetailsScreen(loanId = person.id)) }
+                        onClick = { nav.navigateTo(LedgerCustomerDetailScreen(loanId = person.id)) }
                     )
                 }
             }
