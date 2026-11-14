@@ -89,7 +89,7 @@
 | P2.S1.M1 | Columns + rows preserved | CI | ~ | 2026-11-14 | Loan.customerPhone/LoanRecord.recordPhone carried through legacy datamodels (lossless toEntity); person name kept as alias (counterpartyName) with legacy name preserved; migration pre-fills counterpartyName from name; compiles (legacy-code + feature:loans) |
 | P2.S1.M2 | Contact picker integration | OD | ~ | 2026-11-14 | System picker (ACTION_PICK, no READ_CONTACTS) in legacy-code ContactPicker: reusable rememberContactPicker + ContactPickButton; wired into create-customer (name+phone) and add-entry (record phone) modals; manual entry always works. Device verification pending |
 | P2.S1.M3 | Per-record due date + overdue filter + reminders | OD+CI | ~ | 2026-11-14 | recordDueDate carried through legacy datamodel + entry modal (Due date row, system date picker, clearable); ledger workspace shows All/Overdue filter + red "Overdue by N days" badge; LedgerReminderWorker (daily 09:00, channel payments, quiet hours 22-07 respected, per-person grouping, tap -> Ledger workspace deep link); compiles |
-| P2.S1.M4 | Receipt attach | OD | ☐ | | |
+| P2.S1.M4 | Receipt attach | OD | ~ | 2026-11-14 | ReceiptStorage: app-private filesDir/receipts (relative path in DB, no gallery pollution); entry modal attaches via camera (TakePicture + FileProvider, added fileprovider + file_paths.xml) or gallery (GetContent); delete path removes the file lazily; PDF rendering of receipts comes with P2.S3; compiles |
 
 ### S2 — Book screens
 

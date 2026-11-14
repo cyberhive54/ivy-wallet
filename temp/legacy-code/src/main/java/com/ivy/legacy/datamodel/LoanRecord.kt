@@ -22,6 +22,8 @@ data class LoanRecord(
     val recordPhone: String? = null,
     // Optional due date of this individual entry (ledger, phase 2)
     val recordDueDate: Instant? = null,
+    // Optional receipt/proof photo (relative path in the app-private receipts folder)
+    val attachmentUrl: String? = null,
 
     val isSynced: Boolean = false,
     val isDeleted: Boolean = false,
@@ -39,6 +41,7 @@ data class LoanRecord(
         loanRecordType = loanRecordType,
         recordPhone = recordPhone,
         recordDueDate = recordDueDate,
+        attachmentUrl = attachmentUrl,
         isSynced = isSynced,
         isDeleted = isDeleted,
         id = id

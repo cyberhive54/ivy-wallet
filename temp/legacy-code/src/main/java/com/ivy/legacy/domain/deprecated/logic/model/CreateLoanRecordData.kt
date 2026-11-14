@@ -16,5 +16,7 @@ data class CreateLoanRecordData(
     // Phone of the person this entry belongs to (ledger, phase 2)
     val phone: String? = null,
     // Optional due date of this individual entry (ledger, phase 2)
-    val dueDate: Instant? = null
+    val dueDate: Instant? = null,
+    // Optional receipt photo (relative path in the app-private receipts folder)
+    val attachmentUrl: String? = null
 )

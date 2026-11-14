@@ -1,6 +1,8 @@
 ﻿package com.ivy.wallet.ui.theme.modal
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,10 +25,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -50,6 +54,7 @@ import com.ivy.legacy.utils.getDefaultFIATCurrency
 import com.ivy.legacy.utils.onScreenStart
 import com.ivy.legacy.utils.selectEndTextFieldValue
 import com.ivy.legacy.ivyWalletCtx
+import com.ivy.legacy.ui.theme.receipt.ReceiptStorage
 import com.ivy.wallet.ui.theme.components.IvyOutlinedButton
 import com.ivy.ui.R
 import com.ivy.wallet.domain.deprecated.logic.model.CreateAccountData
@@ -65,6 +70,7 @@ import com.ivy.wallet.ui.theme.modal.edit.AccountModalData
 import com.ivy.wallet.ui.theme.modal.edit.AmountModal
 import com.ivy.wallet.ui.theme.toComposeColor
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.Instant
 import java.util.UUID
 
@@ -137,6 +143,9 @@ fun BoxWithConstraintsScope.LoanRecordModal(
     // Optional due date of this entry (drives the overdue filter + reminders)
     var dueDate by remember(modal) { mutableStateOf(initialRecord?.recordDueDate) }
 
+    // Optional receipt photo (app-private storage)
+    var attachmentUrl by remember(modal) { mutableStateOf(initialRecord?.attachmentUrl) }
+
     IvyModal(
         id = modal?.id,
         visible = modal != null,
@@ -165,6 +174,7 @@ fun BoxWithConstraintsScope.LoanRecordModal(
                         loanRecordType = loanRecordType,
                         pickedPhone = pickedPhone,
                         dueDate = dueDate,
+                        attachmentUrl = attachmentUrl,
 
                         onCreate = onCreate,
                         onEdit = onEdit,
@@ -235,6 +245,15 @@ fun BoxWithConstraintsScope.LoanRecordModal(
                 dueDate = picked
             },
             onClear = { dueDate = null }
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        // Optional receipt photo (camera or gallery) - stored app-private
+        ReceiptAttachRow(
+            attachmentUrl = attachmentUrl,
+            onAttached = { path -> attachmentUrl = path },
+            onRemoved = { attachmentUrl = null }
         )
 
         Spacer(Modifier.height(24.dp))
@@ -407,6 +426,7 @@ fun BoxWithConstraintsScope.LoanRecordModal(
             loanRecordType = loanRecordType,
             pickedPhone = pickedPhone,
             dueDate = dueDate,
+            attachmentUrl = attachmentUrl,
 
             onCreate = onCreate,
             onEdit = onEdit,
@@ -429,6 +449,7 @@ private fun save(
     loanRecordType: LoanRecordType,
     pickedPhone: String? = null,
     dueDate: Instant? = null,
+    attachmentUrl: String? = null,
 
     onCreate: (CreateLoanRecordData) -> Unit,
     onEdit: (EditLoanRecordData) -> Unit,
@@ -443,7 +464,8 @@ private fun save(
             accountId = selectedAccount?.id,
             loanRecordType = loanRecordType,
             recordPhone = pickedPhone?.trim()?.takeIf { it.isNotBlank() } ?: loanRecord.recordPhone,
-            recordDueDate = dueDate
+            recordDueDate = dueDate,
+            attachmentUrl = attachmentUrl ?: loanRecord.attachmentUrl
         )
         onEdit(
             EditLoanRecordData(
@@ -464,7 +486,8 @@ private fun save(
                 createLoanRecordTransaction = createLoanRecordTransaction,
                 loanRecordType = loanRecordType,
                 phone = pickedPhone?.trim()?.takeIf { it.isNotBlank() },
-                dueDate = dueDate
+                dueDate = dueDate,
+                attachmentUrl = attachmentUrl
             )
         )
     }
@@ -703,6 +726,82 @@ private fun AddAccount(
 }
 
 @Preview
+@Composable
+private fun ReceiptAttachRow(
+    attachmentUrl: String?,
+    onAttached: (String) -> Unit,
+    onRemoved: () -> Unit,
+) {
+    val context = LocalContext.current
+    var pendingCameraFile by remember { mutableStateOf<File?>(null) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        val file = pendingCameraFile
+        pendingCameraFile = null
+        if (success && file != null) {
+            onAttached(ReceiptStorage.relativePath(file))
+        } else if (file != null) {
+            // Capture cancelled - don't keep an empty file around
+            ReceiptStorage.delete(context, ReceiptStorage.relativePath(file))
+        }
+    }
+
+    val scope = rememberCoroutineScope()
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                ReceiptStorage.saveFrom(context, uri)?.let { path -> onAttached(path) }
+            }
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.loan_record_receipt),
+            style = UI.typo.c.style(color = UI.colors.gray),
+            modifier = Modifier.weight(1f)
+        )
+
+        IvyOutlinedButton(
+            text = stringResource(R.string.loan_record_receipt_camera),
+            iconStart = R.drawable.ic_custom_camera_m,
+            onClick = {
+                ReceiptStorage.newCameraUri(context)?.let { (uri, file) ->
+                    pendingCameraFile = file
+                    cameraLauncher.launch(uri)
+                }
+            }
+        )
+        Spacer(Modifier.width(8.dp))
+        IvyOutlinedButton(
+            text = stringResource(R.string.loan_record_receipt_gallery),
+            iconStart = R.drawable.ic_attachment,
+            onClick = { galleryLauncher.launch("image/*") }
+        )
+
+        if (attachmentUrl != null) {
+            Spacer(Modifier.width(8.dp))
+            Icon(
+                painter = painterResource(R.drawable.ic_dismiss_close),
+                contentDescription = stringResource(R.string.loan_record_receipt_remove),
+                tint = UI.colors.gray,
+                modifier = Modifier
+                    .size(22.dp)
+                    .clickable { onRemoved() }
+            )
+        }
+    }
+}
+
 @Composable
 private fun DueDateRow(
     dueDate: Instant?,

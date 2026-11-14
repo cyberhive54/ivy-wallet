@@ -1,14 +1,19 @@
 package com.ivy.wallet.domain.deprecated.logic
 
+import android.content.Context
 import com.ivy.data.db.dao.write.WriteLoanRecordDao
 import com.ivy.legacy.datamodel.LoanRecord
+import com.ivy.legacy.ui.theme.receipt.ReceiptStorage
 import com.ivy.legacy.utils.ioThread
 import com.ivy.wallet.domain.deprecated.logic.model.CreateLoanRecordData
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.UUID
 import javax.inject.Inject
 
 class LoanRecordCreator @Inject constructor(
     private val loanRecordWriter: WriteLoanRecordDao,
+    @ApplicationContext
+    private val context: Context,
 ) {
     suspend fun create(
         loanId: UUID,
@@ -32,7 +37,8 @@ class LoanRecordCreator @Inject constructor(
                     convertedAmount = data.convertedAmount,
                     loanRecordType = data.loanRecordType,
                     recordPhone = data.phone?.trim()?.takeIf { it.isNotBlank() },
-                    recordDueDate = data.dueDate
+                    recordDueDate = data.dueDate,
+                    attachmentUrl = data.attachmentUrl
                 )
 
                 loanRecordWriter.save(item.toEntity())
@@ -75,6 +81,8 @@ class LoanRecordCreator @Inject constructor(
         try {
             ioThread {
                 loanRecordWriter.deleteById(item.id)
+                // Lazy cleanup: the receipt dies with the record
+                ReceiptStorage.delete(context, item.attachmentUrl)
             }
 
             onRefreshUI()
