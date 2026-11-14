@@ -120,6 +120,10 @@ data class LedgerCustomerDetailScreen(
     val loanId: UUID,
 ) : Screen
 
+data class LedgerStatementScreen(
+    val loanId: UUID,
+) : Screen
+
 data class SubscriptionEditScreen(
     val plannedPaymentRuleId: UUID? = null,
     val accountId: UUID? = null,

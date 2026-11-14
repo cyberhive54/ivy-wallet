@@ -1,4 +1,4 @@
-package com.ivy.main.workspace
+﻿package com.ivy.main.workspace
 
 import android.content.Intent
 import android.net.Uri
@@ -43,6 +43,7 @@ import com.ivy.base.model.LoanRecordType
 import com.ivy.design.l0_system.UI
 import com.ivy.legacy.ui.theme.receipt.ReceiptStorage
 import com.ivy.navigation.LedgerCustomerDetailScreen
+import com.ivy.navigation.LedgerStatementScreen
 import com.ivy.navigation.navigation
 import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
@@ -152,7 +153,7 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                             color = UI.colors.gray
                         )
                         Text(
-                            text = "₹%,.0f".format(current.outstanding),
+                            text = "â‚¹%,.0f".format(current.outstanding),
                             style = ivyInter(28.sp, FontWeight.ExtraBold, letterSpacing = (-0.6).sp),
                             color = if (current.youOwe) Color(0xFFFF9F0A) else Color(0xFF30D158)
                         )
@@ -200,7 +201,7 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                         onClick = {
                             val phone = current.phone?.replace(Regex("[^0-9+]"), "") ?: ""
                             val text = Uri.encode(
-                                "Hi ${current.name}, regarding our ledger entry of ₹%,.0f."
+                                "Hi ${current.name}, regarding our ledger entry of â‚¹%,.0f."
                                     .format(current.outstanding)
                             )
                             val url = if (phone.isNotBlank()) {
@@ -233,8 +234,7 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                         icon = R.drawable.ic_vue_edu_book,
                         label = stringResource(R.string.ledger_action_statement),
                         onClick = {
-                            // PDF statement ships with P2.S3 — the preview below is the
-                            // statement for now
+                            nav.navigateTo(LedgerStatementScreen(loanId = current.id))
                         }
                     )
                     ActionChip(
@@ -315,7 +315,7 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                             Spacer(Modifier.width(8.dp))
                         }
                         Text(
-                            text = "₹%,.0f".format(entry.amount),
+                            text = "â‚¹%,.0f".format(entry.amount),
                             style = ivyInter(15.sp, FontWeight.ExtraBold),
                             color = if (entry.type == LoanRecordType.INCREASE) {
                                 Color(0xFFFF9F0A)
@@ -445,7 +445,7 @@ private fun SettleDialog(
             Text(
                 text = stringResource(
                     if (youOwe) R.string.ledger_settle_you_pay else R.string.ledger_settle_you_receive,
-                    "₹%,.0f".format(amount)
+                    "â‚¹%,.0f".format(amount)
                 ),
                 style = ivyInter(14.sp),
                 color = UI.colors.pure.copy(alpha = 0.85f)

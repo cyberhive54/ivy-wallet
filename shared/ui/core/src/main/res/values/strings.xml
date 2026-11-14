@@ -662,6 +662,16 @@
     <string name="ledger_settle_you_pay">You will pay %1$s and the ledger is cleared.</string>
     <string name="ledger_settle_you_receive">You will receive %1$s and the ledger is cleared.</string>
     <string name="ledger_settle_confirm">Settle</string>
+    <string name="ledger_statement_title">Statement</string>
+    <string name="ledger_statement_net">Outstanding</string>
+    <string name="ledger_statement_all_time">All time</string>
+    <string name="ledger_statement_preparing">Preparing PDF…</string>
+    <string name="ledger_share_pdf">Share PDF</string>
+    <string name="ledger_range_month">This month</string>
+    <string name="ledger_range_three_months">Last 3 months</string>
+    <string name="ledger_range_custom">Custom</string>
+    <string name="ledger_range_from">From</string>
+    <string name="ledger_range_to">To</string>
     <string name="ledger_settled">Settled</string>
     <string name="ledger_no_match">No people match that name.</string>
     <string name="splitly_groups">GROUPS</string>

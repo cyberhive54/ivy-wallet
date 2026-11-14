@@ -104,16 +104,16 @@
 
 | ID | Milestone | Gate | Status | Done on | Notes |
 |---|---|---|---|---|---|
-| P2.S3.M1 | Renderer (net row + period) | CI | ☐ | | |
-| P2.S3.M2 | Date-range picker + share | OD | ☐ | | |
-| P2.S3.M3 | WhatsApp deep-link text | OD | ☐ | | |
+| P2.S3.M1 | StatementRenderer (shared) | CI | ~ | 2026-11-14 | shared/domain StatementRenderer: PdfDocument A4, Helvetica, header + period + table + bold net line, multi-page, writes to cache; reusable by Splitly later |
+| P2.S3.M2 | Date-range picker + share | OD | ~ | 2026-11-14 | Statement screen: This month / Last 3 months / Custom (From-To pickers), in-app preview + net line, Share PDF via FileProvider (fileprovider + file_paths.xml added) |
+| P2.S3.M3 | WhatsApp deep-link | OD | ~ | 2026-11-14 | Customer detail WhatsApp action opens wa.me with a prefilled balance summary (no permissions, user taps send); link-less summary text |
 
 ### S4 — Hardening
 
 | ID | Milestone | Gate | Status | Done on | Notes |
 |---|---|---|---|---|---|
 | P2.S4.M1 | `WorkManager` daily sweep | OD | ☐ | | |
-| P2.S4.M2 | Backup coverage for Loans | CI+OD | ☐ | | |
+| P2.S4.M2 | Backup covers Loans | CI+OD | ~ | 2026-11-14 | Loans/loan records (incl. v132 phone/due/receipt columns) already in the v132 backup payload; receipt photos stay out of the backup by default (app-private, not exported) |
 | P2.S4.M3 | Full P2 pass | OD+CI | ☐ | | |
 
 ---
