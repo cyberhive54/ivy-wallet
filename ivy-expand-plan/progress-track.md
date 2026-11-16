@@ -112,7 +112,7 @@
 
 | ID | Milestone | Gate | Status | Done on | Notes |
 |---|---|---|---|---|---|
-| P2.S4.M1 | `WorkManager` daily sweep | OD | ☐ | | |
+| P2.S4.M1 | `WorkManager` daily sweep | OD | ~ | 2026-11-16 | LedgerReminderWorker scheduled at app start on channel `payments`, daily 09:00, quiet hours 22-07, deep link to Ledger; device firing not yet observed |
 | P2.S4.M2 | Backup covers Loans | CI+OD | ~ | 2026-11-14 | Loans/loan records (incl. v132 phone/due/receipt columns) already in the v132 backup payload; receipt photos stay out of the backup by default (app-private, not exported) |
 | P2.S4.M3 | Full P2 pass | OD+CI | ☐ | | |
 
@@ -151,7 +151,7 @@
 
 | ID | Milestone | Gate | Status | Done on | Notes |
 |---|---|---|---|---|---|
-| P3.S4.M1 | Goa Trip clean flow | OD | ☐ | | |
+| P3.S4.M1 | Goa Trip clean flow | OD | ~ | 2026-11-16 | APK installed on V23 (Android 14), app launches with no Room errors - 132->133 migration validated at startup. Full UI walkthrough pending device unlock (biometric lock can not be cleared over ADB) |
 | P3.S4.M2 | Hide/unhide module | OD | ☐ | | |
 | P3.S4.M3 | LINT + size audit | CI+OD | ☐ | | |
 
