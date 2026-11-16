@@ -1,4 +1,4 @@
-package com.ivy.data.di
+﻿package com.ivy.data.di
 
 import android.content.Context
 import com.ivy.data.db.IvyRoomDatabase
@@ -16,6 +16,7 @@ import com.ivy.data.db.dao.read.SettingsDao
 import com.ivy.data.db.dao.read.SplitCommentDao
 import com.ivy.data.db.dao.read.SplitExpenseDao
 import com.ivy.data.db.dao.read.SplitExpenseParticipantDao
+import com.ivy.data.db.dao.read.SplitExpensePayerDao
 import com.ivy.data.db.dao.read.SplitSettlementDao
 import com.ivy.data.db.dao.read.TagAssociationDao
 import com.ivy.data.db.dao.read.TagDao
@@ -35,6 +36,7 @@ import com.ivy.data.db.dao.write.WriteSettingsDao
 import com.ivy.data.db.dao.write.WriteSplitCommentDao
 import com.ivy.data.db.dao.write.WriteSplitExpenseDao
 import com.ivy.data.db.dao.write.WriteSplitExpenseParticipantDao
+import com.ivy.data.db.dao.write.WriteSplitExpensePayerDao
 import com.ivy.data.db.dao.write.WriteSplitSettlementDao
 import com.ivy.data.db.dao.write.WriteTagAssociationDao
 import com.ivy.data.db.dao.write.WriteTagDao
@@ -197,6 +199,11 @@ object RoomDbModule {
     }
 
     @Provides
+    fun provideSplitExpensePayerDao(db: IvyRoomDatabase): SplitExpensePayerDao {
+        return db.splitExpensePayerDao
+    }
+
+    @Provides
     fun provideSplitSettlementDao(db: IvyRoomDatabase): SplitSettlementDao {
         return db.splitSettlementDao
     }
@@ -229,6 +236,11 @@ object RoomDbModule {
     @Provides
     fun provideWriteSplitExpenseParticipantDao(db: IvyRoomDatabase): WriteSplitExpenseParticipantDao {
         return db.writeSplitExpenseParticipantDao
+    }
+
+    @Provides
+    fun provideWriteSplitExpensePayerDao(db: IvyRoomDatabase): WriteSplitExpensePayerDao {
+        return db.writeSplitExpensePayerDao
     }
 
     @Provides

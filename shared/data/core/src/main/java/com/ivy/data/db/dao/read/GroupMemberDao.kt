@@ -13,6 +13,9 @@ interface GroupMemberDao {
     @Query("SELECT * FROM group_members WHERE groupId = :groupId ORDER BY orderNum ASC, id ASC")
     suspend fun findByGroupId(groupId: UUID): List<GroupMemberEntity>
 
+    @Query("SELECT * FROM group_members WHERE groupId = :groupId AND archived = 0 ORDER BY orderNum ASC, id ASC")
+    suspend fun findActiveByGroupId(groupId: UUID): List<GroupMemberEntity>
+
     @Query("SELECT * FROM group_members WHERE id = :id")
     suspend fun findById(id: UUID): GroupMemberEntity?
 }

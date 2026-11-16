@@ -133,19 +133,19 @@
 
 | ID | Milestone | Gate | Status | Done on | Notes |
 |---|---|---|---|---|---|
-| P3.S2.M1 | Create/edit group + members | OD | ☐ | | |
-| P3.S2.M2 | Split sheet; validation live | OD | ☐ | | |
-| P3.S2.M3 | Expense detail + comments | OD | ☐ | | |
-| P3.S2.M4 | History + Settle group button | OD | ☐ | | |
-| P3.S2.M5 | Toggle-off guard holds | OD | ☐ | | |
+| P3.S2.M1 | Create/edit group + members | OD | ~ | 2026-11-16 | Group detail screen with name/type/currency edit + archive; members add (contact picker), reorder (up/down), self-row marked, leave = archived row (v133 group_members.archived); new group cards show real net balance |
+| P3.S2.M2 | Split sheet; validation live | OD | ~ | 2026-11-16 | Split expense sheet: multi-payer amounts, 5 mode chips (equal/exact/%/shares/adjust), live owed lines via SplitEngine, category chips shortlist, receipt attach, save validation; v133 split_expense_payers table for multi-payer persistence |
+| P3.S2.M3 | Expense detail + comments | OD | ~ | 2026-11-16 | Expense detail: payer(s), date, note, participants/owed lines, per-member comments with PUBLIC/PRIVATE toggle, delete with confirm |
+| P3.S2.M4 | History + Settle group button | OD | ~ | 2026-11-16 | Group screen shows expense history + per-person balances; membership audit rows show createdAt in grey; Simplify button builds minimal transfer plan |
+| P3.S2.M5 | Toggle-off guard holds | OD | ~ | 2026-11-16 | Settings guard blocks hiding Splitly when groups exist (groupDao.findActive().size > 0); empty-state upsell shows on enable |
 
 ### S3 — Ledger crunchers
 
 | ID | Milestone | Gate | Status | Done on | Notes |
 |---|---|---|---|---|---|
-| P3.S3.M1 | Per-person group ledger | OD | ☐ | | |
-| P3.S3.M2 | Simplify button + apply → zero | OD+CI | ☐ | | |
-| P3.S3.M3 | Backup v132 covers splits | CI | ☐ | | |
+| P3.S3.M1 | Per-person group ledger | OD | ~ | 2026-11-16 | Group screen lists each member with their signed net balance (group-net header banner), settled rows filtered ($0 balances shown grey) |
+| P3.S3.M2 | Simplify button + apply | OD+CI | ~ | 2026-11-16 | Simplify plan sheet lists minimal transfers; Apply calls SplitSettlementUseCase (ledger rows + real transactions) then refreshes to zero nets; 132->133 migration test added |
+| P3.S3.M3 | Backup v132 covers splits | CI | ~ | 2026-11-16 | BackupDataUseCase + IvyWalletCompleteData serialize groups, groupMembers (+archived/createdAt), splitExpenses, participants, payers, settlements, comments; photos stay opt-in |
 
 ### S4 — Prove it
 

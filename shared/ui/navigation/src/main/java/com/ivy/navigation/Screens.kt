@@ -124,6 +124,15 @@ data class LedgerStatementScreen(
     val loanId: UUID,
 ) : Screen
 
+data class SplitGroupScreen(
+    val groupId: UUID,
+) : Screen
+
+data class SplitExpenseDetailScreen(
+    val expenseId: UUID,
+    val groupId: UUID,
+) : Screen
+
 data class SubscriptionEditScreen(
     val plannedPaymentRuleId: UUID? = null,
     val accountId: UUID? = null,

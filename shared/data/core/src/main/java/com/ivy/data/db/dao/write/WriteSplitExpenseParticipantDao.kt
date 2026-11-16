@@ -17,6 +17,9 @@ interface WriteSplitExpenseParticipantDao {
     @Query("DELETE FROM split_expense_participants WHERE id = :id")
     suspend fun deleteById(id: UUID)
 
+    @Query("DELETE FROM split_expense_participants WHERE expenseId = :expenseId")
+    suspend fun deleteByExpenseId(expenseId: UUID)
+
     @Query("DELETE FROM split_expense_participants")
     suspend fun deleteAll()
 }

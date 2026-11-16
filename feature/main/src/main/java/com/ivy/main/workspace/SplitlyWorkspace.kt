@@ -354,10 +354,13 @@ private fun EmptySplitlyState(
 private fun SplitlyGroupRow(
     group: com.ivy.main.workspace.SplitlyGroup,
 ) {
+    val nav = com.ivy.navigation.navigation()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Phase 3: open expense ledger */ }
+            .clickable {
+                nav.navigateTo(com.ivy.navigation.SplitGroupScreen(groupId = group.id))
+            }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -391,9 +394,15 @@ private fun SplitlyGroupRow(
             )
         }
         Text(
-            text = "₹0.00",
+            text = "${if (group.youBalance >= 0) "+" else ""}%,.2f".format(group.youBalance),
             style = ivyInter(15.sp, FontWeight.SemiBold),
-            color = UI.colors.pureInverse
+            color = if (group.youBalance > 0) {
+                Color(0xFF30D158)
+            } else if (group.youBalance < 0) {
+                Color(0xFFFF9F0A)
+            } else {
+                UI.colors.gray
+            }
         )
     }
 }

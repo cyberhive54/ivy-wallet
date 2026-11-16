@@ -1,4 +1,4 @@
-package com.ivy.data.backup
+﻿package com.ivy.data.backup
 
 import android.content.Context
 import android.net.Uri
@@ -22,6 +22,7 @@ import com.ivy.data.db.dao.read.SettingsDao
 import com.ivy.data.db.dao.read.SplitCommentDao
 import com.ivy.data.db.dao.read.SplitExpenseDao
 import com.ivy.data.db.dao.read.SplitExpenseParticipantDao
+import com.ivy.data.db.dao.read.SplitExpensePayerDao
 import com.ivy.data.db.dao.read.SplitSettlementDao
 import com.ivy.data.db.dao.read.TagAssociationDao
 import com.ivy.data.db.dao.read.TagDao
@@ -38,6 +39,7 @@ import com.ivy.data.db.dao.write.WriteSettingsDao
 import com.ivy.data.db.dao.write.WriteSplitCommentDao
 import com.ivy.data.db.dao.write.WriteSplitExpenseDao
 import com.ivy.data.db.dao.write.WriteSplitExpenseParticipantDao
+import com.ivy.data.db.dao.write.WriteSplitExpensePayerDao
 import com.ivy.data.db.dao.write.WriteSplitSettlementDao
 import com.ivy.data.db.dao.write.WriteTagAssociationDao
 import com.ivy.data.db.dao.write.WriteTagDao
@@ -70,6 +72,7 @@ class BackupDataUseCase @Inject constructor(
     private val groupMemberDao: GroupMemberDao,
     private val splitExpenseDao: SplitExpenseDao,
     private val splitExpenseParticipantDao: SplitExpenseParticipantDao,
+    private val splitExpensePayerDao: SplitExpensePayerDao,
     private val splitSettlementDao: SplitSettlementDao,
     private val splitCommentDao: SplitCommentDao,
     private val settingsDao: SettingsDao,
@@ -89,6 +92,7 @@ class BackupDataUseCase @Inject constructor(
     private val groupMemberWriter: WriteGroupMemberDao,
     private val splitExpenseWriter: WriteSplitExpenseDao,
     private val splitExpenseParticipantWriter: WriteSplitExpenseParticipantDao,
+    private val splitExpensePayerWriter: WriteSplitExpensePayerDao,
     private val splitSettlementWriter: WriteSplitSettlementDao,
     private val splitCommentWriter: WriteSplitCommentDao,
     @ApplicationContext
@@ -134,6 +138,7 @@ class BackupDataUseCase @Inject constructor(
             val groupMembers = async { groupMemberDao.findAll() }
             val splitExpenses = async { splitExpenseDao.findAll() }
             val splitExpenseParticipants = async { splitExpenseParticipantDao.findAll() }
+            val splitExpensePayers = async { splitExpensePayerDao.findAll() }
             val splitSettlements = async { splitSettlementDao.findAll() }
             val splitComments = async { splitCommentDao.findAll() }
             val plannedPaymentRules =
@@ -156,6 +161,7 @@ class BackupDataUseCase @Inject constructor(
                 groupMembers = groupMembers.await(),
                 splitExpenses = splitExpenses.await(),
                 splitExpenseParticipants = splitExpenseParticipants.await(),
+                splitExpensePayers = splitExpensePayers.await(),
                 splitSettlements = splitSettlements.await(),
                 splitComments = splitComments.await(),
                 settings = settings.await(),
@@ -333,6 +339,8 @@ class BackupDataUseCase @Inject constructor(
             val splitExpenses = async { splitExpenseWriter.saveMany(completeData.splitExpenses) }
             val splitExpenseParticipants =
                 async { splitExpenseParticipantWriter.saveMany(completeData.splitExpenseParticipants) }
+            val splitExpensePayers =
+                async { splitExpensePayerWriter.saveMany(completeData.splitExpensePayers) }
             val splitSettlements =
                 async { splitSettlementWriter.saveMany(completeData.splitSettlements) }
             val splitComments = async { splitCommentWriter.saveMany(completeData.splitComments) }
@@ -342,6 +350,7 @@ class BackupDataUseCase @Inject constructor(
             groupMembers.await()
             splitExpenses.await()
             splitExpenseParticipants.await()
+            splitExpensePayers.await()
             splitSettlements.await()
             splitComments.await()
 

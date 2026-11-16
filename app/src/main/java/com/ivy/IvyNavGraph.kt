@@ -68,6 +68,8 @@ import com.ivy.navigation.Screen
 import com.ivy.navigation.SearchScreen
 import com.ivy.navigation.LedgerCustomerDetailScreen
 import com.ivy.navigation.LedgerStatementScreen
+import com.ivy.navigation.SplitGroupScreen
+import com.ivy.navigation.SplitExpenseDetailScreen
 import com.ivy.navigation.SubscriptionsScreen
 import com.ivy.navigation.SubscriptionEditScreen
 import com.ivy.navigation.SettingsScreen
@@ -77,6 +79,8 @@ import com.ivy.piechart.PieChartStatisticScreen
 import com.ivy.planned.subscriptions.SubscriptionEditScreen as SubscriptionEditScreenImpl
 import com.ivy.main.workspace.LedgerCustomerDetail as LedgerCustomerDetailImpl
 import com.ivy.main.workspace.LedgerStatement as LedgerStatementImpl
+import com.ivy.main.workspace.SplitGroupScreen as SplitGroupScreenImpl
+import com.ivy.main.workspace.SplitExpenseDetailScreen as SplitExpenseDetailScreenImpl
 import com.ivy.planned.subscriptions.SubscriptionsScreen as SubscriptionsScreenImpl
 import com.ivy.planned.edit.EditPlannedScreen
 import com.ivy.planned.list.PlannedPaymentsScreen
@@ -145,6 +149,8 @@ fun BoxWithConstraintsScope.IvyNavGraph(screen: Screen?) {
                     is SubscriptionsScreen -> SubscriptionsScreenImpl(screen = currentScreen)
                     is LedgerCustomerDetailScreen -> LedgerCustomerDetailImpl(screen = currentScreen)
                     is LedgerStatementScreen -> LedgerStatementImpl(screen = currentScreen)
+                    is SplitGroupScreen -> SplitGroupScreenImpl(screen = currentScreen)
+                    is SplitExpenseDetailScreen -> SplitExpenseDetailScreenImpl(screen = currentScreen)
                     is SubscriptionEditScreen -> SubscriptionEditScreenImpl(screen = currentScreen)
                     is EditPlannedScreen -> EditPlannedScreen(screen = currentScreen)
                     is BalanceScreen -> BalanceScreen(screen = currentScreen)
