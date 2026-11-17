@@ -156,41 +156,24 @@ fun SplitExpenseSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = currency, style = ivyInter(18.sp, FontWeight.Bold), color = UI.colors.gray)
                 Spacer(Modifier.width(8.dp))
-                BasicTextField(
+                SplitTextField(
                     value = amountText,
                     onValueChange = { amountText = it.filter { c -> c.isDigit() || c == '.' } },
-                    singleLine = true,
-                    textStyle = ivyInter(24.sp, FontWeight.ExtraBold).copy(color = UI.colors.pureInverse),
+                    hint = stringResource(R.string.split_amount),
                     modifier = Modifier.weight(1f),
-                    decorationBox = { inner ->
-                        Box(contentAlignment = Alignment.CenterStart) {
-                            if (amountText.isEmpty()) {
-                                Text(stringResource(R.string.split_amount), style = ivyInter(24.sp), color = UI.colors.gray)
-                            }
-                            inner()
-                        }
-                    }
+                    textStyle = ivyInter(24.sp, FontWeight.ExtraBold).copy(color = UI.colors.pureInverse),
                 )
             }
             Spacer(Modifier.height(8.dp))
-            BasicTextField(
+            SplitTextField(
                 value = note,
                 onValueChange = { note = it },
-                singleLine = true,
-                textStyle = ivyInter(15.sp).copy(color = UI.colors.pureInverse),
+                hint = stringResource(R.string.split_expense_note),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(UI.colors.pureInverse.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
                     .padding(12.dp),
-                decorationBox = { inner ->
-                    Box(contentAlignment = Alignment.CenterStart) {
-                        if (note.isEmpty()) {
-                            Text(stringResource(R.string.split_expense_note), style = ivyInter(15.sp), color = UI.colors.gray)
-                        }
-                        inner()
-                    }
-                }
             )
             Spacer(Modifier.height(14.dp))
 
@@ -462,20 +445,12 @@ private fun PayerChip(
         )
         if (selected) {
             Spacer(Modifier.height(4.dp))
-            BasicTextField(
+            SplitTextField(
                 value = if (amount == 0.0) "" else amount.toString(),
                 onValueChange = { text -> onAmount(text.toDoubleOrNull() ?: 0.0) },
-                singleLine = true,
-                textStyle = ivyInter(12.sp).copy(color = UI.colors.pureInverse),
+                hint = "0.00 $currency",
                 modifier = Modifier.width(70.dp),
-                decorationBox = { inner ->
-                    Box(contentAlignment = Alignment.CenterStart) {
-                        if (amount == 0.0) {
-                            Text("0.00 $currency", style = ivyInter(12.sp), color = UI.colors.gray)
-                        }
-                        inner()
-                    }
-                }
+                textStyle = ivyInter(12.sp).copy(color = UI.colors.pureInverse),
             )
         }
     }

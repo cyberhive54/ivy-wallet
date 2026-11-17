@@ -204,28 +204,15 @@ fun BoxWithConstraintsScope.SplitExpenseDetailScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BasicTextField(
+            SplitTextField(
                 value = commentText,
                 onValueChange = { commentText = it },
-                singleLine = true,
-                textStyle = ivyInter(14.sp).copy(color = UI.colors.pureInverse),
+                hint = stringResource(R.string.split_add_comment),
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(12.dp))
                     .background(UI.colors.pureInverse.copy(alpha = 0.06f), RoundedCornerShape(12.dp))
                     .padding(12.dp),
-                decorationBox = { inner ->
-                    androidx.compose.foundation.layout.Box(contentAlignment = Alignment.CenterStart) {
-                        if (commentText.isEmpty()) {
-                            Text(
-                                stringResource(R.string.split_add_comment),
-                                style = ivyInter(14.sp),
-                                color = UI.colors.gray
-                            )
-                        }
-                        inner()
-                    }
-                }
             )
             Spacer(Modifier.width(8.dp))
             Text(

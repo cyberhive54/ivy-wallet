@@ -133,24 +133,15 @@ fun SplitMembersSheet(
             Spacer(Modifier.height(12.dp))
             // Add member
             Row(verticalAlignment = Alignment.CenterVertically) {
-                BasicTextField(
+                SplitTextField(
                     value = name,
                     onValueChange = { name = it },
-                    singleLine = true,
-                    textStyle = ivyInter(15.sp).copy(color = UI.colors.pureInverse),
+                    hint = stringResource(R.string.split_member_name),
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(10.dp))
                         .background(UI.colors.pureInverse.copy(alpha = 0.05f), RoundedCornerShape(10.dp))
                         .padding(12.dp),
-                    decorationBox = { inner ->
-                        Box(contentAlignment = Alignment.CenterStart) {
-                            if (name.isEmpty()) {
-                                Text(stringResource(R.string.split_member_name), style = ivyInter(15.sp), color = UI.colors.gray)
-                            }
-                            inner()
-                        }
-                    }
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
