@@ -76,7 +76,7 @@
 | P1.S4.M1 | Backup v132 round-trip | CI | ~ |  | Export/restore wired for all v132 tables + sharedPrefs toggles; seeded androidTest pending connected run |
 | P1.S4.M2 | Subs widget | OD | ~ | 2026-11-14 | Glance widget: 3 nearest renewals, tap -> rule editor, refresh on app entry; not yet added to a home screen on device |
 | P1.S4.M3 | Full P1 device pass | OD | ~ | 2026-11-14 | DONE so far on V23: launch, 131->132 upgrade, dock tabs, pill panel, radial add menu, crash fixes (transactions tab, migration DDL). REMAINING: subs CRUD on device, toggles under load, backup export/import round-trip, widget on home, reminder firing |
-| P1.S4.M4 | LINT - Detekt clean on P1 modules | CI | ~ |  | New code is Detekt-clean by construction (no suppressions added); full Detekt run pending a build slot |
+| P1.S4.M4 | LINT - Detekt clean on P1 modules | CI | ~ | 2026-11-17 | Detekt on :app (root/buildSrc scopes also configured) is clean after fixing magic number + ReturnCount in app files |
 
 ---
 
@@ -153,7 +153,7 @@
 |---|---|---|---|---|---|
 | P3.S4.M1 | Goa Trip clean flow | OD | ~ | 2026-11-16 | APK installed on V23 (Android 14), app launches with no Room errors - 132->133 migration validated at startup. Full UI walkthrough pending device unlock (biometric lock can not be cleared over ADB) |
 | P3.S4.M2 | Hide/unhide module | OD | ☐ | | |
-| P3.S4.M3 | LINT + size audit | CI+OD | ☐ | | |
+| P3.S4.M3 | LINT + size audit | CI+OD | ~ | 2026-11-17 | Detekt on :app is clean (fixed 2 findings: zIndex magic number + handleSpecialStart ReturnCount). APK size audit + full manual device pass delegated to owner via ivy-expand-plan/manual-device-checklist.md |
 
 ---
 

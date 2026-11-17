@@ -99,6 +99,9 @@ import com.ivy.transactions.TransactionsScreen
 private val Screen?.isFluidAddScreen: Boolean
     get() = this is EditTransactionScreen || this is EditPlannedScreen
 
+/** z-index of the contextual dock overlay above the base screen content. */
+private const val CONTEXTUAL_DOCK_Z_INDEX = 100f
+
 @ExperimentalFoundationApi
 @ExperimentalAnimationApi
 @Composable
@@ -177,7 +180,7 @@ fun BoxWithConstraintsScope.IvyNavGraph(screen: Screen?) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .zIndex(100f)
+                    .zIndex(CONTEXTUAL_DOCK_Z_INDEX)
             ) {
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     BottomBar(

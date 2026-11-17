@@ -138,24 +138,9 @@ class RootViewModel @Inject constructor(
     private fun handleSpecialStart(intent: Intent): Boolean {
         // Tapped a ledger reminder — open the Ledger workspace directly
         val openLedger = intent.getBooleanExtra(LedgerReminderWorker.EXTRA_OPEN_LEDGER_WORKSPACE, false)
-        if (openLedger) {
-            ivyContext.switchWorkspace(
-                com.ivy.base.model.Workspace.LEDGER,
-                sharedPrefs
-            )
-            nav.navigateTo(MainScreen)
-            return true
-        }
-
         // Tapped a subscription reminder — main screen first, editor on top
         val subRuleId = intent.getStringExtra(SubscriptionsReminderWorker.EXTRA_OPEN_SUBSCRIPTION_RULE)
             ?.let { runCatching { java.util.UUID.fromString(it) }.getOrNull() }
-        if (subRuleId != null) {
-            nav.navigateTo(MainScreen)
-            nav.navigateTo(SubscriptionEditScreen(plannedPaymentRuleId = subRuleId))
-            return true
-        }
-
         val addTrnType: TransactionType? = try {
             intent.getSerializableExtra(EXTRA_ADD_TRANSACTION_TYPE) as? TransactionType
                 ?: TransactionType.valueOf(intent.getStringExtra(EXTRA_ADD_TRANSACTION_TYPE) ?: "")
@@ -163,18 +148,34 @@ class RootViewModel @Inject constructor(
             null
         }
 
-        if (addTrnType != null) {
-            nav.navigateTo(
-                EditTransactionScreen(
-                    initialTransactionId = null,
-                    type = addTrnType
+        return when {
+            openLedger -> {
+                ivyContext.switchWorkspace(
+                    com.ivy.base.model.Workspace.LEDGER,
+                    sharedPrefs
                 )
-            )
+                nav.navigateTo(MainScreen)
+                true
+            }
 
-            return true
+            subRuleId != null -> {
+                nav.navigateTo(MainScreen)
+                nav.navigateTo(SubscriptionEditScreen(plannedPaymentRuleId = subRuleId))
+                true
+            }
+
+            addTrnType != null -> {
+                nav.navigateTo(
+                    EditTransactionScreen(
+                        initialTransactionId = null,
+                        type = addTrnType
+                    )
+                )
+                true
+            }
+
+            else -> false
         }
-
-        return false
     }
 
     @Suppress("EmptyFunctionBlock")
