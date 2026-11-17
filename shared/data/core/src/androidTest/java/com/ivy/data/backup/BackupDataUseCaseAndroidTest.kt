@@ -81,6 +81,7 @@ class BackupDataUseCaseAndroidTest {
             groupMemberDao = db.groupMemberDao,
             splitExpenseDao = db.splitExpenseDao,
             splitExpenseParticipantDao = db.splitExpenseParticipantDao,
+            splitExpensePayerDao = db.splitExpensePayerDao,
             splitSettlementDao = db.splitSettlementDao,
             splitCommentDao = db.splitCommentDao,
             settingsDao = db.settingsDao,
@@ -106,6 +107,7 @@ class BackupDataUseCaseAndroidTest {
             groupMemberWriter = db.writeGroupMemberDao,
             splitExpenseWriter = db.writeSplitExpenseDao,
             splitExpenseParticipantWriter = db.writeSplitExpenseParticipantDao,
+            splitExpensePayerWriter = db.writeSplitExpensePayerDao,
             splitSettlementWriter = db.writeSplitSettlementDao,
             splitCommentWriter = db.writeSplitCommentDao,
             context = instrumentationContext,
@@ -126,12 +128,12 @@ class BackupDataUseCaseAndroidTest {
     }
 
     @Test
-    fun backup450_150() = runBlocking {
+    fun backup450_150(): Unit = runBlocking {
         backupTestCase("450-150")
     }
 
     @Test
-    fun backup132_expand_suite_roundtrip() = runBlocking {
+    fun backup132_expand_suite_roundtrip(): Unit = runBlocking {
         // ── seed ──────────────────────────────────────────
         val accountId = UUID.randomUUID()
         val catId = UUID.randomUUID()
@@ -157,8 +159,8 @@ class BackupDataUseCaseAndroidTest {
             paused = false,
             archived = false,
         )
-        db.plannedPaymentRuleWriter.save(subscription)
-        db.plannedPaymentPriceHistoryWriter.saveMany(
+        db.writePlannedPaymentRuleDao.save(subscription)
+        db.writePlannedPaymentPriceHistoryDao.saveMany(
             listOf(
                 PlannedPaymentPriceHistoryEntity(
                     ruleId = subscription.id, amount = 899.0,
@@ -238,6 +240,13 @@ class BackupDataUseCaseAndroidTest {
                 owedAmount = 6000.0,
             )
         )
+        db.writeSplitExpensePayerDao.save(
+            com.ivy.data.db.entity.SplitExpensePayerEntity(
+                expenseId = expenseId,
+                memberId = meId,
+                amount = 12000.0,
+            )
+        )
         db.writeSplitSettlementDao.save(
             SplitSettlementEntity(
                 groupId = groupId,
@@ -307,6 +316,7 @@ class BackupDataUseCaseAndroidTest {
         expenses.size shouldBe 1
         expenses[0].note shouldBe "Hotel"
         db.splitExpenseParticipantDao.findAll().size shouldBe 1
+        db.splitExpensePayerDao.findByExpenseId(expenseId).size shouldBe 1
         db.splitSettlementDao.findByGroupId(groupId).size shouldBe 1
         val comments = db.splitCommentDao.findAll().filter { it.expenseId == expenseId }
         comments.size shouldBe 1

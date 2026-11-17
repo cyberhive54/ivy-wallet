@@ -193,6 +193,35 @@
 
 ---
 
+## Device verification pass (V23 / 2026-11-18)
+
+Full manual pass on build 458a0719 + follow-up fixes; all three workspaces reached.
+
+- Splitly: group detail + Add expense sheet verified. Compose text input fixed:
+  `SplitTextField` now uses an explicit `FocusRequester` + auto-focus (amount), so
+  ADB and hardware input register reliably. `PayerChip` click scoped to its name
+  row so its nested amount field stays editable; single payer auto-fills the bill.
+  Created a 2-member expense (1,000, 500/500), verified balances +500/-500,
+  Simplify plan, Apply (balances zero + undo bar), Undo (balances restored).
+  Public + Private comments, expense detail, members add/reorder, history filters.
+- Ledger: fixed outstanding math in `LedgerWorkspaceViewModel` and
+  `LedgerCustomerDetailViewModel` to include the loan principal (`loan.amount`)
+  plus INCREASE minus DECREASE records — legacy Ivy semantics. Customer Rahul
+  (1,000 lent) now appears on the landing and detail; Statement renders
+  `Rs. 1,000.00` and Share PDF opens the system sheet; Settle writes a real
+  `Settle - Rahul` INCOME transaction and clears the ledger.
+- P1: Subscriptions board reachable via Quick Links, empty state renders.
+- Fixed pre-existing mojibake in English `strings.xml` and four `₹` literals in
+  `LedgerCustomerDetail.kt` (UTF-8 read as Latin-1); removed duplicate
+  "See all groups"; raised zero-balance contrast.
+- Connected androidTest (`:shared:data:core`): 12/12 green — backup round-trip
+  (incl. `split_expense_payers`), 132->133 and 133->134 migrations. Stale backup
+  test constructor/writer refs repaired.
+- `:app:assembleDebug` green; `:app:detekt` clean; no FATAL/AndroidRuntime during
+  the pass. Screenshots in `temp/` are test artifacts and are not committed.
+
+---
+
 ## How to update this file (30 seconds)
 
 1. Before starting work on an ID, mark it `◐`.

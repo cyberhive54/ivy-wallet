@@ -211,7 +211,7 @@ private fun BalanceCell(
         Text(
             text = if (currency.isEmpty()) "₹${"%,.2f".format(amount)}" else "$currency ${"%,.2f".format(amount)}",
             style = ivyInter(22.sp, FontWeight.ExtraBold, letterSpacing = (-0.5).sp),
-            color = if (amount > 0.0) accent else UI.colors.pureInverse.copy(alpha = 0.5f),
+            color = if (amount > 0.0) accent else UI.colors.pureInverse.copy(alpha = 0.75f),
         )
     }
 }

@@ -19,7 +19,7 @@
     <string name="pill_about">About Ivy Expand</string>
     <string name="about_app_name">Ivy Expand</string>
     <string name="about_version">Version 2026.10.22 (207)</string>
-    <string name="about_license">GPLv3 Â· Fork of Ivy Wallet</string>
+    <string name="about_license">GPLv3 · Fork of Ivy Wallet</string>
     <string name="about_repo">github.com/cyberhive54/ivy-wallet</string>
     <string name="about_done">Done</string>
     <string name="menu">Menu</string>
@@ -36,7 +36,7 @@
     <string name="balance_after_payments">BALANCE AFTER PLANNED PAYMENTS</string>
     <string name="connect">Connect</string>
     <string name="sync_transactions">Sync transactions</string>
-    <string name="syncing_transactions">Syncing transactionsâ€¦</string>
+    <string name="syncing_transactions">Syncing transactions…</string>
     <string name="bank_sync_enabled">Bank sync enabled:</string>
     <string name="remove_customer">Remove customer</string>
     <string name="add_budget">Add budget</string>
@@ -82,7 +82,7 @@ Delimiter character: Comma \',\'</string>
     <string name="convert_xls_to_csv_description">!NOTE: If your exported file is missing the \'.xls\' extension, add it by renaming the file.</string>
     <string name="online_csv_converter_free">Online CSV converter FREE</string>
     <string name="check_email_spam">Please check your email\'s "Junk" and "Spam" folders</string>
-    <string name="download_email_file">Download the \"transactions_exportâ€¦\" file attached to the email.</string>
+    <string name="download_email_file">Download the \"transactions_export…\" file attached to the email.</string>
     <string name="download_email_file_description">If you have more than one currency, you\'ll need to download each \'transactions_export...\' file and import them into Ivy.</string>
     <string name="import_from">Import from</string>
     <string name="please_wait">Please wait</string>
@@ -116,7 +116,7 @@ Delimiter character: Comma \',\'</string>
     <string name="transaction_confirm_deletion_description">Deleting this transaction will remove it from the transaction history and update the balance accordingly.</string>
     <string name="confirm_account_change">Confirm Account Change</string>
     <string name="confirm_account_change_description">Note: You are attempting to change the account associated with the loan to an account in a different currency.
-All loan records will be recalculated based on todayâ€™s exchange rates.</string>
+All loan records will be recalculated based on today\'s exchange rates.</string>
     <string name="confirm">Confirm</string>
     <string name="created_on">Created on</string>
     <string name="hi">Hi</string>
@@ -203,7 +203,7 @@ wallet</string>
     <string name="your_personal_money_manager">Your personal money manager</string>
     <string name="opensource">#opensource</string>
     <string name="google_error_try_again">Error. Try again: %1$s</string>
-    <string name="google_signing_in">Signing inâ€¦</string>
+    <string name="google_signing_in">Signing in…</string>
     <string name="google_signing_in_success">Success!</string>
     <string name="login_with_google">Sign in with Google</string>
     <string name="offline_account">Offline account</string>
@@ -231,7 +231,7 @@ wallet</string>
     <string name="recurring_payments">Recurring payments</string>
     <string name="no_planned_payments">No planned payments</string>
     <string name="no_planned_payments_description">You don\'t have any planned payments.
-Tap the \'âš¡\' button at the bottom to add one.</string>
+Tap the \'⚡\' button at the bottom to add one.</string>
     <string name="planned_payments_inline">Planned payments</string>
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
@@ -248,7 +248,7 @@ Tap the \'âš¡\' button at the bottom to add one.</string>
     <string name="enter_account_balance">Enter account balance</string>
     <string name="choose_currency">Select currency</string>
     <string name="calculator">Calculator</string>
-    <string name="calculator_empty_expression">Calculation (+âˆ’Ã·Ã—=)</string>
+    <string name="calculator_empty_expression">Calculation (+−÷×=)</string>
     <string name="edit_category">Edit category</string>
     <string name="create_category">Create category</string>
     <string name="category_name">Category name</string>
@@ -323,7 +323,7 @@ Tap the \'âš¡\' button at the bottom to add one.</string>
     <string name="account_uppercase">ACCOUNT</string>
     <string name="logout">Logout</string>
     <string name="login">Login</string>
-    <string name="syncing">Syncingâ€¦</string>
+    <string name="syncing">Syncing…</string>
     <string name="data_synced_to_cloud">Data synced to the cloud</string>
     <string name="tap_to_sync">Tap to sync</string>
     <string name="sync_failed">Sync failed. Tap to retry</string>
@@ -436,7 +436,7 @@ Tap the \'âš¡\' button at the bottom to add one.</string>
     <string name="did_you_know">Did you know?</string>
     <string name="widget_description">Ivy Wallet offers a convenient widget that allows you to add transactions with just one tap from your home screen.
 
-Note: If the "Add widget" button isn\â€™t working, please add it manually from your launcher\â€™s widgets menu.</string>
+Note: If the "Add widget" button isn\'t working, please add it manually from your launcher\'s widgets menu.</string>
     <string name="add_widget">Add widget</string>
     <string name="set_a_budget">Set a budget</string>
     <string name="set_a_budget_description">Ivy Wallet not only helps you passively track your spending, but also empowers you to actively manage your financial future by setting and sticking to budgets.</string>
@@ -493,7 +493,7 @@ The Ivy Team</string>
     <string name="transfers_as_income_expense"><![CDATA[Transfers as income & expenses]]></string>
     <string name="transfers_as_income_expense_description">Treat account transfers as income or expense in the Accounts screen</string>
     <string name="home_category">Home</string>
-    <string name="generating_report">Generating reportâ€¦</string>
+    <string name="generating_report">Generating report…</string>
     <string name="sort_by">Sort by</string>
     <string name="skip_all">Skip all</string>
     <string name="confirm_skip_all">Confirm skipping all</string>
@@ -530,11 +530,11 @@ All the loan records will be re-calculated based on today\'s currency exchanges 
     <string name="fonts">Fonts</string>
     <string name="tech_stack">Tech Stack</string>
     <string name="tap_to_switch_theme">Tap to toggle theme</string>
-    <string name="do_not_use_for_backup_purposes">âš \uFE0F Not intended for backup use</string>
+    <string name="do_not_use_for_backup_purposes">⚠\uFE0F Not intended for backup use</string>
     <string name="done">Done</string>
     <string name="contributors_number">%1$s Contributors</string>
     <string name="error">Error</string>
-    <string name="loading">Loadingâ€¦</string>
+    <string name="loading">Loading…</string>
     <string name="try_again">Try again</string>
     <string name="one_contribution">1 contribution</string>
     <string name="contributions_number">%1$s contributions</string>
@@ -554,7 +554,7 @@ All the loan records will be re-calculated based on today\'s currency exchanges 
     <string name="import_a_csv_file_to_continue">Import a CSV file to continue.</string>
     <string name="import_csv_continue">Continue</string>
     <string name="warning_import_csv_file">"
-!!!âš ï¸ WARNING: Importing may create duplicate transactions!!!
+!!!⚠️ WARNING: Importing may create duplicate transactions!!!
 Please note that duplicate transactions cannot be easily removed and will need to be deleted individually.
 Reason: We cannot parse transaction IDs because Ivy Wallet uses UUIDs exclusively, while other apps do not.
 If you\'re starting fresh, you can safely ignore this message."</string>
@@ -584,10 +584,10 @@ If you\'re starting fresh, you can safely ignore this message."</string>
     <string name="subscriptions_next">Next %1$s</string>
     <string name="subscriptions_remaining">x%1$d left</string>
     <string name="subscriptions_hike">+%1$.0f%% hike</string>
-    <string name="subscriptions_trial_ends">TRIAL Â· ends %1$s</string>
+    <string name="subscriptions_trial_ends">TRIAL · ends %1$s</string>
     <string name="subscriptions_nothing_due">Nothing due in the next 30 days.</string>
     <string name="subscriptions_empty_title">No subscriptions yet</string>
-    <string name="subscriptions_empty_subtitle">Recurring bills and memberships â€” the plans you keep paying every month â€” will show up here as one tidy board.</string>
+    <string name="subscriptions_empty_subtitle">Recurring bills and memberships — the plans you keep paying every month — will show up here as one tidy board.</string>
     <string name="subscriptions_empty_cta">Add your first</string>
     <string name="subscriptions_section_subscription">SUBSCRIPTION</string>
     <string name="subscriptions_section_trial">TRIAL &amp; END</string>
@@ -602,10 +602,10 @@ If you\'re starting fresh, you can safely ignore this message."</string>
     <string name="subscriptions_remaining_hint">%1$d left after this cycle</string>
     <string name="subscriptions_hike_banner">PRICE INCREASES</string>
     <string name="subscriptions_hike_subtitle">%1$d subscription(s) got more expensive</string>
-    <string name="subscriptions_hike_row">%1$s â€” was %2$s%3$,.0f</string>
+    <string name="subscriptions_hike_row">%1$s — was %2$s%3$,.0f</string>
     <string name="subscriptions_hike_dismiss">Dismiss</string>
     <string name="subscriptions_trial_ended_title">Trial ended</string>
-    <string name="subscriptions_trial_ended_body">%1$s â€” the free trial ended on %2$s. Keep it as a paid subscription, or cancel it before any charge.</string>
+    <string name="subscriptions_trial_ended_body">%1$s — the free trial ended on %2$s. Keep it as a paid subscription, or cancel it before any charge.</string>
     <string name="subscriptions_keep_subscription">Keep subscription</string>
     <string name="subscriptions_cancel_subscription">Cancel subscription</string>
     <string name="subscriptions_section_manage">MANAGE SUBSCRIPTION</string>
@@ -619,16 +619,16 @@ If you\'re starting fresh, you can safely ignore this message."</string>
     <string name="subscriptions_ended">ENDED</string>
     <string name="subscriptions_none_archived">Nothing archived yet. Archived subscriptions land here, off the board.</string>
     <string name="subscriptions_delete_confirm_title">End permanently</string>
-    <string name="subscriptions_delete_confirm_body">Type "%1$s" to confirm. This erases the rule, its reminders and price history â€” there is no undo.</string>
+    <string name="subscriptions_delete_confirm_body">Type "%1$s" to confirm. This erases the rule, its reminders and price history — there is no undo.</string>
     <string name="subscriptions_delete_confirm_action">Delete</string>
     <string name="subscriptions_delete_confirm_hint">Subscription name</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_preferences">Preferences</string>
     <string name="settings_section_workspaces">Workspaces</string>
     <string name="workspaces_ledger_title">Ledger</string>
-    <string name="workspaces_ledger_desc">Track people you lend to and borrow from â€” a KhataBook-style money notebook.</string>
+    <string name="workspaces_ledger_desc">Track people you lend to and borrow from — a KhataBook-style money notebook.</string>
     <string name="workspaces_splitly_title">Splitly</string>
-    <string name="workspaces_splitly_desc">Split expenses with friends â€” shared groups, balances and settle-ups.</string>
+    <string name="workspaces_splitly_desc">Split expenses with friends — shared groups, balances and settle-ups.</string>
     <string name="workspace_blocked_title">Keep your data first</string>
     <string name="workspace_blocked_message">This workspace still has %1$d saved records. Export or delete them first, then you can hide it.</string>
     <string name="settings_section_privacy">Privacy</string>
@@ -671,7 +671,7 @@ If you\'re starting fresh, you can safely ignore this message."</string>
     <string name="ledger_empty_title">No entries yet</string>
     <string name="ledger_empty_subtitle">Track money with friends here. New to lending? Add your first record and see totals land instantly.</string>
     <string name="ledger_add_customer">Add your first entry</string>
-    <string name="ledger_outstanding">OUTSTANDING Â· %1$d</string>
+    <string name="ledger_outstanding">OUTSTANDING · %1$d</string>
     <string name="ledger_show_all">Show all %1$d contacts</string>
     <string name="ledger_customer_not_found">This entry is gone.</string>
     <string name="ledger_you_owe_else">You owe</string>
@@ -709,7 +709,7 @@ If you\'re starting fresh, you can safely ignore this message."</string>
     <string name="splitly_they_owe">They owe</string>
     <string name="splitly_you_owe">You owe</string>
     <string name="splitly_empty_title">No groups yet</string>
-    <string name="splitly_empty_subtitle">Split expenses with friends and keep the books clean â€” no more screenshots and spreadsheets.</string>
+    <string name="splitly_empty_subtitle">Split expenses with friends and keep the books clean — no more screenshots and spreadsheets.</string>
     <string name="splitly_group_name_hint">Group name, e.g. Vacation</string>
     <string name="splitly_create">Create</string>
     <string name="splitly_members">members</string>

@@ -105,17 +105,6 @@ fun BoxWithConstraintsScope.SplitlyLanding() {
                 items(state.groups.take(5)) { group ->
                     SplitlyGroupRow(group = group)
                 }
-                item {
-                    Text(
-                        text = stringResource(R.string.splitly_see_all),
-                        style = ivyInter(15.sp, FontWeight.SemiBold),
-                        color = ExpandDesign.Accent,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { ivyContext.selectMainTab(MainTab.SPLITLY_GROUPS) }
-                            .padding(horizontal = 24.dp, vertical = 14.dp)
-                    )
-                }
             }
         }
     }

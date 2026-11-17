@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -116,6 +117,15 @@ fun SplitExpenseSheet(
     } else {
         emptyMap()
     }
+    // Keep a single selected payer covering the whole bill as the amount changes.
+    // With multiple payers we leave their split amounts untouched.
+    LaunchedEffect(amount) {
+        if (payerAmounts.size == 1) {
+            val only = payerAmounts.keys.first()
+            payerAmounts[only] = amount
+        }
+    }
+
     val totalPaid = payerAmounts.values.sum()
     val valid = amount > 0.0 && participants.isNotEmpty() && totalPaid > 0.0
 
@@ -164,6 +174,8 @@ fun SplitExpenseSheet(
                     hint = stringResource(R.string.split_amount),
                     modifier = Modifier.weight(1f),
                     textStyle = ivyInter(24.sp, FontWeight.ExtraBold).copy(color = UI.colors.pureInverse),
+                    autoFocus = true,
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                 )
             }
             Spacer(Modifier.height(8.dp))
@@ -475,14 +487,18 @@ private fun PayerChip(
                 if (selected) ExpandDesign.Accent else Color.Transparent,
                 RoundedCornerShape(12.dp)
             )
-            .clickable { onToggle(!selected) }
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        Text(
-            text = name,
-            style = ivyInter(13.sp, FontWeight.SemiBold),
-            color = if (selected) ExpandDesign.Accent else UI.colors.pureInverse
-        )
+        Row(
+            modifier = Modifier.clickable { onToggle(!selected) },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = name,
+                style = ivyInter(13.sp, FontWeight.SemiBold),
+                color = if (selected) ExpandDesign.Accent else UI.colors.pureInverse
+            )
+        }
         if (selected) {
             Spacer(Modifier.height(4.dp))
             SplitTextField(

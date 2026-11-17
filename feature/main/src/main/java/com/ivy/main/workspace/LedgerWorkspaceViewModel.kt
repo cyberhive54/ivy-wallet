@@ -89,7 +89,9 @@ class LedgerWorkspaceViewModel @Inject constructor(
                         .sumOf { it.amount }
                     val decreased = records.filter { it.loanRecordType == LoanRecordType.DECREASE }
                         .sumOf { it.amount }
-                    val net = (increased - decreased).coerceAtLeast(0.0)
+                    // Outstanding includes the loan principal (legacy loan.amount);
+                    // records are adjustments on top of it (see LoanViewModel).
+                    val net = (loan.amount + increased - decreased).coerceAtLeast(0.0)
 
                     if (net > 0.0) {
                         if (loan.type == LoanType.LEND) lent += net else borrowed += net

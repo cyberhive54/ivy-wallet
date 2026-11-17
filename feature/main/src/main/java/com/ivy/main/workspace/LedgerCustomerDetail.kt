@@ -153,7 +153,7 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                             color = UI.colors.gray
                         )
                         Text(
-                            text = "â‚¹%,.0f".format(current.outstanding),
+                            text = "₹%,.0f".format(current.outstanding),
                             style = ivyInter(28.sp, FontWeight.ExtraBold, letterSpacing = (-0.6).sp),
                             color = if (current.youOwe) ExpandDesign.Pay else ExpandDesign.Receive
                         )
@@ -201,7 +201,7 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                         onClick = {
                             val phone = current.phone?.replace(Regex("[^0-9+]"), "") ?: ""
                             val text = Uri.encode(
-                                "Hi ${current.name}, regarding our ledger entry of â‚¹%,.0f."
+                                "Hi ${current.name}, regarding our ledger entry of ₹%,.0f."
                                     .format(current.outstanding)
                             )
                             val url = if (phone.isNotBlank()) {
@@ -315,7 +315,7 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                             Spacer(Modifier.width(8.dp))
                         }
                         Text(
-                            text = "â‚¹%,.0f".format(entry.amount),
+                            text = "₹%,.0f".format(entry.amount),
                             style = ivyInter(15.sp, FontWeight.ExtraBold),
                             color = if (entry.type == LoanRecordType.INCREASE) {
                                 ExpandDesign.Pay
@@ -445,7 +445,7 @@ private fun SettleDialog(
             Text(
                 text = stringResource(
                     if (youOwe) R.string.ledger_settle_you_pay else R.string.ledger_settle_you_receive,
-                    "â‚¹%,.0f".format(amount)
+                    "₹%,.0f".format(amount)
                 ),
                 style = ivyInter(14.sp),
                 color = UI.colors.pure.copy(alpha = 0.85f)

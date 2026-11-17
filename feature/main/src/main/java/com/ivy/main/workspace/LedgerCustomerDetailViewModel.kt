@@ -90,7 +90,9 @@ class LedgerCustomerDetailViewModel @Inject constructor(
                     }
                     .sortedByDescending { it.date ?: Instant.EPOCH }
 
-                val lent = records
+                // The loan principal (legacy loan.amount) is the starting given amount;
+                // INCREASE records are additional lending on top of it.
+                val lent = loan.amount + records
                     .filter { it.type == LoanRecordType.INCREASE }
                     .sumOf { it.amount }
                 val received = records
