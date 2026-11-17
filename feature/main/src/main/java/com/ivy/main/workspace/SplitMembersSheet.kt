@@ -122,7 +122,7 @@ fun SplitMembersSheet(
                             Text(
                                 text = "Remove",
                                 style = ivyInter(11.sp),
-                                color = Color(0xFFFF6B5B),
+                                color = ExpandDesign.Danger,
                                 modifier = Modifier.clickable { onArchive(member.id) }
                             )
                         }
@@ -150,7 +150,7 @@ fun SplitMembersSheet(
                     color = Color.White,
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF5E5CE6), RoundedCornerShape(10.dp))
+                        .background(ExpandDesign.Accent, RoundedCornerShape(10.dp))
                         .clickable(enabled = name.isNotBlank()) {
                             onAdd(name, phone)
                             name = ""
@@ -170,7 +170,7 @@ fun SplitMembersSheet(
                 Text(
                     text = stringResource(R.string.split_leave_group),
                     style = ivyInter(13.sp, FontWeight.SemiBold),
-                    color = Color(0xFFFF6B5B),
+                    color = ExpandDesign.Danger,
                     modifier = Modifier.clickable(onClick = onLeave)
                 )
                 Text(

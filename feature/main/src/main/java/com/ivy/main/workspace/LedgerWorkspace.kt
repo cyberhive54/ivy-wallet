@@ -72,27 +72,15 @@ fun BoxWithConstraintsScope.LedgerLanding() {
         )
         Spacer(Modifier.height(10.dp))
 
-        // Totals banner — What's due to you vs What you owe
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(UI.colors.pureInverse.copy(alpha = 0.06f), RoundedCornerShape(20.dp))
-                .padding(horizontal = 16.dp, vertical = 18.dp),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
-        ) {
-            TotalCell(
-                label = stringResource(R.string.ledger_you_due),
-                amount = state.totalLent,
-                accent = Color(0xFF30D158),
-            )
-            TotalCell(
-                label = stringResource(R.string.ledger_you_owe),
-                amount = state.totalBorrowed,
-                accent = Color(0xFFFF9F0A),
-            )
-        }
+        // Single authoritative balance band (DESIGN.md)
+        ExpandBalanceBand(
+            receiveLabel = stringResource(R.string.ledger_you_due),
+            receiveAmount = state.totalLent,
+            payLabel = stringResource(R.string.ledger_you_owe),
+            payAmount = state.totalBorrowed,
+            currency = "",
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
 
         Spacer(Modifier.height(14.dp))
 
@@ -146,7 +134,7 @@ fun BoxWithConstraintsScope.LedgerLanding() {
                 label = stringResource(R.string.ledger_filter_overdue_only, state.people.count { it.overdue }),
                 selected = filter == LedgerFilter.OVERDUE,
                 onClick = { filter = LedgerFilter.OVERDUE },
-                accent = Color(0xFFFF6B5B)
+                accent = ExpandDesign.Danger
             )
         }
         Spacer(Modifier.height(12.dp))
@@ -196,7 +184,7 @@ fun BoxWithConstraintsScope.LedgerLanding() {
                         Text(
                             text = stringResource(R.string.ledger_show_all, visiblePeople.size),
                             style = ivyInter(15.sp, FontWeight.SemiBold),
-                            color = Color(0xFF5E5CE6),
+                            color = ExpandDesign.Accent,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { ivyContext.selectMainTab(MainTab.LEDGER_CONTACTS) }
@@ -386,7 +374,7 @@ private fun LedgerFilterChip(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
-    accent: Color = Color(0xFF5E5CE6),
+    accent: Color = ExpandDesign.Accent,
 ) {
     Text(
         text = label,
@@ -449,14 +437,14 @@ private fun EmptyLedgerState(
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF5E5CE6).copy(alpha = 0.16f), RoundedCornerShape(14.dp))
+                .background(ExpandDesign.Accent.copy(alpha = 0.16f), RoundedCornerShape(14.dp))
                 .clickable(onClick = onCreateClick)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Text(
                 text = stringResource(R.string.ledger_add_customer),
                 style = ivyInter(15.sp, FontWeight.SemiBold),
-                color = Color(0xFF5E5CE6)
+                color = ExpandDesign.Accent
             )
         }
     }
@@ -479,13 +467,13 @@ private fun LedgerPersonRow(
             modifier = Modifier
                 .width(44.dp)
                 .clip(RoundedCornerShape(percent = 50))
-                .background(Color(0xFF5E5CE6).copy(alpha = 0.16f)),
+                .background(ExpandDesign.Accent.copy(alpha = 0.16f)),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = person.name.trim().takeIf { it.isNotEmpty() }?.take(2)?.uppercase() ?: "?",
                 style = ivyInter(16.sp, FontWeight.Bold),
-                color = Color(0xFF5E5CE6)
+                color = ExpandDesign.Accent
             )
         }
         Spacer(Modifier.width(12.dp))
@@ -500,7 +488,7 @@ private fun LedgerPersonRow(
                 Text(
                     text = stringResource(R.string.ledger_overdue_days, person.overdueDays),
                     style = ivyInter(12.sp, FontWeight.Bold),
-                    color = Color(0xFFFF6B5B)
+                    color = ExpandDesign.Danger
                 )
             }
         }
@@ -512,7 +500,7 @@ private fun LedgerPersonRow(
             },
             style = ivyInter(15.sp, FontWeight.ExtraBold, letterSpacing = (-0.2).sp),
             color = if (person.settled) UI.colors.gray
-            else if (person.youOwe) Color(0xFFFF9F0A) else Color(0xFF30D158)
+            else if (person.youOwe) ExpandDesign.Pay else ExpandDesign.Receive
         )
     }
 }

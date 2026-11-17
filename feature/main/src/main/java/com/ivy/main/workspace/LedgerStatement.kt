@@ -275,9 +275,9 @@ fun BoxWithConstraintsScope.LedgerStatement(screen: LedgerStatementScreen) {
                             text = "Rs. %,.2f".format(entry.amount),
                             style = ivyInter(14.sp, FontWeight.Bold),
                             color = if (entry.type == LoanRecordType.INCREASE) {
-                                Color(0xFFFF9F0A)
+                                ExpandDesign.Pay
                             } else {
-                                Color(0xFF30D158)
+                                ExpandDesign.Receive
                             }
                         )
                     }
@@ -306,7 +306,7 @@ fun BoxWithConstraintsScope.LedgerStatement(screen: LedgerStatementScreen) {
                         color = Color.White,
                         modifier = Modifier
                             .clip(RoundedCornerShape(14.dp))
-                            .background(Color(0xFF5E5CE6), RoundedCornerShape(14.dp))
+                            .background(ExpandDesign.Accent, RoundedCornerShape(14.dp))
                             .clickable {
                                 sharing = true
                                 shareStatement(context, statement, c.name)
@@ -358,7 +358,7 @@ private fun StatementRangeChip(
         modifier = Modifier
             .clip(RoundedCornerShape(percent = 50))
             .background(
-                if (selected) Color(0xFF5E5CE6) else UI.colors.pureInverse.copy(alpha = 0.06f),
+                if (selected) ExpandDesign.Accent else UI.colors.pureInverse.copy(alpha = 0.06f),
                 RoundedCornerShape(percent = 50)
             )
             .clickable(onClick = onClick)

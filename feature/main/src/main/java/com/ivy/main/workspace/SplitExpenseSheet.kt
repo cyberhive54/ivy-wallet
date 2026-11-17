@@ -1,4 +1,4 @@
-package com.ivy.main.workspace
+﻿package com.ivy.main.workspace
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -63,7 +63,8 @@ import java.util.UUID
 fun SplitExpenseSheet(
     members: List<SplitMember>,
     currency: String,
-    categoryIds: List<UUID>,
+    categories: List<SplitCategory> = emptyList(),
+    onCreateCategory: (String) -> Unit = {},
     onSave: (
         note: String?,
         amount: Double,
@@ -83,6 +84,7 @@ fun SplitExpenseSheet(
     var pickedPhone by remember { mutableStateOf<String?>(null) }
     var attachmentUrl by remember { mutableStateOf<String?>(null) }
     var selectedCategory by remember { mutableStateOf<UUID?>(null) }
+    var newCategoryName by remember { mutableStateOf("") }
 
     // Payer amounts — default to the first ("You") member covering the whole bill
     val payerAmounts = remember {
@@ -229,7 +231,7 @@ fun SplitExpenseSheet(
                         Text(
                             text = "%,.2f".format(owedAmount),
                             style = ivyInter(14.sp, FontWeight.Bold),
-                            color = Color(0xFF5E5CE6)
+                            color = ExpandDesign.Accent
                         )
                     }
                     Spacer(Modifier.height(6.dp))
@@ -251,7 +253,7 @@ fun SplitExpenseSheet(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(percent = 50))
                                     .background(
-                                        if (selected) Color(0xFF5E5CE6) else UI.colors.pureInverse.copy(alpha = 0.06f),
+                                        if (selected) ExpandDesign.Accent else UI.colors.pureInverse.copy(alpha = 0.06f),
                                         RoundedCornerShape(percent = 50)
                                     )
                                     .clickable { modes[member.id] = option }
@@ -298,20 +300,58 @@ fun SplitExpenseSheet(
             // Category shortlist + "+ New" (global categories are shared)
             SectionLabel(stringResource(R.string.split_category))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(categoryIds) { id ->
+                items(categories) { category ->
                     Text(
-                        text = id.toString().take(6),
+                        text = category.name,
                         style = ivyInter(12.sp, FontWeight.SemiBold),
-                        color = if (selectedCategory == id) Color.White else UI.colors.pureInverse,
+                        color = if (selectedCategory == category.id) Color.White else UI.colors.pureInverse,
                         modifier = Modifier
                             .clip(RoundedCornerShape(percent = 50))
                             .background(
-                                if (selectedCategory == id) Color(0xFF5E5CE6) else UI.colors.pureInverse.copy(alpha = 0.06f),
+                                if (selectedCategory == category.id) ExpandDesign.Accent else UI.colors.pureInverse.copy(alpha = 0.06f),
                                 RoundedCornerShape(percent = 50)
                             )
-                            .clickable { selectedCategory = if (selectedCategory == id) null else id }
+                            .clickable { selectedCategory = if (selectedCategory == category.id) null else category.id }
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     )
+                }
+                item {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(ExpandDesign.Accent.copy(alpha = 0.10f), RoundedCornerShape(percent = 50))
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                    ) {
+                        androidx.compose.foundation.text.BasicTextField(
+                            value = newCategoryName,
+                            onValueChange = { newCategoryName = it },
+                            singleLine = true,
+                            textStyle = ivyInter(12.sp, FontWeight.SemiBold)
+                                .copy(color = if (newCategoryName.isEmpty()) UI.colors.gray else ExpandDesign.Accent),
+                            modifier = Modifier.width(72.dp),
+                            decorationBox = { inner ->
+                                androidx.compose.foundation.layout.Box(contentAlignment = Alignment.CenterStart) {
+                                    if (newCategoryName.isEmpty()) {
+                                        Text("new", style = ivyInter(12.sp), color = UI.colors.gray)
+                                    }
+                                    inner()
+                                }
+                            }
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "+",
+                            style = ivyInter(14.sp, FontWeight.Bold),
+                            color = ExpandDesign.Accent,
+                            modifier = Modifier.clickable {
+                                if (newCategoryName.isNotBlank()) {
+                                    onCreateCategory(newCategoryName.trim())
+                                    newCategoryName = ""
+                                }
+                            },
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -334,7 +374,7 @@ fun SplitExpenseSheet(
                 Text(
                     text = "Camera",
                     style = ivyInter(12.sp, FontWeight.SemiBold),
-                    color = Color(0xFF5E5CE6),
+                    color = ExpandDesign.Accent,
                     modifier = Modifier.clickable {
                         ReceiptStorage.newCameraUri(context)?.let { (uri, _) -> cameraLauncher.launch(uri) }
                     }
@@ -343,7 +383,7 @@ fun SplitExpenseSheet(
                 Text(
                     text = "Gallery",
                     style = ivyInter(12.sp, FontWeight.SemiBold),
-                    color = Color(0xFF5E5CE6),
+                    color = ExpandDesign.Accent,
                     modifier = Modifier.clickable { galleryLauncher.launch("image/*") }
                 )
             }
@@ -370,7 +410,7 @@ fun SplitExpenseSheet(
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
                         .background(
-                            if (valid) Color(0xFF5E5CE6) else UI.colors.pureInverse.copy(alpha = 0.06f),
+                            if (valid) ExpandDesign.Accent else UI.colors.pureInverse.copy(alpha = 0.06f),
                             RoundedCornerShape(14.dp)
                         )
                         .clickable(enabled = valid) {
@@ -427,12 +467,12 @@ private fun PayerChip(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .background(
-                if (selected) Color(0xFF5E5CE6).copy(alpha = 0.15f) else UI.colors.pureInverse.copy(alpha = 0.05f),
+                if (selected) ExpandDesign.Accent.copy(alpha = 0.15f) else UI.colors.pureInverse.copy(alpha = 0.05f),
                 RoundedCornerShape(12.dp)
             )
             .border(
                 1.dp,
-                if (selected) Color(0xFF5E5CE6) else Color.Transparent,
+                if (selected) ExpandDesign.Accent else Color.Transparent,
                 RoundedCornerShape(12.dp)
             )
             .clickable { onToggle(!selected) }
@@ -441,7 +481,7 @@ private fun PayerChip(
         Text(
             text = name,
             style = ivyInter(13.sp, FontWeight.SemiBold),
-            color = if (selected) Color(0xFF5E5CE6) else UI.colors.pureInverse
+            color = if (selected) ExpandDesign.Accent else UI.colors.pureInverse
         )
         if (selected) {
             Spacer(Modifier.height(4.dp))

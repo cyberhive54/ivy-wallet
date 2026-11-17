@@ -70,37 +70,22 @@ fun BoxWithConstraintsScope.SplitlyLanding() {
         )
         Spacer(Modifier.height(10.dp))
 
-        // Summary strip — owed to / owed by you (INR default this release)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(UI.colors.pureInverse.copy(alpha = 0.06f), RoundedCornerShape(20.dp))
-                .padding(horizontal = 16.dp, vertical = 18.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            SplitlyTotal(
-                label = stringResource(R.string.splitly_they_owe),
-                amount = state.youLentTotal,
-                accent = Color(0xFF30D158),
-            )
-            SplitlyTotal(
-                label = stringResource(R.string.splitly_you_owe),
-                amount = state.youOwedTotal,
-                accent = Color(0xFFFF9F0A),
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Text(
-            modifier = Modifier.padding(horizontal = 24.dp),
-            text = stringResource(R.string.splitly_recent_groups),
-            style = ivyInter(13.sp, FontWeight.SemiBold, letterSpacing = 0.6.sp),
-            color = UI.colors.gray
+        // Single authoritative balance band (DESIGN.md)
+        ExpandBalanceBand(
+            receiveLabel = stringResource(R.string.splitly_they_owe),
+            receiveAmount = state.youLentTotal,
+            payLabel = stringResource(R.string.splitly_you_owe),
+            payAmount = state.youOwedTotal,
+            currency = "",
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
-        Spacer(Modifier.height(8.dp))
+
+        ExpandSectionTitle(
+            text = stringResource(R.string.splitly_recent_groups),
+            modifier = Modifier.padding(horizontal = 20.dp),
+            action = stringResource(R.string.splitly_see_all),
+            onAction = { ivyContext.selectMainTab(MainTab.SPLITLY_GROUPS) },
+        )
 
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -108,11 +93,12 @@ fun BoxWithConstraintsScope.SplitlyLanding() {
         ) {
             if (state.isEmpty) {
                 item {
-                    EmptySplitlyState(
-                        value = "",
-                        onValueChange = null,
-                        onCreate = { ivyContext.selectMainTab(MainTab.SPLITLY_GROUPS) },
-                        buttonLabel = stringResource(R.string.splitly_go_create),
+                    ExpandEmptyState(
+                        glyph = "+",
+                        title = stringResource(R.string.splitly_empty_title),
+                        subtitle = stringResource(R.string.splitly_empty_subtitle),
+                        actionLabel = stringResource(R.string.splitly_go_create),
+                        onAction = { ivyContext.selectMainTab(MainTab.SPLITLY_GROUPS) },
                     )
                 }
             } else {
@@ -123,7 +109,7 @@ fun BoxWithConstraintsScope.SplitlyLanding() {
                     Text(
                         text = stringResource(R.string.splitly_see_all),
                         style = ivyInter(15.sp, FontWeight.SemiBold),
-                        color = Color(0xFF5E5CE6),
+                        color = ExpandDesign.Accent,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { ivyContext.selectMainTab(MainTab.SPLITLY_GROUPS) }
@@ -229,8 +215,8 @@ fun BoxWithConstraintsScope.SplitlyGroups() {
                         }
                     },
                     colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Color(0xFF5E5CE6).copy(alpha = 0.16f),
-                        contentColor = Color(0xFF5E5CE6)
+                        containerColor = ExpandDesign.Accent.copy(alpha = 0.16f),
+                        contentColor = ExpandDesign.Accent
                     )
                 ) {
                     Text(
@@ -293,8 +279,8 @@ private fun EmptySplitlyState(
             FilledTonalButton(
                 onClick = onCreate,
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = Color(0xFF5E5CE6).copy(alpha = 0.16f),
-                    contentColor = Color(0xFF5E5CE6)
+                    containerColor = ExpandDesign.Accent.copy(alpha = 0.16f),
+                    contentColor = ExpandDesign.Accent
                 )
             ) {
                 Text(
@@ -337,8 +323,8 @@ private fun EmptySplitlyState(
             FilledTonalButton(
                 onClick = onCreate,
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = Color(0xFF5E5CE6).copy(alpha = 0.16f),
-                    contentColor = Color(0xFF5E5CE6)
+                    containerColor = ExpandDesign.Accent.copy(alpha = 0.16f),
+                    contentColor = ExpandDesign.Accent
                 )
             ) {
                 Text(
@@ -369,13 +355,13 @@ private fun SplitlyGroupRow(
             modifier = Modifier
                 .width(44.dp)
                 .clip(RoundedCornerShape(percent = 50))
-                .background(Color(0xFF5E5CE6).copy(alpha = 0.18f)),
+                .background(ExpandDesign.Accent.copy(alpha = 0.18f)),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = group.name.trim().takeIf { it.isNotEmpty() }?.take(2)?.uppercase() ?: "??",
                 style = ivyInter(15.sp, FontWeight.Bold),
-                color = Color(0xFF5E5CE6)
+                color = ExpandDesign.Accent
             )
         }
         Spacer(Modifier.width(12.dp))
@@ -397,9 +383,9 @@ private fun SplitlyGroupRow(
             text = "${if (group.youBalance >= 0) "+" else ""}%,.2f".format(group.youBalance),
             style = ivyInter(15.sp, FontWeight.SemiBold),
             color = if (group.youBalance > 0) {
-                Color(0xFF30D158)
+                ExpandDesign.Receive
             } else if (group.youBalance < 0) {
-                Color(0xFFFF9F0A)
+                ExpandDesign.Pay
             } else {
                 UI.colors.gray
             }

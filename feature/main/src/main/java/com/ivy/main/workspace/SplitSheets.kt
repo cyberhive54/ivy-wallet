@@ -96,7 +96,7 @@ fun SplitGroupEditSheet(
                         modifier = Modifier
                             .clip(RoundedCornerShape(percent = 50))
                             .background(
-                                if (selected) Color(0xFF5E5CE6) else UI.colors.pureInverse.copy(alpha = 0.06f),
+                                if (selected) ExpandDesign.Accent else UI.colors.pureInverse.copy(alpha = 0.06f),
                                 RoundedCornerShape(percent = 50)
                             )
                             .clickable { type = option }
@@ -139,7 +139,7 @@ fun SplitGroupEditSheet(
                     Text(
                         text = stringResource(R.string.split_archive_group),
                         style = ivyInter(14.sp, FontWeight.SemiBold),
-                        color = Color(0xFFFF6B5B),
+                        color = ExpandDesign.Danger,
                         modifier = Modifier.clickable(onClick = onArchive)
                     )
                 }
@@ -151,7 +151,7 @@ fun SplitGroupEditSheet(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(
-                            if (name.isNotBlank() && currency.isNotBlank()) Color(0xFF5E5CE6)
+                            if (name.isNotBlank() && currency.isNotBlank()) ExpandDesign.Accent
                             else UI.colors.pureInverse.copy(alpha = 0.06f),
                             RoundedCornerShape(12.dp)
                         )
@@ -232,7 +232,7 @@ fun SplitPlanSheet(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(
-                            if (state.plan.isNotEmpty()) Color(0xFF5E5CE6) else UI.colors.pureInverse.copy(alpha = 0.06f),
+                            if (state.plan.isNotEmpty()) ExpandDesign.Accent else UI.colors.pureInverse.copy(alpha = 0.06f),
                             RoundedCornerShape(12.dp)
                         )
                         .clickable(enabled = state.plan.isNotEmpty(), onClick = onApply)
@@ -266,7 +266,7 @@ private fun SplitPlanRow(
         Text(
             text = "%,.2f".format(transfer.amount.toDouble()) + " $currency",
             style = ivyInter(14.sp, FontWeight.Bold),
-            color = Color(0xFF5E5CE6)
+            color = ExpandDesign.Accent
         )
     }
 }

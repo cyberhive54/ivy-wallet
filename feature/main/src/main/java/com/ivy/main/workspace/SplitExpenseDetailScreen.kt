@@ -101,7 +101,7 @@ fun BoxWithConstraintsScope.SplitExpenseDetailScreen(
             Text(
                 text = stringResource(R.string.split_delete_expense),
                 style = ivyInter(12.sp, FontWeight.SemiBold),
-                color = Color(0xFFFF6B5B),
+                color = ExpandDesign.Danger,
                 modifier = Modifier.clickable { confirmDelete = true }
             )
         }
@@ -132,7 +132,7 @@ fun BoxWithConstraintsScope.SplitExpenseDetailScreen(
                     Text(
                         text = "%,.2f".format(expense.amount) + " $currency",
                         style = ivyInter(26.sp, FontWeight.ExtraBold, letterSpacing = (-0.5).sp),
-                        color = Color(0xFF5E5CE6)
+                        color = ExpandDesign.Accent
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
@@ -161,7 +161,7 @@ fun BoxWithConstraintsScope.SplitExpenseDetailScreen(
                 DetailRow(
                     label = (memberNames[share.memberId] ?: "Member") + " · " + share.mode.name,
                     value = "%,.2f".format(share.owed) + " $currency",
-                    valueColor = if (share.owed > 0) Color(0xFFFF9F0A) else Color(0xFF30D158),
+                    valueColor = if (share.owed > 0) ExpandDesign.Pay else ExpandDesign.Receive,
                 )
             }
 
@@ -221,7 +221,7 @@ fun BoxWithConstraintsScope.SplitExpenseDetailScreen(
                     else R.string.split_comment_public
                 ),
                 style = ivyInter(11.sp, FontWeight.SemiBold),
-                color = if (commentVisibility == "PRIVATE") Color(0xFFFF9F0A) else Color(0xFF5E5CE6),
+                color = if (commentVisibility == "PRIVATE") ExpandDesign.Pay else ExpandDesign.Accent,
                 modifier = Modifier.clickable {
                     commentVisibility = if (commentVisibility == "PRIVATE") "PUBLIC" else "PRIVATE"
                 }
@@ -230,7 +230,7 @@ fun BoxWithConstraintsScope.SplitExpenseDetailScreen(
             Text(
                 text = "➤",
                 style = ivyInter(18.sp, FontWeight.Bold),
-                color = Color(0xFF5E5CE6),
+                color = ExpandDesign.Accent,
                 modifier = Modifier.clickable(enabled = commentText.isNotBlank()) {
                     viewModel.addComment(expense.id, commentText, commentVisibility)
                     commentText = ""
@@ -270,7 +270,7 @@ fun BoxWithConstraintsScope.SplitExpenseDetailScreen(
                     Text(
                         text = stringResource(R.string.split_delete_expense),
                         style = ivyInter(14.sp, FontWeight.Bold),
-                        color = Color(0xFFFF6B5B),
+                        color = ExpandDesign.Danger,
                         modifier = Modifier.clickable {
                             currentExpense?.let { viewModel.deleteExpense(it) }
                             confirmDelete = false

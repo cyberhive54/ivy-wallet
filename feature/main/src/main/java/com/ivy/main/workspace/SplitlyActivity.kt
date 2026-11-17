@@ -81,14 +81,14 @@ fun BoxWithConstraintsScope.SplitlyActivity() {
                             modifier = Modifier
                                 .width(56.dp)
                                 .clip(RoundedCornerShape(percent = 50))
-                                .background(Color(0xFF5E5CE6).copy(alpha = 0.14f))
+                                .background(ExpandDesign.Accent.copy(alpha = 0.14f))
                                 .padding(14.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_activity),
                                 contentDescription = null,
-                                tint = Color(0xFF5E5CE6)
+                                tint = ExpandDesign.Accent
                             )
                         }
                         Spacer(Modifier.height(14.dp))
@@ -120,7 +120,7 @@ private fun ActivityRow(
 ) {
     val isExpense = item.kind == SplitlyActivityKind.EXPENSE
     val icon = if (isExpense) R.drawable.ic_vue_money_receipt_items else R.drawable.ic_checklist
-    val amountColor = if (isExpense) Color(0xFFFF9F0A) else Color(0xFF30D158)
+    val amountColor = if (isExpense) ExpandDesign.Pay else ExpandDesign.Receive
     val dateText = DAY_FORMAT.format(item.time.atZone(ZoneId.systemDefault()))
 
     Row(
@@ -133,13 +133,13 @@ private fun ActivityRow(
             modifier = Modifier
                 .width(40.dp)
                 .clip(RoundedCornerShape(percent = 50))
-                .background(Color(0xFF5E5CE6).copy(alpha = 0.14f)),
+                .background(ExpandDesign.Accent.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(icon),
                 contentDescription = null,
-                tint = Color(0xFF5E5CE6),
+                tint = ExpandDesign.Accent,
                 modifier = Modifier
                     .padding(10.dp)
                     .width(20.dp)

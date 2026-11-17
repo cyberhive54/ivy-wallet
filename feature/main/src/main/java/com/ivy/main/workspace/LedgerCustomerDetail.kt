@@ -132,14 +132,14 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                         modifier = Modifier
                             .size(56.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF5E5CE6).copy(alpha = 0.16f)),
+                            .background(ExpandDesign.Accent.copy(alpha = 0.16f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = current.name.trim().takeIf { it.isNotEmpty() }
                                 ?.take(2)?.uppercase() ?: "?",
                             style = ivyInter(20.sp, FontWeight.Bold),
-                            color = Color(0xFF5E5CE6)
+                            color = ExpandDesign.Accent
                         )
                     }
                     Spacer(Modifier.width(14.dp))
@@ -155,7 +155,7 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                         Text(
                             text = "â‚¹%,.0f".format(current.outstanding),
                             style = ivyInter(28.sp, FontWeight.ExtraBold, letterSpacing = (-0.6).sp),
-                            color = if (current.youOwe) Color(0xFFFF9F0A) else Color(0xFF30D158)
+                            color = if (current.youOwe) ExpandDesign.Pay else ExpandDesign.Receive
                         )
                     }
                 }
@@ -308,7 +308,7 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                                 Icon(
                                     painter = painterResource(R.drawable.ic_attachment),
                                     contentDescription = stringResource(R.string.ledger_receipt_attached),
-                                    tint = Color(0xFF5E5CE6),
+                                    tint = ExpandDesign.Accent,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -318,9 +318,9 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                             text = "â‚¹%,.0f".format(entry.amount),
                             style = ivyInter(15.sp, FontWeight.ExtraBold),
                             color = if (entry.type == LoanRecordType.INCREASE) {
-                                Color(0xFFFF9F0A)
+                                ExpandDesign.Pay
                             } else {
-                                Color(0xFF30D158)
+                                ExpandDesign.Receive
                             }
                         )
                     }
@@ -388,7 +388,7 @@ private fun ActionChip(
             .clip(RoundedCornerShape(16.dp))
             .background(
                 if (danger) {
-                    Color(0xFFFF6B5B).copy(alpha = 0.12f)
+                    ExpandDesign.Danger.copy(alpha = 0.12f)
                 } else {
                     UI.colors.pureInverse.copy(alpha = 0.06f)
                 },
@@ -401,14 +401,14 @@ private fun ActionChip(
         Icon(
             painter = painterResource(icon),
             contentDescription = null,
-            tint = if (danger) Color(0xFFFF6B5B) else UI.colors.pureInverse,
+            tint = if (danger) ExpandDesign.Danger else UI.colors.pureInverse,
             modifier = Modifier.size(20.dp)
         )
         Spacer(Modifier.height(4.dp))
         Text(
             text = label,
             style = ivyInter(10.sp, FontWeight.SemiBold),
-            color = if (danger) Color(0xFFFF6B5B) else UI.colors.pureInverse,
+            color = if (danger) ExpandDesign.Danger else UI.colors.pureInverse,
             maxLines = 1
         )
     }
@@ -465,10 +465,10 @@ private fun SettleDialog(
                 Text(
                     text = stringResource(R.string.ledger_settle_confirm),
                     style = ivyInter(14.sp, FontWeight.Bold),
-                    color = Color(0xFF5E5CE6),
+                    color = ExpandDesign.Accent,
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF5E5CE6).copy(alpha = 0.20f), RoundedCornerShape(12.dp))
+                        .background(ExpandDesign.Accent.copy(alpha = 0.20f), RoundedCornerShape(12.dp))
                         .clickable(onClick = onConfirm)
                         .padding(horizontal = 16.dp, vertical = 10.dp)
                 )
@@ -500,7 +500,7 @@ private fun DeleteConfirmDialog(
             Text(
                 text = title,
                 style = ivyInter(17.sp, FontWeight.ExtraBold),
-                color = Color(0xFFFF6B5B)
+                color = ExpandDesign.Danger
             )
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -517,10 +517,10 @@ private fun DeleteConfirmDialog(
                 Text(
                     text = stringResource(R.string.delete),
                     style = ivyInter(14.sp, FontWeight.Bold),
-                    color = Color(0xFFFF6B5B),
+                    color = ExpandDesign.Danger,
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFFF6B5B).copy(alpha = 0.16f), RoundedCornerShape(12.dp))
+                        .background(ExpandDesign.Danger.copy(alpha = 0.16f), RoundedCornerShape(12.dp))
                         .clickable(onClick = onConfirm)
                         .padding(horizontal = 16.dp, vertical = 10.dp)
                 )

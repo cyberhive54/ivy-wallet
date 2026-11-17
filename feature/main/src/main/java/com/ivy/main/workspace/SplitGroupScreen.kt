@@ -1,5 +1,11 @@
 package com.ivy.main.workspace
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,12 +18,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -38,20 +44,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.collectAsState
 import com.ivy.design.l0_system.UI
-import com.ivy.domain.split.ShareMode
 import com.ivy.navigation.SplitExpenseDetailScreen
 import com.ivy.navigation.navigation
 import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
 import com.ivy.ui.typography.ivyInter
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-private val DAY_FORMAT = DateTimeFormatter.ofPattern("d MMM yyyy")
+private val DAY_FORMAT = DateTimeFormatter.ofPattern("d MMM")
+
+/** History window (P3.S2.M4). */
+private enum class HistoryRange { ALL, MONTH, THREE_MONTHS }
 
 /**
- * Group detail (P3.S2 + P3.S3): members, expenses, per-member balances,
- * simplify/settle plan, comments and group/member management.
+ * Group detail — redesigned (DESIGN.md). One calm surface, one authoritative
+ * balance band, then the record. Hairline surfaces, critically damped motion,
+ * semantic color, and every action one tap away.
  */
 @Composable
 fun BoxWithConstraintsScope.SplitGroupScreen(screen: com.ivy.navigation.SplitGroupScreen) {
@@ -63,8 +73,25 @@ fun BoxWithConstraintsScope.SplitGroupScreen(screen: com.ivy.navigation.SplitGro
     var showMembersSheet by remember { mutableStateOf(false) }
     var showGroupEdit by remember { mutableStateOf(false) }
     var showPlanSheet by remember { mutableStateOf(false) }
+    var range by remember { mutableStateOf(HistoryRange.ALL) }
+    var showSettled by remember { mutableStateOf(false) }
 
     LaunchedEffect(screen.groupId) { viewModel.load(screen.groupId) }
+
+    val currency = state.group?.currency ?: "INR"
+    val filteredExpenses = state.expenses.filter { expense ->
+        (showSettled || !expense.settled) && when (range) {
+            HistoryRange.ALL -> true
+            HistoryRange.MONTH -> {
+                val d = expense.date.atZone(ZoneId.systemDefault()).toLocalDate()
+                d >= LocalDate.now().withDayOfMonth(1)
+            }
+            HistoryRange.THREE_MONTHS -> {
+                val d = expense.date.atZone(ZoneId.systemDefault()).toLocalDate()
+                d >= LocalDate.now().minusMonths(3)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -74,154 +101,196 @@ fun BoxWithConstraintsScope.SplitGroupScreen(screen: com.ivy.navigation.SplitGro
     ) {
         // Header
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .width(44.dp)
-                    .height(44.dp)
-                    .clip(RoundedCornerShape(percent = 50))
-                    .clickable { nav.back() },
+                Modifier.size(44.dp).clip(CircleShape).clickable { nav.back() },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = null,
-                    tint = UI.colors.pureInverse
-                )
+                Icon(painterResource(R.drawable.ic_back), null, tint = UI.colors.pureInverse)
             }
-            Column(modifier = Modifier.weight(1f)) {
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
                 Text(
-                    text = state.group?.name ?: stringResource(R.string.splitly),
-                    style = ivyInter(20.sp, FontWeight.ExtraBold, letterSpacing = (-0.4).sp),
+                    state.group?.name ?: stringResource(R.string.splitly),
+                    style = ivyInter(24.sp, FontWeight.ExtraBold, letterSpacing = (-0.5).sp),
                     color = UI.colors.pureInverse,
-                    maxLines = 1
+                    maxLines = 1,
                 )
                 Text(
-                    text = "${state.group?.currency ?: ""} · ${state.members.count { !it.archived }} ${stringResource(R.string.splitly_members)}",
-                    style = ivyInter(11.sp),
-                    color = UI.colors.gray
+                    "$currency · ${state.members.count { !it.archived }} ${stringResource(R.string.splitly_members)}",
+                    style = ivyInter(12.sp),
+                    color = UI.colors.gray,
                 )
             }
-            Icon(
-                painter = painterResource(R.drawable.ic_settings),
-                contentDescription = stringResource(R.string.edit_group),
-                tint = UI.colors.pureInverse,
-                modifier = Modifier
-                    .width(40.dp)
-                    .clip(RoundedCornerShape(percent = 50))
-                    .clickable { showGroupEdit = true }
-                    .padding(8.dp)
-            )
+            Box(
+                Modifier.size(44.dp).clip(CircleShape).clickable { showGroupEdit = true },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(painterResource(R.drawable.ic_settings), null, tint = UI.colors.pureInverse)
+            }
         }
 
-        // Balance banner
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(UI.colors.pureInverse.copy(alpha = 0.06f), RoundedCornerShape(18.dp))
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            BalanceCell(
-                label = stringResource(R.string.splitly_they_owe),
-                amount = state.balances.values.filter { it > 0 }.sum(),
-                accent = Color(0xFF30D158),
-            )
-            BalanceCell(
-                label = stringResource(R.string.splitly_you_owe),
-                amount = kotlin.math.abs(state.balances.values.filter { it < 0 }.sum()),
-                accent = Color(0xFFFF9F0A),
-            )
-        }
+        Spacer(Modifier.height(4.dp))
 
-        // Action buttons row
+        // Single authoritative balance band
+        ExpandBalanceBand(
+            receiveLabel = stringResource(R.string.splitly_they_owe),
+            receiveAmount = state.balances.values.filter { it > 0 }.sum(),
+            payLabel = stringResource(R.string.splitly_you_owe),
+            payAmount = kotlin.math.abs(state.balances.values.filter { it < 0 }.sum()),
+            currency = currency,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+
+        Spacer(Modifier.height(14.dp))
+
+        // Actions
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ActionChip(label = stringResource(R.string.split_add_expense), accent = Color(0xFF5E5CE6)) {
+            ExpandPillAction(stringResource(R.string.split_add_expense), Modifier.weight(1f)) {
                 showExpenseSheet = true
             }
-            ActionChip(label = stringResource(R.string.split_members), accent = Color(0xFF5E5CE6)) {
+            ExpandPillAction(stringResource(R.string.split_members), Modifier.weight(1f), filled = false) {
                 showMembersSheet = true
             }
-            ActionChip(label = stringResource(R.string.split_simplify), accent = Color(0xFF5E5CE6)) {
+            ExpandPillAction(stringResource(R.string.split_simplify), Modifier.weight(1f), filled = false) {
                 viewModel.buildPlan()
                 showPlanSheet = true
             }
         }
 
-        // Per-person ledger (P3.S3.M1)
-        if (state.balances.isNotEmpty()) {
-            Text(
-                text = stringResource(R.string.split_balances),
-                style = ivyInter(13.sp, FontWeight.SemiBold, letterSpacing = 0.6.sp),
-                color = UI.colors.gray,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-            )
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 120.dp)
-            ) {
-                items(state.members.filter { !it.archived }) { member ->
-                    val balance = state.balances[member.id] ?: 0.0
-                    SplitBalanceRow(
-                        name = member.name,
-                        balance = balance,
-                        isYou = member.isYou,
-                        currency = state.group?.currency ?: "INR",
+        // Undo affordance (P3.S3.M2) — appears after applying a settle-up plan
+        AnimatedVisibility(
+            visible = state.lastSettlement != null,
+            enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut(),
+        ) {
+            state.lastSettlement?.let { undo ->
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(ExpandDesign.Accent.copy(alpha = 0.12f), RoundedCornerShape(14.dp))
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.split_settled_undo_hint),
+                        style = ivyInter(13.sp, FontWeight.Medium),
+                        color = UI.colors.pureInverse,
+                        modifier = Modifier.weight(1f),
                     )
-                }
-                item { Spacer(Modifier.height(8.dp)) }
-                items(state.expenses) { expense ->
-                    SplitExpenseRow(
-                        expense = expense,
-                        currency = state.group?.currency ?: "INR",
-                        onClick = {
-                            nav.navigateTo(
-                                SplitExpenseDetailScreen(
-                                    expenseId = expense.id,
-                                    groupId = screen.groupId,
-                                )
-                            )
-                        }
+                    Text(
+                        stringResource(R.string.split_undo),
+                        style = ivyInter(13.sp, FontWeight.Bold),
+                        color = ExpandDesign.AccentSoft,
+                        modifier = Modifier.clickable { viewModel.undoSettlement() },
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        "✕",
+                        style = ivyInter(13.sp, FontWeight.Bold),
+                        color = UI.colors.gray,
+                        modifier = Modifier.clickable { viewModel.dismissUndo() },
                     )
                 }
             }
-        } else if (!state.loading) {
-            Text(
-                text = stringResource(R.string.split_no_expenses),
-                style = ivyInter(15.sp),
-                color = UI.colors.gray,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp)
+        }
+
+        // Balances
+        val activeBalances = state.members.filter { !it.archived && (state.balances[it.id] ?: 0.0) != 0.0 }
+        if (activeBalances.isNotEmpty()) {
+            ExpandSectionTitle(stringResource(R.string.split_balances))
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(activeBalances) { member ->
+                    SplitBalanceRow(
+                        name = member.name,
+                        balance = state.balances[member.id] ?: 0.0,
+                        isYou = member.isYou,
+                        currency = currency,
+                    )
+                }
+            }
+        } else if (filteredExpenses.isEmpty() && !state.loading) {
+            ExpandEmptyState(
+                glyph = "+",
+                title = stringResource(R.string.split_no_expenses),
+                subtitle = stringResource(R.string.split_empty_subtitle),
+                actionLabel = stringResource(R.string.split_add_expense),
+                onAction = { showExpenseSheet = true },
+                modifier = Modifier.weight(1f),
             )
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
+
+        // History filter row
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            HistoryRange.entries.forEach { option ->
+                val label = when (option) {
+                    HistoryRange.ALL -> stringResource(R.string.ledger_filter_all)
+                    HistoryRange.MONTH -> stringResource(R.string.history_month)
+                    HistoryRange.THREE_MONTHS -> stringResource(R.string.ledger_range_three_months)
+                }
+                Text(
+                    label,
+                    style = ivyInter(12.sp, FontWeight.SemiBold),
+                    color = if (range == option) Color.White else UI.colors.gray,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(
+                            if (range == option) ExpandDesign.Accent else UI.colors.pureInverse.copy(alpha = 0.05f),
+                            RoundedCornerShape(50)
+                        )
+                        .clickable { range = option }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            Text(
+                stringResource(if (showSettled) R.string.history_hide_settled else R.string.history_show_settled),
+                style = ivyInter(11.sp, FontWeight.Medium),
+                color = ExpandDesign.Accent,
+                modifier = Modifier.clickable { showSettled = !showSettled },
+            )
+        }
+
+        // History list (last section, bounded height)
+        LazyColumn(
+            modifier = Modifier.height(220.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp)
+        ) {
+            items(filteredExpenses) { expense ->
+                SplitExpenseRow(
+                    expense = expense,
+                    currency = currency,
+                    onClick = {
+                        nav.navigateTo(
+                            SplitExpenseDetailScreen(expenseId = expense.id, groupId = screen.groupId)
+                        )
+                    },
+                )
+            }
         }
     }
 
     if (showExpenseSheet) {
         SplitExpenseSheet(
             members = state.members.filter { !it.archived },
-            currency = state.group?.currency ?: "INR",
-            categoryIds = emptyList(),
+            currency = currency,
+            categories = state.categories,
+            onCreateCategory = { viewModel.createCategory(it) },
             onSave = { note, amount, date, categoryId, attachmentUrl, payers, shares ->
-                viewModel.saveExpense(
-                    note = note,
-                    amount = amount,
-                    currency = state.group?.currency ?: "INR",
-                    date = date,
-                    categoryId = categoryId,
-                    attachmentUrl = attachmentUrl,
-                    payers = payers,
-                    shares = shares,
-                )
+                viewModel.saveExpense(note, amount, currency, date, categoryId, attachmentUrl, payers, shares)
                 showExpenseSheet = false
             },
             onDismiss = { showExpenseSheet = false },
@@ -242,15 +311,8 @@ fun BoxWithConstraintsScope.SplitGroupScreen(screen: com.ivy.navigation.SplitGro
     if (showGroupEdit) {
         SplitGroupEditSheet(
             group = state.group,
-            onSave = { name, type, currency ->
-                viewModel.updateGroup(name, type, currency)
-                showGroupEdit = false
-            },
-            onArchive = {
-                viewModel.archiveGroup()
-                showGroupEdit = false
-                nav.back()
-            },
+            onSave = { name, type, cur -> viewModel.updateGroup(name, type, cur); showGroupEdit = false },
+            onArchive = { viewModel.archiveGroup(); showGroupEdit = false; nav.back() },
             onDismiss = { showGroupEdit = false },
         )
     }
@@ -258,104 +320,64 @@ fun BoxWithConstraintsScope.SplitGroupScreen(screen: com.ivy.navigation.SplitGro
     if (showPlanSheet) {
         SplitPlanSheet(
             state = state,
-            onApply = {
-                viewModel.applyPlan()
-                showPlanSheet = false
-            },
-            onDismiss = {
-                viewModel.dismissPlan()
-                showPlanSheet = false
-            },
+            onApply = { viewModel.applyPlan(); showPlanSheet = false },
+            onDismiss = { viewModel.dismissPlan(); showPlanSheet = false },
         )
     }
 }
 
 @Composable
-private fun BalanceCell(label: String, amount: Double, accent: Color) {
-    Column {
-        Text(text = label, style = ivyInter(12.sp, FontWeight.SemiBold), color = UI.colors.gray)
-        Spacer(Modifier.height(3.dp))
-        Text(
-            text = "%,.2f".format(amount),
-            style = ivyInter(20.sp, FontWeight.ExtraBold, letterSpacing = (-0.4).sp),
-            color = accent,
-        )
-    }
-}
-
-@Composable
-private fun ActionChip(label: String, accent: Color, onClick: () -> Unit) {
-    Text(
-        text = label,
-        style = ivyInter(12.sp, FontWeight.SemiBold),
-        color = Color.White,
-        modifier = Modifier
-            .clip(RoundedCornerShape(percent = 50))
-            .background(accent, RoundedCornerShape(percent = 50))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-    )
-}
-
-@Composable
-private fun SplitBalanceRow(
-    name: String,
-    balance: Double,
-    isYou: Boolean,
-    currency: String,
-) {
+private fun SplitBalanceRow(name: String, balance: Double, isYou: Boolean, currency: String) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+        Box(
+            Modifier.size(36.dp).clip(CircleShape)
+                .background(ExpandDesign.Accent.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(name.take(1).uppercase(), style = ivyInter(14.sp, FontWeight.Bold), color = ExpandDesign.Accent)
+        }
+        Spacer(Modifier.width(12.dp))
         Text(
-            text = name + if (isYou) " (You)" else "",
+            name + if (isYou) " (You)" else "",
             style = ivyInter(15.sp, FontWeight.Medium),
             color = UI.colors.pureInverse,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         Text(
-            text = "${if (balance >= 0) "+" else ""}%,.2f".format(balance) + " $currency",
+            "${if (balance >= 0) "+" else ""}${"%,.2f".format(balance)} $currency",
             style = ivyInter(14.sp, FontWeight.Bold),
-            color = if (balance > 0) Color(0xFF30D158)
-            else if (balance < 0) Color(0xFFFF9F0A) else UI.colors.gray
+            color = if (balance > 0) ExpandDesign.Receive else ExpandDesign.Pay,
         )
     }
 }
 
 @Composable
-private fun SplitExpenseRow(
-    expense: SplitExpense,
-    currency: String,
-    onClick: () -> Unit,
-) {
+private fun SplitExpenseRow(expense: SplitExpense, currency: String, onClick: () -> Unit) {
     val dateText = expense.date.atZone(ZoneId.systemDefault()).format(DAY_FORMAT)
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 24.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(Modifier.weight(1f)) {
             Text(
-                text = expense.note?.takeIf { it.isNotBlank() } ?: stringResource(R.string.splitly_expense),
+                expense.note?.takeIf { it.isNotBlank() } ?: stringResource(R.string.splitly_expense),
                 style = ivyInter(15.sp, FontWeight.SemiBold),
                 color = UI.colors.pureInverse,
-                maxLines = 1
+                maxLines = 1,
             )
             Text(
-                text = dateText + " · " + expense.payers.size + " payer(s)",
+                "$dateText · ${expense.payers.size} payer(s)" + if (expense.settled) " · settled" else "",
                 style = ivyInter(11.sp),
-                color = UI.colors.gray
+                color = UI.colors.gray,
             )
         }
         Text(
-            text = "%,.2f".format(expense.amount) + " $currency",
+            "$currency ${"%,.2f".format(expense.amount)}",
             style = ivyInter(15.sp, FontWeight.ExtraBold),
-            color = UI.colors.pureInverse
+            color = if (expense.settled) UI.colors.gray else UI.colors.pureInverse,
         )
     }
 }
