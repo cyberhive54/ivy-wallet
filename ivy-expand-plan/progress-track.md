@@ -153,7 +153,7 @@
 |---|---|---|---|---|---|
 | P3.S4.M1 | Goa Trip clean flow | OD | ~ | 2026-11-16 | APK installed on V23 (Android 14), app launches with no Room errors - 132->133 migration validated at startup. Full UI walkthrough pending device unlock (biometric lock can not be cleared over ADB) |
 | P3.S4.M2 | Hide/unhide module | OD | ☐ | | |
-| P3.S4.M3 | LINT + size audit | CI+OD | ~ | 2026-11-17 | Detekt on :app is clean (fixed 2 findings: zIndex magic number + handleSpecialStart ReturnCount). APK size audit + full manual device pass delegated to owner via ivy-expand-plan/manual-device-checklist.md |
+| P3.S4.M3 | LINT + size audit | CI+OD | ~ | 2026-11-17 | Detekt on :app is clean (fixed 2 findings: zIndex magic number + handleSpecialStart ReturnCount). APK 104 MB debug (no size regression); full manual device pass delegated to owner via ivy-expand-plan/manual-device-checklist.md |
 
 ---
 
