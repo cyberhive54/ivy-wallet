@@ -1,4 +1,4 @@
-package com.ivy.main.workspace
+﻿package com.ivy.main.workspace
 
 import android.content.Intent
 import androidx.compose.foundation.background
@@ -208,11 +208,11 @@ fun BoxWithConstraintsScope.LedgerStatement(screen: LedgerStatementScreen) {
                         ?.format(STATEMENT_DATE).orEmpty(),
                     description = entry.note?.takeIf { it.isNotBlank() }
                         ?: stringResource(R.string.ledger_entry),
-                    amount = "₹%,.2f".format(entry.amount)
+                    amount = "Rs. %,.2f".format(entry.amount)
                 )
             },
             netLabel = stringResource(R.string.ledger_statement_net),
-            netAmount = "₹%,.2f".format(c.outstanding)
+            netAmount = "Rs. %,.2f".format(c.outstanding)
         )
 
         // Preview + share
@@ -272,7 +272,7 @@ fun BoxWithConstraintsScope.LedgerStatement(screen: LedgerStatementScreen) {
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = "₹%,.2f".format(entry.amount),
+                            text = "Rs. %,.2f".format(entry.amount),
                             style = ivyInter(14.sp, FontWeight.Bold),
                             color = if (entry.type == LoanRecordType.INCREASE) {
                                 Color(0xFFFF9F0A)

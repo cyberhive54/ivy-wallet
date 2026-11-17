@@ -1,4 +1,4 @@
-package com.ivy.legacy.datamodel
+﻿package com.ivy.legacy.datamodel
 
 import androidx.compose.runtime.Immutable
 import com.ivy.base.model.LoanRecordType
@@ -24,6 +24,8 @@ data class LoanRecord(
     val recordDueDate: Instant? = null,
     // Optional receipt/proof photo (relative path in the app-private receipts folder)
     val attachmentUrl: String? = null,
+    // Optional global category tag for this ledger entry (v134)
+    val categoryId: java.util.UUID? = null,
 
     val isSynced: Boolean = false,
     val isDeleted: Boolean = false,
@@ -42,6 +44,7 @@ data class LoanRecord(
         recordPhone = recordPhone,
         recordDueDate = recordDueDate,
         attachmentUrl = attachmentUrl,
+        categoryId = categoryId,
         isSynced = isSynced,
         isDeleted = isDeleted,
         id = id

@@ -31,6 +31,11 @@ import com.ivy.domain.split.SplitEngine
 import com.ivy.domain.split.SplitParticipant
 import com.ivy.domain.split.SplitSettlementUseCase
 import com.ivy.domain.split.Transfer
+import com.ivy.data.repository.CategoryRepository
+import com.ivy.data.model.Category
+import com.ivy.data.model.CategoryId
+import com.ivy.data.model.primitive.ColorInt
+import com.ivy.data.model.primitive.NotBlankTrimmedString
 import com.ivy.legacy.utils.ioThread
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -95,6 +100,15 @@ data class SplitComment(
     val visibility: String,
 )
 
+/** A global category for the split expense shortlist. */
+data class SplitCategory(val id: UUID, val name: String)
+
+/** A settlement that can still be undone. */
+data class UndoableSettlement(
+    val settlementIds: List<UUID>,
+    val transactionIds: List<UUID>,
+)
+
 /** The full state of the group detail screen. */
 data class SplitGroupState(
     val loading: Boolean = true,
@@ -108,6 +122,8 @@ data class SplitGroupState(
     val plan: List<Transfer> = emptyList(),
     val accountId: UUID? = null,
     val accountCurrency: String = "INR",
+    val categories: List<SplitCategory> = emptyList(),
+    val lastSettlement: UndoableSettlement? = null,
 ) {
     val isEmpty: Boolean get() = !loading && expenses.isEmpty()
     val youBalance: Double get() = youMemberId?.let { balances[it] ?: 0.0 } ?: 0.0
@@ -133,6 +149,9 @@ class SplitGroupViewModel @Inject constructor(
     private val payerWriter: WriteSplitExpensePayerDao,
     private val commentWriter: WriteSplitCommentDao,
     private val settlementUseCase: SplitSettlementUseCase,
+    private val categoryRepository: CategoryRepository,
+    private val writeSettlementDao: com.ivy.data.db.dao.write.WriteSplitSettlementDao,
+    private val transactionRepository: com.ivy.data.repository.TransactionRepository,
     private val accountsAct: com.ivy.wallet.domain.action.account.AccountsAct,
     @ApplicationContext
     private val context: Context,
@@ -166,6 +185,9 @@ class SplitGroupViewModel @Inject constructor(
                     ?: allMembers.firstOrNull { it.memberIsYou }?.id
 
                 val expenses = splitExpenseDao.findByGroupId(groupId)
+                val categories = categoryRepository.findAll().map {
+                    SplitCategory(it.id.value, it.name.value)
+                }
                 val payers = splitExpensePayerDao.findAll()
                 val shares = splitExpenseParticipantDao.findAll()
                 val settlements = splitSettlementDao.findByGroupId(groupId)
@@ -263,6 +285,8 @@ class SplitGroupViewModel @Inject constructor(
                     youMemberId = youMemberId,
                     accountId = _state.value.accountId,
                     accountCurrency = _state.value.accountCurrency,
+                    categories = categories,
+                    lastSettlement = _state.value.lastSettlement,
                 )
             }
         }
@@ -297,7 +321,7 @@ class SplitGroupViewModel @Inject constructor(
         if (plan.isEmpty()) return
         viewModelScope.launch {
             val memberNames = s.members.associate { it.id to it.name }
-            withContext(Dispatchers.IO) {
+            val result = withContext(Dispatchers.IO) {
                 settlementUseCase.apply(
                     groupId = group.id,
                     groupName = group.name,
@@ -309,7 +333,58 @@ class SplitGroupViewModel @Inject constructor(
                     assetCode = s.accountCurrency,
                 )
             }
-            _state.value = s.copy(plan = emptyList())
+            _state.value = s.copy(
+                plan = emptyList(),
+                lastSettlement = UndoableSettlement(
+                    settlementIds = result.settlementIds,
+                    transactionIds = result.transactionIds,
+                ),
+            )
+            refresh()
+        }
+    }
+
+    /**
+     * Undo-dismissible settle-up (P3.S3.M2): removes the settlement rows and the
+     * linked transactions that were just written, restoring the previous balances.
+     */
+    fun undoSettlement() {
+        val s = _state.value
+        val undo = s.lastSettlement ?: return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                undo.settlementIds.forEach { writeSettlementDao.deleteById(it) }
+                undo.transactionIds.forEach {
+                    transactionRepository.deleteById(com.ivy.data.model.TransactionId(it))
+                }
+            }
+            _state.value = s.copy(lastSettlement = null)
+            refresh()
+        }
+    }
+
+    /** Dismisses the undo affordance without reverting the settlement. */
+    fun dismissUndo() {
+        _state.value = _state.value.copy(lastSettlement = null)
+    }
+
+    /** Adds a new global category inline from the split expense sheet (P3.S2.M2). */
+    fun createCategory(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val order = categoryRepository.findMaxOrderNum() + 1.0
+                categoryRepository.save(
+                    Category(
+                        id = CategoryId(UUID.randomUUID()),
+                        name = NotBlankTrimmedString.unsafe(trimmed),
+                        color = ColorInt(0xFF5E5CE6.toInt()),
+                        icon = null,
+                        orderNum = order,
+                    )
+                )
+            }
             refresh()
         }
     }

@@ -1,4 +1,4 @@
-package com.ivy.wallet.domain.deprecated.logic.model
+﻿package com.ivy.wallet.domain.deprecated.logic.model
 
 import com.ivy.base.model.LoanRecordType
 import com.ivy.legacy.datamodel.Account
@@ -18,5 +18,7 @@ data class CreateLoanRecordData(
     // Optional due date of this individual entry (ledger, phase 2)
     val dueDate: Instant? = null,
     // Optional receipt photo (relative path in the app-private receipts folder)
-    val attachmentUrl: String? = null
+    val attachmentUrl: String? = null,
+    // Optional global category tag for this ledger entry (v134)
+    val categoryId: java.util.UUID? = null
 )

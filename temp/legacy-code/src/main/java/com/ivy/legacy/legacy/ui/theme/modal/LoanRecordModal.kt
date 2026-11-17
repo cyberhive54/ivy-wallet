@@ -7,6 +7,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -99,6 +103,7 @@ fun BoxWithConstraintsScope.LoanRecordModal(
     onDelete: (LoanRecord) -> Unit,
     dismiss: () -> Unit,
     accounts: List<Account> = emptyList(),
+    categories: List<Pair<java.util.UUID, String>> = emptyList(),
     onCreateAccount: (CreateAccountData) -> Unit = {},
 ) {
     val initialRecord = modal?.loanRecord
@@ -139,6 +144,7 @@ fun BoxWithConstraintsScope.LoanRecordModal(
 
     // Phone of the person for this entry â€” filled by the system contact picker
     var pickedPhone by remember(modal) { mutableStateOf<String?>(null) }
+    var selectedCategory by remember(modal) { mutableStateOf<java.util.UUID?>(initialRecord?.categoryId) }
 
     // Optional due date of this entry (drives the overdue filter + reminders)
     var dueDate by remember(modal) { mutableStateOf(initialRecord?.recordDueDate) }
@@ -178,6 +184,7 @@ fun BoxWithConstraintsScope.LoanRecordModal(
                         pickedPhone = pickedPhone,
                         dueDate = dueDate,
                         attachmentUrl = attachmentUrl,
+                        categoryId = selectedCategory,
 
                         onCreate = onCreate,
                         onEdit = onEdit,
@@ -238,6 +245,35 @@ fun BoxWithConstraintsScope.LoanRecordModal(
                 pickedPhone = picked?.phone
             }
         )
+
+        // Optional category tag for this ledger entry (v134)
+        if (categories.isNotEmpty()) {
+            Spacer(Modifier.height(10.dp))
+            androidx.compose.foundation.lazy.LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(categories) { (id, name) ->
+                    val selected = selectedCategory == id
+                    Text(
+                        text = name,
+                        style = UI.typo.c.style(
+                            color = if (selected) Color.White else UI.colors.pureInverse,
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(
+                                if (selected) Color(0xFF5E5CE6) else UI.colors.pureInverse.copy(alpha = 0.06f),
+                                RoundedCornerShape(percent = 50)
+                            )
+                            .clickable {
+                                selectedCategory = if (selected) null else id
+                            }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                    )
+                }
+            }
+        }
 
         Spacer(Modifier.height(16.dp))
 
@@ -448,6 +484,7 @@ fun BoxWithConstraintsScope.LoanRecordModal(
             pickedPhone = pickedPhone,
             dueDate = dueDate,
             attachmentUrl = attachmentUrl,
+            categoryId = selectedCategory,
 
             onCreate = onCreate,
             onEdit = onEdit,
@@ -471,6 +508,7 @@ private fun save(
     pickedPhone: String? = null,
     dueDate: Instant? = null,
     attachmentUrl: String? = null,
+    categoryId: java.util.UUID? = null,
 
     onCreate: (CreateLoanRecordData) -> Unit,
     onEdit: (EditLoanRecordData) -> Unit,
@@ -486,7 +524,8 @@ private fun save(
             loanRecordType = loanRecordType,
             recordPhone = pickedPhone?.trim()?.takeIf { it.isNotBlank() } ?: loanRecord.recordPhone,
             recordDueDate = dueDate,
-            attachmentUrl = attachmentUrl ?: loanRecord.attachmentUrl
+            attachmentUrl = attachmentUrl ?: loanRecord.attachmentUrl,
+            categoryId = categoryId ?: loanRecord.categoryId
         )
         onEdit(
             EditLoanRecordData(
@@ -508,7 +547,8 @@ private fun save(
                 loanRecordType = loanRecordType,
                 phone = pickedPhone?.trim()?.takeIf { it.isNotBlank() },
                 dueDate = dueDate,
-                attachmentUrl = attachmentUrl
+                attachmentUrl = attachmentUrl,
+                categoryId = categoryId
             )
         )
     }

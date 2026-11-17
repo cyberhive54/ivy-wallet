@@ -72,6 +72,7 @@ import com.ivy.data.db.entity.SplitExpensePayerEntity
 import com.ivy.data.db.entity.SplitSettlementEntity
 import com.ivy.data.db.migration.Migration131to132_ExpandSuite
 import com.ivy.data.db.migration.Migration132to133_SplitlyMembers
+import com.ivy.data.db.migration.Migration133to134_LedgerEntryCategory
 import com.ivy.domain.db.migration.Migration105to106_TrnRecurringRules
 import com.ivy.domain.db.migration.Migration106to107_Wishlist
 import com.ivy.domain.db.migration.Migration107to108_Sync
@@ -110,7 +111,7 @@ import com.ivy.domain.db.migration.Migration125to126_Tags
             spec = IvyRoomDatabase.DeleteSEMigration::class
         )
     ],
-    version = 133,
+    version = 134,
     exportSchema = true
 )
 @TypeConverters(RoomTypeConverters::class)
@@ -186,7 +187,8 @@ abstract class IvyRoomDatabase : RoomDatabase() {
             Migration129to130_LoanIncludeNote(),
             Migration130to131_NecessityAndCategoryTypes(),
             Migration131to132_ExpandSuite(),
-            Migration132to133_SplitlyMembers()
+            Migration132to133_SplitlyMembers(),
+            Migration133to134_LedgerEntryCategory()
         )
 
         @Suppress("SpreadOperator")

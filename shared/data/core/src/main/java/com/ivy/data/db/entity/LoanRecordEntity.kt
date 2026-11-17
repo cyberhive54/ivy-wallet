@@ -1,10 +1,11 @@
-package com.ivy.data.db.entity
+﻿package com.ivy.data.db.entity
 
 import androidx.annotation.Keep
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.ivy.base.kotlinxserilzation.KSerializerInstant
 import com.ivy.base.kotlinxserilzation.KSerializerUUID
+import androidx.room.ColumnInfo
 import com.ivy.base.model.LoanRecordType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -44,6 +45,11 @@ data class LoanRecordEntity(
     // Optional receipt/proof attached to this record (private storage path)
     @SerialName("attachmentUrl")
     val attachmentUrl: String? = null,
+    // Optional global category tag for this ledger entry (v134).
+    @SerialName("categoryId")
+    @Serializable(with = KSerializerUUID::class)
+    val categoryId: UUID? = null,
+
     // In order to keep backups valid, loanRecordType is by default DECREASE.
     // This is because before issue 2740 all records were of this type implicitly.
     @SerialName("loanRecordType")
