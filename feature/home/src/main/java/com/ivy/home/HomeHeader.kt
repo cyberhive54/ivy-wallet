@@ -1,7 +1,6 @@
 package com.ivy.home
 
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -48,7 +47,7 @@ import com.ivy.legacy.utils.rememberInteractionSource
 import com.ivy.legacy.utils.rememberSwipeListenerState
 import com.ivy.legacy.utils.shortenAmount
 import com.ivy.legacy.utils.shouldShortAmount
-import com.ivy.legacy.utils.springBounce
+import androidx.compose.animation.core.spring
 import com.ivy.navigation.PieChartStatisticScreen
 import com.ivy.navigation.navigation
 import com.ivy.ui.R
@@ -73,9 +72,7 @@ internal fun HomeHeader(
     Column {
         val percentExpanded by animateFloatAsState(
             targetValue = if (expanded) 1f else 0f,
-            animationSpec = springBounce(
-                stiffness = Spring.StiffnessLow
-            ),
+            animationSpec = spring(dampingRatio = 1.0f, stiffness = 320f),
             label = "Home Header Expand Collapse"
         )
 

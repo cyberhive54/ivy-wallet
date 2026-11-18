@@ -1,4 +1,4 @@
-﻿package com.ivy.main.workspace
+package com.ivy.main.workspace
 
 import android.content.Intent
 import android.net.Uri
@@ -132,14 +132,14 @@ fun BoxWithConstraintsScope.LedgerCustomerDetail(screen: LedgerCustomerDetailScr
                         modifier = Modifier
                             .size(56.dp)
                             .clip(CircleShape)
-                            .background(ExpandDesign.Accent.copy(alpha = 0.16f)),
+                            .background(UI.colors.pureInverse.copy(alpha = 0.07f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = current.name.trim().takeIf { it.isNotEmpty() }
                                 ?.take(2)?.uppercase() ?: "?",
-                            style = ivyInter(20.sp, FontWeight.Bold),
-                            color = ExpandDesign.Accent
+                            style = ivyInter(17.sp, FontWeight.Medium),
+                            color = UI.colors.pureInverse
                         )
                     }
                     Spacer(Modifier.width(14.dp))

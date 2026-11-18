@@ -1,4 +1,4 @@
-﻿package com.ivy.main.workspace
+package com.ivy.main.workspace
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -462,18 +462,18 @@ private fun LedgerPersonRow(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Avatar: first letter(s) of the name
+        // Quiet initials — identity is carried by the name, not a colored badge.
         androidx.compose.foundation.layout.Box(
             modifier = Modifier
                 .width(44.dp)
                 .clip(RoundedCornerShape(percent = 50))
-                .background(ExpandDesign.Accent.copy(alpha = 0.16f)),
+                .background(UI.colors.pureInverse.copy(alpha = 0.07f)),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = person.name.trim().takeIf { it.isNotEmpty() }?.take(2)?.uppercase() ?: "?",
-                style = ivyInter(16.sp, FontWeight.Bold),
-                color = ExpandDesign.Accent
+                style = ivyInter(14.sp, FontWeight.Medium),
+                color = UI.colors.pureInverse
             )
         }
         Spacer(Modifier.width(12.dp))

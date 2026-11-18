@@ -321,8 +321,8 @@ private fun LazyItemScope.HomeDueSectionHeader(
         ) {
             Text(
                 modifier = Modifier.testTag("upcoming_title"),
-                text = title.uppercase(),
-                style = homeInter(13.sp, FontWeight.SemiBold, letterSpacing = 0.6.sp),
+                text = title,
+                style = homeInter(13.sp, FontWeight.Medium),
                 color = accent
             )
 
@@ -826,7 +826,7 @@ private fun DueDateCaption(transaction: Transaction) {
                 )
             }
         ).uppercase(),
-        style = homeInter(11.sp, FontWeight.SemiBold, letterSpacing = 0.4.sp),
+        style = homeInter(11.sp, FontWeight.Medium),
         color = if (transaction.dueDate!!.isAfter(timeProvider.utcNow())) {
             UI.colors.orange
         } else {

@@ -222,6 +222,27 @@ Full manual pass on build 458a0719 + follow-up fixes; all three workspaces reach
 
 ---
 
+## Quality pass — all three workspaces (2026-11-18)
+
+Owner feedback: the redesign read as generic "AI slop" and the Finance workspace
+still used the legacy design system. Direction: **quality pass, keep structure**.
+
+- `ExpandDesign.kt`: removed press-scale fidgeting on cards/pills, tracked
+  all-caps labels, competing ExtraBold numerals and tinted glyph boxes. One accent
+  reserved for the primary action; secondary text at 0.72 alpha; sentence case.
+- Finance: `IncomeExpenseCards` restyled — removed colored shadows and gradient
+  fills, neutral hairline surfaces, semantic amounts, Medium weights. `HomeHeader`
+  bounce spring replaced with a critically damped spring; all-caps/tracked labels
+  removed from `HomeStyling` and `HomeTransactionRows`.
+- Splitly/Ledger: neutral initials replace tinted avatar badges; sentence-case
+  section labels; Undo link no longer reuses the accent.
+- `DESIGN.md` rewritten with the rejected slop tells recorded so they stay out.
+- Status: `:app:assembleDebug` green, `:app:detekt` clean. **Visual verification
+  pending** — device disconnected before the rendered comparison could be made.
+  Do not mark the quality pass visually accepted until that check lands.
+
+---
+
 ## How to update this file (30 seconds)
 
 1. Before starting work on an ID, mark it `◐`.

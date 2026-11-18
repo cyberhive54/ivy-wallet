@@ -187,8 +187,8 @@ fun BoxWithConstraintsScope.SplitGroupScreen(screen: com.ivy.navigation.SplitGro
                     )
                     Text(
                         stringResource(R.string.split_undo),
-                        style = ivyInter(13.sp, FontWeight.Bold),
-                        color = ExpandDesign.AccentSoft,
+                        style = ivyInter(13.sp, FontWeight.Medium),
+                        color = UI.colors.pureInverse,
                         modifier = Modifier.clickable { viewModel.undoSettlement() },
                     )
                     Spacer(Modifier.width(12.dp))
@@ -334,10 +334,14 @@ private fun SplitBalanceRow(name: String, balance: Double, isYou: Boolean, curre
     ) {
         Box(
             Modifier.size(36.dp).clip(CircleShape)
-                .background(ExpandDesign.Accent.copy(alpha = 0.12f)),
+                .background(UI.colors.pureInverse.copy(alpha = 0.07f)),
             contentAlignment = Alignment.Center
         ) {
-            Text(name.take(1).uppercase(), style = ivyInter(14.sp, FontWeight.Bold), color = ExpandDesign.Accent)
+            Text(
+                name.trim().take(2).uppercase(),
+                style = ivyInter(13.sp, FontWeight.Medium),
+                color = UI.colors.pureInverse,
+            )
         }
         Spacer(Modifier.width(12.dp))
         Text(

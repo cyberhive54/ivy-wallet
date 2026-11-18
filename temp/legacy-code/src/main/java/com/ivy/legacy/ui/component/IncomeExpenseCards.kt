@@ -1,6 +1,7 @@
 package com.ivy.legacy.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,29 +14,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ivy.base.legacy.Transaction
 import com.ivy.base.legacy.TransactionHistoryItem
 import com.ivy.base.legacy.stringRes
 import com.ivy.base.model.TransactionType
 import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
-import com.ivy.legacy.utils.drawColoredShadow
 import com.ivy.legacy.utils.format
 import com.ivy.ui.R
 import com.ivy.wallet.domain.data.IvyCurrency
-import com.ivy.wallet.ui.theme.Gradient
-import com.ivy.wallet.ui.theme.Green
-import com.ivy.wallet.ui.theme.MediumBlack
-import com.ivy.wallet.ui.theme.MediumWhite
-import com.ivy.wallet.ui.theme.components.IvyButton
-import com.ivy.wallet.ui.theme.findContrastTextColor
-import com.ivy.wallet.ui.theme.isDarkColor
 
 @Deprecated("Old design system. Use `:ivy-design` and Material3")
 @Suppress("ParameterNaming")
@@ -69,7 +62,6 @@ fun IncomeExpensesCards(
             addButtonText = if (hasAddButtons) stringResource(R.string.add_income) else null,
             isIncome = true,
 
-            itemColor = itemColor,
             onHeaderCardClicked = { incomeHeaderCardClicked() }
         ) {
             onAddTransaction(TransactionType.INCOME)
@@ -87,7 +79,6 @@ fun IncomeExpensesCards(
             addButtonText = if (hasAddButtons) stringResource(R.string.add_expense) else null,
             isIncome = false,
 
-            itemColor = itemColor,
             onHeaderCardClicked = { expenseHeaderCardClicked() }
         ) {
             onAddTransaction(TransactionType.EXPENSE)
@@ -108,98 +99,73 @@ private fun RowScope.HeaderCard(
     isIncome: Boolean,
     addButtonText: String?,
 
-    itemColor: Color,
-
     onHeaderCardClicked: () -> Unit = {},
     onAddClick: () -> Unit
 ) {
-    val backgroundColor = if (isDarkColor(itemColor)) {
-        MediumBlack.copy(alpha = 0.9f)
-    } else {
-        MediumWhite.copy(alpha = 0.9f)
-    }
-
-    val contrastColor = findContrastTextColor(backgroundColor)
+    val semantic = if (isIncome) Color(0xFF30D158) else Color(0xFFFF9F0A)
+    val surface = UI.colors.pureInverse.copy(alpha = 0.04f)
+    val hairline = UI.colors.pureInverse.copy(alpha = 0.10f)
+    val primary = UI.colors.pureInverse
+    val secondary = UI.colors.pureInverse.copy(alpha = 0.72f)
 
     Column(
         modifier = Modifier
             .weight(1f)
-            .drawColoredShadow(
-                color = backgroundColor,
-                alpha = 0.1f
-            )
-            .background(backgroundColor, UI.shapes.r2)
+            .clip(UI.shapes.r2)
+            .background(surface, UI.shapes.r2)
+            .border(1.dp, hairline, UI.shapes.r2)
             .clickable { onHeaderCardClicked() },
     ) {
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(20.dp))
 
         Text(
-            modifier = Modifier.padding(horizontal = 24.dp),
+            modifier = Modifier.padding(horizontal = 20.dp),
             text = title,
-            style = UI.typo.c.style(
-                color = contrastColor,
-                fontWeight = FontWeight.ExtraBold
-            )
+            style = UI.typo.b2.style(color = secondary, fontWeight = FontWeight.Medium)
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
 
         Text(
-            modifier = Modifier.padding(horizontal = 24.dp),
+            modifier = Modifier.padding(horizontal = 20.dp),
             text = amount.format(currencyCode),
-            style = UI.typo.nB1.style(
-                color = contrastColor,
-                fontWeight = FontWeight.ExtraBold
-            )
+            style = UI.typo.nB1.style(color = semantic, fontWeight = FontWeight.SemiBold)
         )
         Text(
-            modifier = Modifier.padding(horizontal = 24.dp),
+            modifier = Modifier.padding(horizontal = 20.dp),
             text = IvyCurrency.fromCode(currencyCode)?.name ?: "",
-            style = UI.typo.b2.style(
-                color = contrastColor,
-                fontWeight = FontWeight.Normal
-            )
+            style = UI.typo.b2.style(color = secondary, fontWeight = FontWeight.Normal)
         )
 
         Spacer(Modifier.height(12.dp))
 
         Text(
-            modifier = Modifier.padding(horizontal = 24.dp),
+            modifier = Modifier.padding(horizontal = 20.dp),
             text = transactionCount.toString(),
-            style = UI.typo.nB1.style(
-                color = contrastColor,
-                fontWeight = FontWeight.ExtraBold
-            )
+            style = UI.typo.nB1.style(color = primary, fontWeight = FontWeight.Medium)
         )
         Text(
-            modifier = Modifier.padding(horizontal = 24.dp),
+            modifier = Modifier.padding(horizontal = 20.dp),
             text = stringRes(R.string.transactions),
-            style = UI.typo.b2.style(
-                color = contrastColor,
-                fontWeight = FontWeight.Normal
-            )
+            style = UI.typo.b2.style(color = secondary, fontWeight = FontWeight.Normal)
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(20.dp))
 
         if (addButtonText != null) {
-            val addButtonBackground = if (isIncome) Green else contrastColor
-            IvyButton(
+            Text(
+                text = addButtonText,
+                style = UI.typo.b2.style(color = primary, fontWeight = FontWeight.Medium),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-                    .align(Alignment.CenterHorizontally),
-                text = addButtonText,
-                shadowAlpha = 0.1f,
-                backgroundGradient = Gradient.solid(addButtonBackground),
-                textStyle = UI.typo.b2.style(
-                    color = findContrastTextColor(addButtonBackground),
-                    fontWeight = FontWeight.Bold
-                ).copy(fontSize = 12.sp),
-                wrapContentMode = false
-            ) {
-                onAddClick()
-            }
+                    .padding(horizontal = 12.dp)
+                    .clip(UI.shapes.r2)
+                    .background(surface, UI.shapes.r2)
+                    .border(1.dp, hairline, UI.shapes.r2)
+                    .clickable { onAddClick() }
+                    .padding(vertical = 10.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
 
             Spacer(Modifier.height(12.dp))
         }

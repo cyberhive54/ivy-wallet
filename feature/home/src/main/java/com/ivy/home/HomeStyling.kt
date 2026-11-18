@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ivy.design.l0_system.UI
 import com.ivy.ui.typography.ivyInter
-import java.util.Locale
 
 // -----------------------------------------------------------------------------------------
 // Home typography - delegates to the shared Inter family (shared/ui/core), mirroring the
@@ -49,8 +48,8 @@ internal fun HomeSectionHeader(
     Text(
         modifier = modifier
             .padding(start = 36.dp),
-        text = text.uppercase(Locale.getDefault()),
-        style = homeInter(13.sp, FontWeight.SemiBold, letterSpacing = 0.6.sp),
+        text = text,
+        style = homeInter(13.sp, FontWeight.Medium),
         color = color
     )
 
